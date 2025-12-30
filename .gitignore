@@ -1,9 +1,8 @@
-# Flutter/Dart
-.dart_tool/
+
 
 .pub-cache/
 .pub/
-build/
+
 
 # Android
 .gradle/
