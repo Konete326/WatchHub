@@ -1,0 +1,188 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../providers/admin_provider.dart';
+import '../../models/brand.dart';
+import '../../utils/theme.dart';
+
+class ManageBrandsScreen extends StatefulWidget {
+  const ManageBrandsScreen({super.key});
+
+  @override
+  State<ManageBrandsScreen> createState() => _ManageBrandsScreenState();
+}
+
+class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<AdminProvider>(context, listen: false).fetchAllBrands());
+  }
+
+  void _showAddEditDialog({Brand? brand}) {
+    final nameController = TextEditingController(text: brand?.name ?? '');
+    final descController = TextEditingController(text: brand?.description ?? '');
+    File? selectedImage;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(brand == null ? 'Add Brand' : 'Edit Brand'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        setDialogState(() => selectedImage = File(image.path));
+                      }
+                    },
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
+                        image: selectedImage != null
+                            ? DecorationImage(image: FileImage(selectedImage!), fit: BoxFit.cover)
+                            : (brand?.logoUrl != null
+                                ? DecorationImage(image: CachedNetworkImageProvider(brand!.logoUrl!), fit: BoxFit.cover)
+                                : null),
+                      ),
+                      child: (selectedImage == null && brand?.logoUrl == null)
+                          ? const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Brand Name', border: OutlineInputBorder()),
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: descController,
+                    decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                
+                final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+                bool success;
+                if (brand == null) {
+                  success = await adminProvider.createBrand(
+                    name: nameController.text.trim(),
+                    description: descController.text.trim(),
+                    logoFile: selectedImage,
+                  );
+                } else {
+                  success = await adminProvider.updateBrand(
+                    id: brand.id,
+                    name: nameController.text.trim(),
+                    description: descController.text.trim(),
+                    logoFile: selectedImage,
+                  );
+                }
+
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(brand == null ? 'Brand added' : 'Brand updated'), backgroundColor: AppTheme.successColor),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _deleteBrand(Brand brand) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Brand'),
+        content: Text('Are you sure you want to delete ${brand.name}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final success = await Provider.of<AdminProvider>(context, listen: false).deleteBrand(brand.id);
+              if (success && mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Brand deleted')));
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Manage Brands')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddEditDialog(),
+        child: const Icon(Icons.add),
+      ),
+      body: Consumer<AdminProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.brands.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (provider.brands.isEmpty) {
+            return const Center(child: Text('No brands found'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: provider.brands.length,
+            itemBuilder: (context, index) {
+              final brand = provider.brands[index];
+              return Card(
+                child: ListTile(
+                  leading: brand.logoUrl != null
+                      ? CachedNetworkImage(imageUrl: brand.logoUrl!, width: 50, height: 50, fit: BoxFit.cover)
+                      : const Icon(Icons.business),
+                  title: Text(brand.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: brand.description != null ? Text(brand.description!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showAddEditDialog(brand: brand)),
+                      IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _deleteBrand(brand)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}

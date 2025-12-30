@@ -1,0 +1,38 @@
+# Flutter/Dart
+.dart_tool/
+
+.pub-cache/
+.pub/
+build/
+
+# Android
+.gradle/
+local.properties
+*.kwks
+*.keystore
+*.jks
+**/android/app/key.properties
+
+# iOS/macOS
+.generated/
+.last_build_id
+DerivedData/
+*.IPHONE
+*.simulator
+*.pb.h
+*.pb.cc
+Pods/
+ServiceDefinitions.json
+
+# Web
+build/web/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Environment variables
+.env
+.env.*
+functions/.env
