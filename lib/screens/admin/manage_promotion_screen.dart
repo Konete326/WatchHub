@@ -1,5 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
+
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -179,7 +181,7 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                           border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.grey.shade50,
-                          image: _imageFile != null
+                          image: _imageFile != null && !kIsWeb
                               ? DecorationImage(
                                   image: FileImage(_imageFile!),
                                   fit: BoxFit.cover)
@@ -190,36 +192,48 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                                       fit: BoxFit.cover)
                                   : null),
                         ),
-                        child: (_imageFile == null &&
-                                provider.promotionHighlight?.imageUrl == null)
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_a_photo_outlined,
-                                      size: 48, color: Colors.grey.shade400),
-                                  const SizedBox(height: 8),
-                                  Text('Select Banner Image',
-                                      style: TextStyle(
-                                          color: Colors.grey.shade600)),
-                                ],
+                        child: _imageFile != null && kIsWeb
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _imageFile!.path,
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
                               )
-                            : Stack(
-                                children: [
-                                  Positioned(
-                                    right: 8,
-                                    top: 8,
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.black54,
-                                      radius: 16,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.edit,
-                                            size: 16, color: Colors.white),
-                                        onPressed: _pickImage,
+                            : (_imageFile == null &&
+                                    provider.promotionHighlight?.imageUrl ==
+                                        null)
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_a_photo_outlined,
+                                          size: 48,
+                                          color: Colors.grey.shade400),
+                                      const SizedBox(height: 8),
+                                      Text('Select Banner Image',
+                                          style: TextStyle(
+                                              color: Colors.grey.shade600)),
+                                    ],
+                                  )
+                                : Stack(
+                                    children: [
+                                      Positioned(
+                                        right: 8,
+                                        top: 8,
+                                        child: CircleAvatar(
+                                          backgroundColor: Colors.black54,
+                                          radius: 16,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.edit,
+                                                size: 16, color: Colors.white),
+                                            onPressed: _pickImage,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
                       ),
                     ),
                   ] else ...[
@@ -373,8 +387,11 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
       clipBehavior: Clip.antiAlias,
       child: isImage
           ? (_imageFile != null
-              ? Image.file(_imageFile!,
-                  height: 120, width: double.infinity, fit: BoxFit.cover)
+              ? (kIsWeb
+                  ? Image.network(_imageFile!.path,
+                      height: 120, width: double.infinity, fit: BoxFit.cover)
+                  : Image.file(_imageFile!,
+                      height: 120, width: double.infinity, fit: BoxFit.cover))
               : (provider.promotionHighlight?.imageUrl != null
                   ? CachedNetworkImage(
                       imageUrl: provider.promotionHighlight!.imageUrl!,

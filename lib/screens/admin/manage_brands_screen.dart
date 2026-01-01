@@ -59,7 +59,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
           // Hum yahan provider ko watch karenge taake error aate hi UI update ho
           final adminProvider = Provider.of<AdminProvider>(context);
@@ -91,14 +91,17 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                               ? DecorationImage(
                                   image: FileImage(selectedImage!),
                                   fit: BoxFit.contain)
-                              : (brand?.logoUrl != null
+                              : (brand?.logoUrl != null &&
+                                      brand!.logoUrl!.isNotEmpty
                                   ? DecorationImage(
                                       image: CachedNetworkImageProvider(
-                                          brand!.logoUrl!),
+                                          brand.logoUrl!),
                                       fit: BoxFit.contain)
                                   : null),
                         ),
-                        child: (selectedImage == null && brand?.logoUrl == null)
+                        child: (selectedImage == null &&
+                                (brand?.logoUrl == null ||
+                                    brand!.logoUrl!.isEmpty))
                             ? const Icon(Icons.add_a_photo,
                                 size: 40, color: Colors.grey)
                             : null,
@@ -142,10 +145,12 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  adminProvider.clearError();
-                  Navigator.pop(context);
-                },
+                onPressed: adminProvider.isLoading
+                    ? null
+                    : () {
+                        adminProvider.clearError();
+                        Navigator.pop(dialogContext);
+                      },
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
@@ -182,14 +187,18 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                         }
 
                         if (success && mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(brand == null
-                                    ? 'Brand added'
-                                    : 'Brand updated'),
-                                backgroundColor: AppTheme.successColor),
-                          );
+                          if (Navigator.canPop(dialogContext)) {
+                            Navigator.pop(dialogContext);
+                          }
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(brand == null
+                                      ? 'Brand added'
+                                      : 'Brand updated'),
+                                  backgroundColor: AppTheme.successColor),
+                            );
+                          }
                         }
                       },
                 child: adminProvider.isLoading
@@ -257,7 +266,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
               final brand = provider.brands[index];
               return Card(
                 child: ListTile(
-                  leading: brand.logoUrl != null
+                  leading: brand.logoUrl != null && brand.logoUrl!.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: brand.logoUrl!,
                           width: 50,

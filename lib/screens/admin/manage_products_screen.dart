@@ -251,7 +251,8 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   child: ListTile(
-                                    leading: watch.images.isNotEmpty
+                                    leading: watch.images.isNotEmpty &&
+                                            watch.images.first.isNotEmpty
                                         ? ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(8),

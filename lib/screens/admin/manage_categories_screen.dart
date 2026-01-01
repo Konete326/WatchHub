@@ -46,72 +46,111 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     final nameController = TextEditingController(text: category?.name ?? '');
     final formKey = GlobalKey<FormState>();
 
+    // Dialog khulne se pehle purana error clear kar dein
+    Provider.of<AdminProvider>(context, listen: false).clearError();
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(category == null ? 'Add Category' : 'Edit Category'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                    labelText: 'Category Name', border: OutlineInputBorder()),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final adminProvider = Provider.of<AdminProvider>(context);
+
+          return AlertDialog(
+            title: Text(category == null ? 'Add Category' : 'Edit Category'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                        labelText: 'Category Name',
+                        border: OutlineInputBorder()),
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                    onChanged: (_) => adminProvider.clearError(),
+                  ),
+
+                  // Naya Error Message Section
+                  if (adminProvider.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        adminProvider.errorMessage!,
+                        style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: adminProvider.isLoading
+                      ? null
+                      : () {
+                          adminProvider.clearError();
+                          Navigator.pop(dialogContext);
+                        },
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: adminProvider.isLoading
+                    ? null
+                    : () async {
+                        if (!formKey.currentState!.validate()) return;
+
+                        final newName = nameController.text.trim();
+
+                        // Check for duplicate name
+                        final isDuplicate = adminProvider.categories.any((c) =>
+                            c.name.toLowerCase() == newName.toLowerCase() &&
+                            c.id != category?.id);
+
+                        if (isDuplicate) {
+                          _showDuplicateError();
+                          return;
+                        }
+
+                        bool success;
+                        if (category == null) {
+                          success = await adminProvider.createCategory(
+                            name: newName,
+                          );
+                        } else {
+                          success = await adminProvider.updateCategory(
+                            id: category.id,
+                            name: newName,
+                          );
+                        }
+
+                        if (success && mounted) {
+                          if (Navigator.canPop(dialogContext)) {
+                            Navigator.pop(dialogContext);
+                          }
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(category == null
+                                      ? 'Category added'
+                                      : 'Category updated'),
+                                  backgroundColor: AppTheme.successColor),
+                            );
+                          }
+                        }
+                      },
+                child: adminProvider.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Save'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-
-              final adminProvider =
-                  Provider.of<AdminProvider>(context, listen: false);
-              final newName = nameController.text.trim();
-
-              // Check for duplicate name
-              final isDuplicate = adminProvider.categories.any((c) =>
-                  c.name.toLowerCase() == newName.toLowerCase() &&
-                  c.id != category?.id);
-
-              if (isDuplicate) {
-                _showDuplicateError();
-                return;
-              }
-
-              bool success;
-              if (category == null) {
-                success = await adminProvider.createCategory(
-                  name: newName,
-                );
-              } else {
-                success = await adminProvider.updateCategory(
-                  id: category.id,
-                  name: newName,
-                );
-              }
-
-              if (success && mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(category == null
-                          ? 'Category added'
-                          : 'Category updated'),
-                      backgroundColor: AppTheme.successColor),
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
