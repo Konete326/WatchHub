@@ -24,101 +24,133 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
         Provider.of<AdminProvider>(context, listen: false).fetchAllBrands());
   }
 
-  void _showAddEditDialog({Brand? brand}) {
+void _showAddEditDialog({Brand? brand}) {
     final nameController = TextEditingController(text: brand?.name ?? '');
     final descController = TextEditingController(text: brand?.description ?? '');
     File? selectedImage;
     final formKey = GlobalKey<FormState>();
 
+    // Dialog khulne se pehle purana error clear kar dein
+    Provider.of<AdminProvider>(context, listen: false).clearError();
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(brand == null ? 'Add Brand' : 'Edit Brand'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                      if (image != null) {
-                        setDialogState(() => selectedImage = File(image.path));
-                      }
-                    },
-                    child: Container(
-                      height: 100,
-                      width: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                        image: selectedImage != null
-                            ? DecorationImage(image: FileImage(selectedImage!), fit: BoxFit.cover)
-                            : (brand?.logoUrl != null
-                                ? DecorationImage(image: CachedNetworkImageProvider(brand!.logoUrl!), fit: BoxFit.cover)
-                                : null),
+        builder: (context, setDialogState) {
+          // Hum yahan provider ko watch karenge taake error aate hi UI update ho
+          final adminProvider = Provider.of<AdminProvider>(context);
+
+          return AlertDialog(
+            title: Text(brand == null ? 'Add Brand' : 'Edit Brand'),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                        if (image != null) {
+                          setDialogState(() => selectedImage = File(image.path));
+                        }
+                      },
+                      child: Container(
+                        height: 100,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                          image: selectedImage != null
+                              ? DecorationImage(image: FileImage(selectedImage!), fit: BoxFit.cover)
+                              : (brand?.logoUrl != null
+                                  ? DecorationImage(image: CachedNetworkImageProvider(brand!.logoUrl!), fit: BoxFit.cover)
+                                  : null),
+                        ),
+                        child: (selectedImage == null && brand?.logoUrl == null)
+                            ? const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)
+                            : null,
                       ),
-                      child: (selectedImage == null && brand?.logoUrl == null)
-                          ? const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)
-                          : null,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Brand Name', border: OutlineInputBorder()),
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                    maxLines: 2,
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Brand Name', border: OutlineInputBorder()),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                      // Jab user type kare toh error gaib ho jaye
+                      onChanged: (_) => adminProvider.clearError(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: descController,
+                      decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                      maxLines: 2,
+                    ),
+                    
+                    // --- Naya Error Message Section ---
+                    if (adminProvider.errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          adminProvider.errorMessage!,
+                          style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                
-                final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-                bool success;
-                if (brand == null) {
-                  success = await adminProvider.createBrand(
-                    name: nameController.text.trim(),
-                    description: descController.text.trim(),
-                    logoFile: selectedImage,
-                  );
-                } else {
-                  success = await adminProvider.updateBrand(
-                    id: brand.id,
-                    name: nameController.text.trim(),
-                    description: descController.text.trim(),
-                    logoFile: selectedImage,
-                  );
-                }
-
-                if (success && mounted) {
+            actions: [
+              TextButton(
+                onPressed: () {
+                  adminProvider.clearError();
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(brand == null ? 'Brand added' : 'Brand updated'), backgroundColor: AppTheme.successColor),
-                  );
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: adminProvider.isLoading 
+                  ? null 
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      
+                      bool success;
+                      if (brand == null) {
+                        success = await adminProvider.createBrand(
+                          name: nameController.text.trim(),
+                          description: descController.text.trim(),
+                          logoFile: selectedImage,
+                        );
+                      } else {
+                        success = await adminProvider.updateBrand(
+                          id: brand.id,
+                          name: nameController.text.trim(),
+                          description: descController.text.trim(),
+                          logoFile: selectedImage,
+                        );
+                      }
+
+                      if (success && mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(brand == null ? 'Brand added' : 'Brand updated'), 
+                            backgroundColor: AppTheme.successColor
+                          ),
+                        );
+                      }
+                    },
+                child: adminProvider.isLoading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-
   void _deleteBrand(Brand brand) {
     showDialog(
       context: context,

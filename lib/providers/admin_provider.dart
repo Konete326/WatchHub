@@ -308,12 +308,28 @@ class AdminProvider with ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    
     try {
+      // 1. Pehle check karein ke kya is naam ka brand list mein maujood hai
+      // Case-insensitive check ke liye .toLowerCase() use kiya hai
+      bool exists = _brands.any((brand) => 
+        brand.name.trim().toLowerCase() == name.trim().toLowerCase()
+      );
+
+      if (exists) {
+        _errorMessage = "Brand with this name already exists!";
+        _isLoading = false;
+        notifyListeners();
+        return false; // Function yahan stop ho jayega
+      }
+
+      // 2. Agar nahi hai, toh service call karein
       await _adminService.createBrand(
         name: name,
         description: description,
         logoFile: logoFile,
       );
+      
       await fetchAllBrands();
       return true;
     } catch (e) {
