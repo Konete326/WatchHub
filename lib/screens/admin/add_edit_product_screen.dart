@@ -164,6 +164,29 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     });
   }
 
+  void _showDuplicateError() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Duplicate Product'),
+          ],
+        ),
+        content: const Text(
+            'A product with this name already exists. Please use a different name.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedBrandId == null) {
@@ -182,6 +205,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final name = _nameController.text.trim();
+
+      // Check for duplicate name
+      // We search for watches with this name.
+      // Since AdminService fetches all watches when searching, we can use it.
+      final result = await _adminService.getAllWatches(search: name);
+      final List<Watch> existingWatches = result['watches'] ?? [];
+
+      final isDuplicate = existingWatches.any((w) =>
+          w.name.toLowerCase() == name.toLowerCase() &&
+          w.id != widget.watch?.id);
+
+      if (isDuplicate) {
+        setState(() => _isLoading = false);
+        _showDuplicateError();
+        return;
+      }
+
       final specifications = <String, dynamic>{};
       if (_movementController.text.isNotEmpty) {
         specifications['movement'] = _movementController.text;
@@ -201,7 +242,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         await _adminService.updateWatch(
           id: widget.watch!.id,
           brandId: _selectedBrandId,
-          name: _nameController.text.trim(),
+          name: name,
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text),
           stock: int.parse(_stockController.text),
@@ -216,7 +257,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         // Create new watch
         await _adminService.createWatch(
           brandId: _selectedBrandId!,
-          name: _nameController.text.trim(),
+          name: name,
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text),
           stock: int.parse(_stockController.text),
