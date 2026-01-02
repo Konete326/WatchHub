@@ -242,10 +242,11 @@ class AdminService {
     );
 
     final docRef = await _firestore.collection('banners').add({
-      'imageUrl': imageUrl,
+      'image': imageUrl, // Changed from 'imageUrl' to 'image' to match HomeBanner model
       'title': title,
       'subtitle': subtitle,
       'link': link,
+      'isActive': true, // Set isActive to true by default
       'createdAt': FieldValue.serverTimestamp(),
     });
     
@@ -256,7 +257,8 @@ class AdminService {
   Future<void> deleteBanner(String id) async {
     final doc = await _firestore.collection('banners').doc(id).get();
     if (doc.exists) {
-      final imageUrl = doc.data()?['imageUrl'];
+      // Check both 'image' and 'imageUrl' for backward compatibility
+      final imageUrl = doc.data()?['image'] ?? doc.data()?['imageUrl'];
       if (imageUrl != null) {
         final publicId = CloudinaryService.extractPublicId(imageUrl);
         if (publicId != null) {
@@ -318,6 +320,18 @@ class AdminService {
         'totalPages': (watches.length / limit).ceil()
       }
     };
+  }
+
+  /// Check if a watch name already exists (case-insensitive)
+  /// Returns true if a watch with the same name exists (excluding the current watch if editing)
+  Future<bool> watchNameExists(String name, {String? excludeWatchId}) async {
+    final snapshot = await _firestore.collection('watches').get();
+    final watches = snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    
+    return watches.any((w) => 
+      w.name.toLowerCase().trim() == name.toLowerCase().trim() &&
+      (excludeWatchId == null || w.id != excludeWatchId)
+    );
   }
 
   Future<Watch> createWatch({

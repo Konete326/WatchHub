@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import '../services/admin_service.dart';
 import '../models/order.dart';
 import '../models/watch.dart';
@@ -113,7 +112,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   Future<bool> createBanner({
-    required File imageFile,
+    required dynamic imageFile, // XFile for web, File for mobile
     String? title,
     String? subtitle,
     String? link,
@@ -253,7 +252,7 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> updatePromotionHighlight({
     required String type,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
     String? title,
     String? subtitle,
     String? backgroundColor,
@@ -303,7 +302,7 @@ class AdminProvider with ChangeNotifier {
   Future<bool> createBrand({
     required String name,
     String? description,
-    File? logoFile,
+    dynamic logoFile, // XFile for web, File for mobile
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -345,7 +344,7 @@ class AdminProvider with ChangeNotifier {
     required String id,
     String? name,
     String? description,
-    File? logoFile,
+    dynamic logoFile, // XFile for web, File for mobile
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -403,7 +402,7 @@ class AdminProvider with ChangeNotifier {
   Future<bool> createCategory({
     required String name,
     String? description,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -429,7 +428,7 @@ class AdminProvider with ChangeNotifier {
     required String id,
     String? name,
     String? description,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
   }) async {
     _isLoading = true;
     _errorMessage = null;

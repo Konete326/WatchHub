@@ -34,9 +34,11 @@ class HomeBanner {
 
   factory HomeBanner.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    // Check both 'image' and 'imageUrl' for backward compatibility
+    final imageUrl = data['image'] ?? data['imageUrl'] ?? '';
     return HomeBanner(
       id: doc.id,
-      image: data['image'] ?? '',
+      image: imageUrl,
       title: data['title'],
       subtitle: data['subtitle'],
       link: data['link'],

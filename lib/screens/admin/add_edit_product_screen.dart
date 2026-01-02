@@ -231,17 +231,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final name = _nameController.text.trim();
 
-      // Check for duplicate name
-      // We search for watches with this name.
-      // Since AdminService fetches all watches when searching, we can use it.
-      final result = await _adminService.getAllWatches(search: name);
-      final List<Watch> existingWatches = result['watches'] ?? [];
+      // Check for duplicate name (case-insensitive, exact match)
+      final nameExists = await _adminService.watchNameExists(
+        name,
+        excludeWatchId: widget.watch?.id,
+      );
 
-      final isDuplicate = existingWatches.any((w) =>
-          w.name.toLowerCase() == name.toLowerCase() &&
-          w.id != widget.watch?.id);
-
-      if (isDuplicate) {
+      if (nameExists) {
         setState(() => _isLoading = false);
         _showDuplicateError();
         return;
