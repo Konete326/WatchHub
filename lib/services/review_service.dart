@@ -1,21 +1,22 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
-import 'package:firebase_storage/firebase_storage.dart';
 import '../models/review.dart';
 import '../models/user.dart';
+import 'cloudinary_service.dart';
 
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String? get uid => _auth.currentUser?.uid;
 
   Future<String> _uploadImage(String reviewId, File file, int index) async {
-    final ref = _storage.ref().child('reviews/$reviewId/image_$index.jpg');
-    final uploadTask = await ref.putFile(file);
-    return await uploadTask.ref.getDownloadURL();
+    return await CloudinaryService.uploadImage(
+      file,
+      folder: 'reviews',
+      publicId: 'reviews/$reviewId/image_$index',
+    );
   }
 
   Future<Map<String, dynamic>> getWatchReviews(

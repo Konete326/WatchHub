@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +41,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<model.Category> _categories = [];
   String? _selectedBrandId;
   String? _selectedCategory;
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = []; // Use XFile for both web and mobile
   List<String> _existingImageUrls = [];
   bool _isLoading = false;
   bool _isLoadingBrands = false;
@@ -135,24 +135,46 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final images = await _imagePicker.pickMultiImage();
       if (images != null && images.isNotEmpty) {
-        setState(() {
-          final remainingSlots =
-              5 - _selectedImages.length - _existingImageUrls.length;
-          if (remainingSlots > 0) {
-            _selectedImages.addAll(
-              images.take(remainingSlots).map((path) => File(path.path)),
-            );
-          } else {
+        final remainingSlots =
+            5 - _selectedImages.length - _existingImageUrls.length;
+        if (remainingSlots > 0) {
+          final newFiles = <XFile>[];
+          for (var xFile in images.take(remainingSlots)) {
+            try {
+              // Verify file is readable by trying to read bytes
+              try {
+                final bytes = await xFile.readAsBytes();
+                if (bytes.isNotEmpty) {
+                  newFiles.add(xFile);
+                }
+              } catch (e) {
+                // If reading fails, skip this file
+                print('Failed to read file ${xFile.path}: $e');
+              }
+            } catch (e) {
+              print('Error processing file ${xFile.path}: $e');
+            }
+          }
+          
+          if (mounted) {
+            setState(() {
+              _selectedImages.addAll(newFiles);
+            });
+          }
+        } else {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Maximum 5 images allowed')),
             );
           }
-        });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -273,11 +295,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
 
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.watch != null
                 ? 'Watch updated successfully'
                 : 'Watch created successfully'),
+            backgroundColor: Colors.green,
           ),
         );
         Navigator.of(context).pop(true);
@@ -291,6 +315,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        print('Error creating/updating watch: $e');
       }
     }
   }
@@ -376,19 +401,27 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: kIsWeb
-                                  ? Image.network(
-                                      file.path,
+                              child: FutureBuilder<Uint8List>(
+                                  future: file.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      );
+                                    }
+                                    return Container(
                                       width: 80,
                                       height: 80,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      file,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    ),
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    );
+                                  },
+                                ),
                             ),
                             Positioned(
                               top: 0,

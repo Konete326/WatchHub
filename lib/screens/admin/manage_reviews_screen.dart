@@ -176,7 +176,7 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
         children: [
           // Filters
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -216,12 +216,13 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
                   children: [
                     // Rating Filter
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<int?>(
                         value: _filterRating,
                         decoration: const InputDecoration(
                           labelText: 'Rating',
                           contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                           isDense: true,
                           border: OutlineInputBorder(),
                         ),
@@ -233,6 +234,7 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
                               (index) => DropdownMenuItem(
                                     value: index + 1,
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         ...List.generate(
                                             index + 1,
@@ -250,15 +252,16 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 3),
                     // Sort
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<String>(
                         value: '${_sortBy}_$_sortOrder',
                         decoration: const InputDecoration(
                           labelText: 'Sort',
                           contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                           isDense: true,
                           border: OutlineInputBorder(),
                         ),
@@ -288,12 +291,25 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // Clear Filters
-                    IconButton(
-                      icon: const Icon(Icons.clear_all),
-                      onPressed: _clearFilters,
-                      tooltip: 'Clear Filters',
+                    const SizedBox(width: 2),
+                    // Clear Filters - Compact button
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _clearFilters,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          child: const Icon(
+                            Icons.clear_all,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
