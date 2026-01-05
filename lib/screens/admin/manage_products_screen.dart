@@ -39,7 +39,15 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     super.dispose();
   }
 
-  Future<void> _loadWatches({int page = 1, String? search}) async {
+  Future<void> _loadWatches({int page = 1, String? search, bool refresh = false}) async {
+    if (refresh) {
+      setState(() {
+        _currentPage = 1;
+        _watches = [];
+      });
+      page = 1;
+    }
+    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -56,11 +64,12 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
       if (mounted) {
         setState(() {
           final watchesData = result['watches'];
-          _watches = watchesData != null && watchesData is List
-              ? (watchesData as List)
-                  .map((json) => Watch.fromJson(json as Map<String, dynamic>))
-                  .toList()
-              : [];
+          if (watchesData != null && watchesData is List) {
+            // getAllWatches returns List<Watch> directly
+            _watches = watchesData.cast<Watch>();
+          } else {
+            _watches = [];
+          }
 
           final pagination = result['pagination'];
           if (pagination != null) {
@@ -76,6 +85,7 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
           _errorMessage = 'Failed to load watches: ${e.toString()}';
           _isLoading = false;
         });
+        print('Error loading watches: $e');
       }
     }
   }
@@ -147,7 +157,8 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                 ),
               );
               if (result == true) {
-                _loadWatches(page: _currentPage, search: _searchQuery);
+                // Refresh the list to show the new/updated watch
+                _loadWatches(page: 1, search: _searchQuery, refresh: true);
               }
             },
             tooltip: 'Add Product',
@@ -163,7 +174,12 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search watches...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    _onSearch(_searchController.text);
+                  },
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -179,6 +195,7 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
               ),
               onSubmitted: _onSearch,
               onChanged: (value) {
+                setState(() {}); // Rebuild to update suffixIcon visibility
                 if (value.isEmpty) {
                   _onSearch('');
                 }

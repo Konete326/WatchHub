@@ -47,8 +47,9 @@ class WatchProvider with ChangeNotifier {
 
     try {
       _featuredWatches = await _watchService.getFeaturedWatches(limit: 10);
+      // Don't set error message if empty - just show empty state in UI
       if (_featuredWatches.isEmpty) {
-        _errorMessage = 'No featured watches available at the moment.';
+        _errorMessage = null; // Clear error, let UI handle empty state
       }
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);

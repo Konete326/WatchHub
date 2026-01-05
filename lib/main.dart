@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 
 import 'providers/auth_provider.dart';
@@ -33,6 +34,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Note: Cloudinary credentials are currently hardcoded in CloudinaryService
+  // TODO: Implement environment variable loading once flutter_dotenv path issue is resolved
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

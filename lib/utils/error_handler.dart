@@ -47,7 +47,27 @@ class FirebaseErrorHandler {
     } else if (e is SocketException) {
       return 'No internet connection. Please check your network settings.';
     } else if (e is Exception) {
-      return e.toString().replaceAll('Exception: ', '');
+      final errorStr = e.toString();
+      // Try to extract a meaningful message
+      if (errorStr.contains('Exception:')) {
+        return errorStr.split('Exception:').last.trim();
+      }
+      if (errorStr.contains('Error:')) {
+        return errorStr.split('Error:').last.trim();
+      }
+      return errorStr.replaceAll('Exception: ', '').replaceAll('Error: ', '');
+    } else if (e is String) {
+      return e;
+    }
+
+    // For any other type, try to convert to string
+    try {
+      final errorStr = e.toString();
+      if (errorStr.isNotEmpty && errorStr != 'null') {
+        return errorStr;
+      }
+    } catch (_) {
+      // If conversion fails, use default
     }
 
     return 'An unexpected error occurred. Please try again.';

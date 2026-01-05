@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -41,11 +41,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<model.Category> _categories = [];
   String? _selectedBrandId;
   String? _selectedCategory;
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = []; // Use XFile for both web and mobile
   List<String> _existingImageUrls = [];
   bool _isLoading = false;
   bool _isLoadingBrands = false;
   bool _isLoadingCategories = false;
+  bool _hasBeltOption = false; // Whether belt option is available
+  bool _hasChainOption = false; // Whether chain option is available
 
   @override
   void initState() {
@@ -74,6 +76,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (widget.watch!.discountPercentage != null) {
         _discountController.text = widget.watch!.discountPercentage.toString();
       }
+      _hasBeltOption = widget.watch!.hasBeltOption;
+      _hasChainOption = widget.watch!.hasChainOption;
     }
   }
 
@@ -135,24 +139,46 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final images = await _imagePicker.pickMultiImage();
       if (images != null && images.isNotEmpty) {
-        setState(() {
-          final remainingSlots =
-              5 - _selectedImages.length - _existingImageUrls.length;
-          if (remainingSlots > 0) {
-            _selectedImages.addAll(
-              images.take(remainingSlots).map((path) => File(path.path)),
-            );
-          } else {
+        final remainingSlots =
+            5 - _selectedImages.length - _existingImageUrls.length;
+        if (remainingSlots > 0) {
+          final newFiles = <XFile>[];
+          for (var xFile in images.take(remainingSlots)) {
+            try {
+              // Verify file is readable by trying to read bytes
+              try {
+                final bytes = await xFile.readAsBytes();
+                if (bytes.isNotEmpty) {
+                  newFiles.add(xFile);
+                }
+              } catch (e) {
+                // If reading fails, skip this file
+                print('Failed to read file ${xFile.path}: $e');
+              }
+            } catch (e) {
+              print('Error processing file ${xFile.path}: $e');
+            }
+          }
+          
+          if (mounted) {
+            setState(() {
+              _selectedImages.addAll(newFiles);
+            });
+          }
+        } else {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Maximum 5 images allowed')),
             );
           }
-        });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -209,17 +235,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final name = _nameController.text.trim();
 
-      // Check for duplicate name
-      // We search for watches with this name.
-      // Since AdminService fetches all watches when searching, we can use it.
-      final result = await _adminService.getAllWatches(search: name);
-      final List<Watch> existingWatches = result['watches'] ?? [];
+      // Check for duplicate name (case-insensitive, exact match)
+      final nameExists = await _adminService.watchNameExists(
+        name,
+        excludeWatchId: widget.watch?.id,
+      );
 
-      final isDuplicate = existingWatches.any((w) =>
-          w.name.toLowerCase() == name.toLowerCase() &&
-          w.id != widget.watch?.id);
-
-      if (isDuplicate) {
+      if (nameExists) {
         setState(() => _isLoading = false);
         _showDuplicateError();
         return;
@@ -254,6 +276,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ? int.tryParse(_discountController.text)
               : null,
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
         );
       } else {
         // Create new watch
@@ -269,15 +293,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ? int.tryParse(_discountController.text)
               : null,
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
         );
       }
 
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.watch != null
                 ? 'Watch updated successfully'
                 : 'Watch created successfully'),
+            backgroundColor: Colors.green,
           ),
         );
         Navigator.of(context).pop(true);
@@ -291,9 +319,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        print('Error creating/updating watch: $e');
       }
     }
   }
+
+  // Helper method to build belt color picker with full color palette
 
   @override
   Widget build(BuildContext context) {
@@ -376,19 +407,27 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: kIsWeb
-                                  ? Image.network(
-                                      file.path,
+                              child: FutureBuilder<Uint8List>(
+                                  future: file.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      );
+                                    }
+                                    return Container(
                                       width: 80,
                                       height: 80,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      file,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    ),
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    );
+                                  },
+                                ),
                             ),
                             Positioned(
                               top: 0,
@@ -488,8 +527,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           validator: (value) {
                             if (value?.isEmpty ?? true)
                               return 'Please enter a price';
-                            if (double.tryParse(value!) == null)
+                            final price = double.tryParse(value!);
+                            if (price == null)
                               return 'Invalid price';
+                            if (price < 0)
+                              return 'Price cannot be negative';
                             return null;
                           },
                         ),
@@ -555,6 +597,48 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         setState(() => _selectedCategory = value),
                     validator: (value) =>
                         value == null ? 'Please select a category' : null,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Strap Options Availability
+                  const Text(
+                    'Strap Options Available',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Belt Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose belt with color options',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasBeltOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasBeltOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Chain Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose chain with color options (Black, Silver, Gold)',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasChainOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasChainOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 24),
 

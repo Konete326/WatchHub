@@ -71,10 +71,9 @@ class CartProvider with ChangeNotifier {
 
     try {
       final result = await _cartService.getCart();
-      _cartItems = result as List<CartItem>;
-      _subtotal = _cartItems.fold(0,
-          (sum, item) => sum + (item.watch?.currentPrice ?? 0) * item.quantity);
-      _itemCount = _cartItems.fold(0, (sum, item) => sum + item.quantity);
+      _cartItems = result['cartItems'] as List<CartItem>;
+      _subtotal = result['subtotal'] as double;
+      _itemCount = result['itemCount'] as int;
 
       // Fetch settings for delivery calculation
       if (_settings == null) {

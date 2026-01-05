@@ -10,12 +10,14 @@
         "cached_network_image",
         "carousel_slider",
         "cloud_firestore",
+        "crypto",
         "cupertino_icons",
         "firebase_auth",
         "firebase_core",
         "firebase_messaging",
         "firebase_storage",
         "flutter",
+        "flutter_dotenv",
         "flutter_local_notifications",
         "flutter_rating_bar",
         "flutter_stripe",
@@ -57,6 +59,20 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
+      ]
+    },
+    {
+      "name": "flutter_dotenv",
+      "version": "5.2.1",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -347,6 +363,13 @@
       ]
     },
     {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
       "name": "web",
       "version": "1.1.1",
       "dependencies": []
@@ -373,13 +396,6 @@
       "name": "fixnum",
       "version": "1.1.1",
       "dependencies": []
-    },
-    {
-      "name": "crypto",
-      "version": "3.0.7",
-      "dependencies": [
-        "typed_data"
-      ]
     },
     {
       "name": "image_picker_windows",
@@ -775,13 +791,6 @@
       "dependencies": [
         "source_span",
         "string_scanner"
-      ]
-    },
-    {
-      "name": "typed_data",
-      "version": "1.4.0",
-      "dependencies": [
-        "collection"
       ]
     },
     {
