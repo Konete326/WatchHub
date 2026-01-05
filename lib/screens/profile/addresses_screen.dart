@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 import '../../widgets/shimmer_loading.dart';
@@ -30,10 +32,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AddAddressScreen(),
-                ),
+              AnimationUtils.pushSharedAxis(
+                context,
+                const AddAddressScreen(),
+                transitionType: SharedAxisTransitionType.vertical,
               );
             },
           ),
@@ -108,11 +110,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     ],
                     onSelected: (value) async {
                       if (value == 'edit') {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AddAddressScreen(address: address),
-                          ),
+                        AnimationUtils.pushSharedAxis(
+                          context,
+                          AddAddressScreen(address: address),
+                          transitionType: SharedAxisTransitionType.vertical,
                         );
                       } else if (value == 'delete') {
                         final confirm = await showDialog<bool>(

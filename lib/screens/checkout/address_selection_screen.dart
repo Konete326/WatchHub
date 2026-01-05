@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 import '../profile/add_address_screen.dart';
@@ -131,12 +133,12 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                       ElevatedButton(
                         onPressed: _selectedAddressId != null
                             ? () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => PaymentScreen(
-                                      addressId: _selectedAddressId!,
-                                    ),
+                                AnimationUtils.pushSharedAxis(
+                                  context,
+                                  PaymentScreen(
+                                    addressId: _selectedAddressId!,
                                   ),
+                                  transitionType: SharedAxisTransitionType.horizontal,
                                 );
                               }
                             : null,

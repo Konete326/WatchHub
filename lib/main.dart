@@ -17,6 +17,7 @@ import 'providers/admin_provider.dart';
 import 'providers/settings_provider.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
+import 'utils/animation_utils.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -82,6 +83,24 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const MainNavigation(),
           '/admin': (context) => const AdminDashboardScreen(),
+        },
+        onGenerateRoute: (settings) {
+          // Use fade through for route transitions (unrelated screens)
+          Widget page;
+          switch (settings.name) {
+            case '/login':
+              page = const LoginScreen();
+              break;
+            case '/home':
+              page = const MainNavigation();
+              break;
+            case '/admin':
+              page = const AdminDashboardScreen();
+              break;
+            default:
+              page = const SplashScreen();
+          }
+          return AnimationUtils.fadeThroughRoute(page);
         },
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
@@ -184,10 +186,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.person,
                 title: 'Edit Profile',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EditProfileScreen(),
-                    ),
+                  AnimationUtils.pushSharedAxis(
+                    context,
+                    const EditProfileScreen(),
+                    transitionType: SharedAxisTransitionType.vertical,
                   );
                 },
               ),
@@ -195,10 +197,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.location_on,
                 title: 'My Addresses',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AddressesScreen(),
-                    ),
+                  AnimationUtils.pushSharedAxis(
+                    context,
+                    const AddressesScreen(),
+                    transitionType: SharedAxisTransitionType.vertical,
                   );
                 },
               ),
@@ -206,10 +208,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.receipt_long,
                 title: 'Order History',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const OrderHistoryScreen(),
-                    ),
+                  AnimationUtils.pushSharedAxis(
+                    context,
+                    const OrderHistoryScreen(),
+                    transitionType: SharedAxisTransitionType.vertical,
                   );
                 },
               ),
@@ -217,10 +219,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.support_agent,
                 title: 'Customer Support',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SupportScreen(),
-                    ),
+                  AnimationUtils.pushSharedAxis(
+                    context,
+                    const SupportScreen(),
+                    transitionType: SharedAxisTransitionType.vertical,
                   );
                 },
               ),
@@ -229,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Logout',
                 iconColor: AppTheme.errorColor,
                 onTap: () async {
-                  final confirm = await showDialog<bool>(
+                  final confirm = await AnimationUtils.showAnimatedDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Logout'),

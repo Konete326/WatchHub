@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/watch_provider.dart';
 import '../../widgets/watch_card.dart';
+import '../../utils/animation_utils.dart';
 import '../product/product_detail_screen.dart';
 import '../../utils/theme.dart';
 import '../../widgets/shimmer_loading.dart';
@@ -366,11 +367,9 @@ class _SearchScreenState extends State<SearchScreen> {
               return WatchCard(
                 watch: watch,
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ProductDetailScreen(watchId: watch.id),
-                    ),
+                  AnimationUtils.pushContainerTransform(
+                    context,
+                    ProductDetailScreen(watchId: watch.id),
                   );
                 },
               );

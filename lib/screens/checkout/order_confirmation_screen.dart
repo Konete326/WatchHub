@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import '../../utils/theme.dart';
 import '../orders/order_detail_screen.dart';
 
@@ -51,10 +53,10 @@ class OrderConfirmationScreen extends StatelessWidget {
               const SizedBox(height: 48),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => OrderDetailScreen(orderId: orderId),
-                    ),
+                  AnimationUtils.pushSharedAxis(
+                    context,
+                    OrderDetailScreen(orderId: orderId),
+                    transitionType: SharedAxisTransitionType.horizontal,
                   );
                 },
                 style: ElevatedButton.styleFrom(

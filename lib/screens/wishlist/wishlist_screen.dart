@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../utils/animation_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/wishlist_provider.dart';
@@ -117,11 +118,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         side: BorderSide(color: Colors.grey.shade100)),
                     child: InkWell(
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ProductDetailScreen(watchId: watch.id),
-                          ),
+                        AnimationUtils.pushContainerTransform(
+                          context,
+                          ProductDetailScreen(watchId: watch.id),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),

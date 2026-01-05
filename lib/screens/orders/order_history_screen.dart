@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import 'package:intl/intl.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -77,11 +79,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              OrderDetailScreen(orderId: order.id),
-                        ),
+                      AnimationUtils.pushSharedAxis(
+                        context,
+                        OrderDetailScreen(orderId: order.id),
+                        transitionType: SharedAxisTransitionType.horizontal,
                       );
                     },
                     child: Padding(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
+import '../../utils/animation_utils.dart';
 import '../../utils/image_utils.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../checkout/address_selection_screen.dart';
@@ -40,7 +42,7 @@ class _CartScreenState extends State<CartScreen> {
                     IconButton(
                       icon: const Icon(Icons.delete_sweep, color: Colors.white),
                       onPressed: () async {
-                        final confirm = await showDialog<bool>(
+                        final confirm = await AnimationUtils.showAnimatedDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Delete Selected'),
@@ -472,10 +474,10 @@ class _CartScreenState extends State<CartScreen> {
                       ElevatedButton(
                         onPressed: cartProvider.hasSelection
                             ? () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const AddressSelectionScreen()),
+                                AnimationUtils.pushSharedAxis(
+                                  context,
+                                  const AddressSelectionScreen(),
+                                  transitionType: SharedAxisTransitionType.horizontal,
                                 );
                               }
                             : null,

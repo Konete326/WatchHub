@@ -157,17 +157,18 @@ class WatchCard extends StatelessWidget {
             ),
 
             // Watch Details
-            Expanded(
+            Flexible(
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (watch.brand != null)
                       Text(
                         watch.brand!.name,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           color: AppTheme.textSecondaryColor,
                           fontWeight: FontWeight.w500,
                         ),
@@ -175,40 +176,47 @@ class WatchCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     const SizedBox(height: 2),
-                    Text(
-                      watch.name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
+                    Flexible(
+                      child: Text(
+                        watch.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 4),
                     Consumer<SettingsProvider>(
                         builder: (context, settings, child) {
                       return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (watch.isOnSale)
-                                  Text(
-                                    settings.formatPrice(watch.price),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey,
-                                      decoration: TextDecoration.lineThrough,
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: Text(
+                                      settings.formatPrice(watch.price),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 Text(
                                   settings.formatPrice(watch.currentPrice),
                                   style: const TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: AppTheme.primaryColor,
                                   ),
@@ -218,22 +226,24 @@ class WatchCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 4),
                           if (watch.averageRating != null &&
                               watch.averageRating! > 0)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star,
-                                    size: 12, color: Colors.amber),
-                                const SizedBox(width: 2),
-                                Text(
-                                  watch.averageRating!.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star,
+                                      size: 11, color: Colors.amber),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    watch.averageRating!.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
                             ),
                         ],
                       );

@@ -7,9 +7,11 @@
       "name": "watchhub",
       "version": "1.0.0+1",
       "dependencies": [
+        "animations",
         "cached_network_image",
         "carousel_slider",
         "cloud_firestore",
+        "convex_bottom_bar",
         "crypto",
         "cupertino_icons",
         "firebase_auth",
@@ -17,14 +19,17 @@
         "firebase_messaging",
         "firebase_storage",
         "flutter",
+        "flutter_animate",
         "flutter_dotenv",
         "flutter_local_notifications",
         "flutter_rating_bar",
+        "flutter_staggered_animations",
         "flutter_stripe",
         "google_sign_in",
         "http",
         "image_picker",
         "intl",
+        "lottie",
         "path",
         "photo_view",
         "provider",
@@ -131,6 +136,46 @@
         "stripe_android",
         "stripe_ios",
         "stripe_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_staggered_animations",
+      "version": "1.1.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "lottie",
+      "version": "3.3.2",
+      "dependencies": [
+        "archive",
+        "flutter",
+        "http",
+        "path",
+        "vector_math"
+      ]
+    },
+    {
+      "name": "flutter_animate",
+      "version": "4.5.2",
+      "dependencies": [
+        "flutter",
+        "flutter_shaders"
+      ]
+    },
+    {
+      "name": "animations",
+      "version": "2.1.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "convex_bottom_bar",
+      "version": "3.2.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -488,6 +533,23 @@
       "version": "10.2.1",
       "dependencies": [
         "flutter"
+      ]
+    },
+    {
+      "name": "archive",
+      "version": "4.0.7",
+      "dependencies": [
+        "crypto",
+        "path",
+        "posix"
+      ]
+    },
+    {
+      "name": "flutter_shaders",
+      "version": "0.1.3",
+      "dependencies": [
+        "flutter",
+        "vector_math"
       ]
     },
     {
@@ -878,6 +940,15 @@
         "collection",
         "json_annotation",
         "meta"
+      ]
+    },
+    {
+      "name": "posix",
+      "version": "6.0.3",
+      "dependencies": [
+        "ffi",
+        "meta",
+        "path"
       ]
     },
     {

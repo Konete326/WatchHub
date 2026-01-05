@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
+import '../../utils/animation_utils.dart';
 import '../../utils/theme.dart';
 import 'faq_screen.dart';
 import 'tickets_screen.dart';
@@ -19,8 +21,10 @@ class SupportScreen extends StatelessWidget {
           Card(
             child: InkWell(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const FAQScreen()),
+                AnimationUtils.pushSharedAxis(
+                  context,
+                  const FAQScreen(),
+                  transitionType: SharedAxisTransitionType.vertical,
                 );
               },
               child: const Padding(
@@ -55,8 +59,10 @@ class SupportScreen extends StatelessWidget {
           Card(
             child: InkWell(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const ContactScreen()),
+                AnimationUtils.pushSharedAxis(
+                  context,
+                  const ContactScreen(),
+                  transitionType: SharedAxisTransitionType.vertical,
                 );
               },
               child: const Padding(
@@ -91,8 +97,10 @@ class SupportScreen extends StatelessWidget {
           Card(
             child: InkWell(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const TicketsScreen()),
+                AnimationUtils.pushSharedAxis(
+                  context,
+                  const TicketsScreen(),
+                  transitionType: SharedAxisTransitionType.vertical,
                 );
               },
               child: const Padding(

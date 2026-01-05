@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import '../providers/watch_provider.dart';
 import '../models/review.dart';
 import '../utils/theme.dart';
+import '../utils/animation_utils.dart';
 import 'review_dialog.dart';
 import 'shimmer_loading.dart';
 
@@ -94,7 +95,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   if (currentUserId != null)
                     TextButton.icon(
                       onPressed: () async {
-                        final result = await showDialog(
+                        final result = await AnimationUtils.showAnimatedDialog(
                           context: context,
                           builder: (context) => ReviewDialog(
                             watchId: widget.watchId,
@@ -429,7 +430,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     ],
                     onSelected: (value) async {
                       if (value == 'edit') {
-                        final result = await showDialog(
+                        final result = await AnimationUtils.showAnimatedDialog(
                           context: context,
                           builder: (context) => ReviewDialog(
                             watchId: widget.watchId,
@@ -444,7 +445,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                           }
                         }
                       } else if (value == 'delete') {
-                        final confirmed = await showDialog<bool>(
+                        final confirmed = await AnimationUtils.showAnimatedDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Delete Review'),
