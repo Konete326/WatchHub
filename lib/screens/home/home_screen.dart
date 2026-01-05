@@ -82,7 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-            if (watchProvider.errorMessage != null) {
+            // Only show error screen if there's a real error AND no data at all
+            // Otherwise, show content with empty states
+            if (watchProvider.errorMessage != null &&
+                watchProvider.featuredWatches.isEmpty &&
+                watchProvider.banners.isEmpty &&
+                !watchProvider.isLoading) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(watchProvider.errorMessage!),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => watchProvider.fetchFeaturedWatches(),
+                      onPressed: () {
+                        watchProvider.clearError();
+                        watchProvider.fetchFeaturedWatches();
+                        watchProvider.fetchBanners();
+                      },
                       child: const Text('Retry'),
                     ),
                   ],

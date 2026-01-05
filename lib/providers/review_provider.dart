@@ -57,6 +57,8 @@ class ReviewProvider with ChangeNotifier {
       _currentPage++;
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
+      print('Error fetching reviews: $e');
+      print('Stack trace: ${StackTrace.current}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -71,8 +73,14 @@ class ReviewProvider with ChangeNotifier {
     try {
       final newReview =
           await _reviewService.createReview(review, images: images);
+      
+      // Add the new review to the list immediately
       _reviews.insert(0, newReview);
+      notifyListeners();
+      
       // Refresh reviews to get updated rating distribution
+      // Add a small delay to ensure Firestore has indexed the new review for queries
+      await Future.delayed(const Duration(milliseconds: 300));
       await fetchWatchReviews(review.watchId, refresh: true);
       _isLoading = false;
       notifyListeners();

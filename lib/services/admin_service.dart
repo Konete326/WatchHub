@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
-import 'package:firebase_storage/firebase_storage.dart';
 import '../models/watch.dart';
 import '../models/order.dart';
 import '../models/user.dart';
@@ -13,10 +11,10 @@ import '../models/coupon.dart';
 import '../models/promotion_banner.dart';
 import '../models/brand.dart';
 import '../models/category.dart';
+import 'cloudinary_service.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Brand Management
   Future<List<Brand>> getAllBrands() async {
@@ -27,13 +25,11 @@ class AdminService {
   Future<Brand> createBrand({
     required String name,
     String? description,
-    File? logoFile,
+    dynamic logoFile, // XFile for web, File for mobile
   }) async {
     String? logoUrl;
     if (logoFile != null) {
-      final ref = _storage.ref().child('brands/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(logoFile);
-      logoUrl = await uploadTask.ref.getDownloadURL();
+      logoUrl = await CloudinaryService.uploadImage(logoFile, folder: 'brands');
     }
 
     final docRef = await _firestore.collection('brands').add({
@@ -51,16 +47,18 @@ class AdminService {
     required String id,
     String? name,
     String? description,
-    File? logoFile,
+    dynamic logoFile, // XFile for web, File for mobile
   }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
     if (description != null) updates['description'] = description;
     
     if (logoFile != null) {
-      final ref = _storage.ref().child('brands/${id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(logoFile);
-      updates['logoUrl'] = await uploadTask.ref.getDownloadURL();
+      updates['logoUrl'] = await CloudinaryService.uploadImage(
+        logoFile,
+        folder: 'brands',
+        publicId: 'brands/$id',
+      );
     }
 
     await _firestore.collection('brands').doc(id).update(updates);
@@ -73,9 +71,10 @@ class AdminService {
     if (doc.exists) {
       final logoUrl = doc.data()?['logoUrl'];
       if (logoUrl != null) {
-        try {
-          await _storage.refFromURL(logoUrl).delete();
-        } catch (e) {}
+        final publicId = CloudinaryService.extractPublicId(logoUrl);
+        if (publicId != null) {
+          await CloudinaryService.deleteImage(publicId);
+        }
       }
       await doc.reference.delete();
     }
@@ -90,13 +89,11 @@ class AdminService {
   Future<Category> createCategory({
     required String name,
     String? description,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
   }) async {
     String? imageUrl;
     if (imageFile != null) {
-      final ref = _storage.ref().child('categories/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      imageUrl = await uploadTask.ref.getDownloadURL();
+      imageUrl = await CloudinaryService.uploadImage(imageFile, folder: 'categories');
     }
 
     final docRef = await _firestore.collection('categories').add({
@@ -114,16 +111,18 @@ class AdminService {
     required String id,
     String? name,
     String? description,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
   }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
     if (description != null) updates['description'] = description;
     
     if (imageFile != null) {
-      final ref = _storage.ref().child('categories/${id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      updates['imageUrl'] = await uploadTask.ref.getDownloadURL();
+      updates['imageUrl'] = await CloudinaryService.uploadImage(
+        imageFile,
+        folder: 'categories',
+        publicId: 'categories/$id',
+      );
     }
 
     await _firestore.collection('categories').doc(id).update(updates);
@@ -136,9 +135,10 @@ class AdminService {
     if (doc.exists) {
       final imageUrl = doc.data()?['imageUrl'];
       if (imageUrl != null) {
-        try {
-          await _storage.refFromURL(imageUrl).delete();
-        } catch (e) {}
+        final publicId = CloudinaryService.extractPublicId(imageUrl);
+        if (publicId != null) {
+          await CloudinaryService.deleteImage(publicId);
+        }
       }
       await doc.reference.delete();
     }
@@ -185,7 +185,7 @@ class AdminService {
 
   Future<PromotionBanner> updatePromotionHighlight({
     required String type,
-    File? imageFile,
+    dynamic imageFile, // XFile for web, File for mobile
     String? title,
     String? subtitle,
     String? backgroundColor,
@@ -195,9 +195,11 @@ class AdminService {
   }) async {
     String? imageUrl;
     if (type == 'image' && imageFile != null) {
-      final ref = _storage.ref().child('promotions/highlight.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      imageUrl = await uploadTask.ref.getDownloadURL();
+      imageUrl = await CloudinaryService.uploadImage(
+        imageFile,
+        folder: 'promotions',
+        publicId: 'promotions/highlight',
+      );
     } else {
       final oldDoc = await _firestore.collection('settings').doc('promotion_highlight').get();
       if (oldDoc.exists && type == 'image') {
@@ -229,20 +231,22 @@ class AdminService {
   }
 
   Future<HomeBanner> createBanner({
-    required File imageFile,
+    required dynamic imageFile, // XFile for web, File for mobile
     String? title,
     String? subtitle,
     String? link,
   }) async {
-    final ref = _storage.ref().child('banners/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    final uploadTask = await ref.putFile(imageFile);
-    final imageUrl = await uploadTask.ref.getDownloadURL();
+    final imageUrl = await CloudinaryService.uploadImage(
+      imageFile,
+      folder: 'banners',
+    );
 
     final docRef = await _firestore.collection('banners').add({
-      'imageUrl': imageUrl,
+      'image': imageUrl, // Changed from 'imageUrl' to 'image' to match HomeBanner model
       'title': title,
       'subtitle': subtitle,
       'link': link,
+      'isActive': true, // Set isActive to true by default
       'createdAt': FieldValue.serverTimestamp(),
     });
     
@@ -253,9 +257,13 @@ class AdminService {
   Future<void> deleteBanner(String id) async {
     final doc = await _firestore.collection('banners').doc(id).get();
     if (doc.exists) {
-      final imageUrl = doc.data()?['imageUrl'];
+      // Check both 'image' and 'imageUrl' for backward compatibility
+      final imageUrl = doc.data()?['image'] ?? doc.data()?['imageUrl'];
       if (imageUrl != null) {
-        await _storage.refFromURL(imageUrl).delete();
+        final publicId = CloudinaryService.extractPublicId(imageUrl);
+        if (publicId != null) {
+          await CloudinaryService.deleteImage(publicId);
+        }
       }
       await doc.reference.delete();
     }
@@ -278,7 +286,7 @@ class AdminService {
     return {
       'totalUsers': usersCount,
       'totalOrders': ordersCount,
-      'totalProducts': watchesCount,
+      'totalWatches': watchesCount,
       'totalRevenue': totalRevenue,
     };
   }
@@ -314,6 +322,18 @@ class AdminService {
     };
   }
 
+  /// Check if a watch name already exists (case-insensitive)
+  /// Returns true if a watch with the same name exists (excluding the current watch if editing)
+  Future<bool> watchNameExists(String name, {String? excludeWatchId}) async {
+    final snapshot = await _firestore.collection('watches').get();
+    final watches = snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    
+    return watches.any((w) => 
+      w.name.toLowerCase().trim() == name.toLowerCase().trim() &&
+      (excludeWatchId == null || w.id != excludeWatchId)
+    );
+  }
+
   Future<Watch> createWatch({
     required String brandId,
     required String name,
@@ -323,14 +343,18 @@ class AdminService {
     required String category,
     Map<String, dynamic>? specifications,
     int? discountPercentage,
-    List<File>? imageFiles,
+    List<dynamic>? imageFiles, // XFile for web, File for mobile
+    bool hasBeltOption = false,
+    bool hasChainOption = false,
   }) async {
     final imageUrls = <String>[];
-    if (imageFiles != null) {
-      for (var file in imageFiles) {
-        final ref = _storage.ref().child('watches/${DateTime.now().millisecondsSinceEpoch}_${imageFiles.indexOf(file)}.jpg');
-        final uploadTask = await ref.putFile(file);
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
+    if (imageFiles != null && imageFiles.isNotEmpty) {
+      try {
+        imageUrls.addAll(await CloudinaryService.uploadImages(imageFiles, folder: 'watches'));
+      } catch (e) {
+        print('Error uploading images: $e');
+        // Continue with watch creation even if image upload fails
+        // Images will be empty array
       }
     }
 
@@ -343,6 +367,8 @@ class AdminService {
       'category': category,
       'specifications': specifications,
       'discountPercentage': discountPercentage,
+      'hasBeltOption': hasBeltOption,
+      'hasChainOption': hasChainOption,
       'images': imageUrls,
       'popularity': 0,
       'reviewCount': 0,
@@ -351,6 +377,9 @@ class AdminService {
     });
 
     final doc = await docRef.get();
+    if (!doc.exists) {
+      throw Exception('Failed to create watch - document not found after creation');
+    }
     return Watch.fromFirestore(doc);
   }
 
@@ -364,7 +393,9 @@ class AdminService {
     String? category,
     Map<String, dynamic>? specifications,
     int? discountPercentage,
-    List<File>? imageFiles,
+    List<dynamic>? imageFiles, // XFile for web, File for mobile
+    bool? hasBeltOption,
+    bool? hasChainOption,
   }) async {
     final updates = <String, dynamic>{};
     if (brandId != null) updates['brandId'] = brandId;
@@ -375,14 +406,11 @@ class AdminService {
     if (category != null) updates['category'] = category;
     if (specifications != null) updates['specifications'] = specifications;
     if (discountPercentage != null) updates['discountPercentage'] = discountPercentage;
+    if (hasBeltOption != null) updates['hasBeltOption'] = hasBeltOption;
+    if (hasChainOption != null) updates['hasChainOption'] = hasChainOption;
 
     if (imageFiles != null && imageFiles.isNotEmpty) {
-      final imageUrls = <String>[];
-      for (var file in imageFiles) {
-        final ref = _storage.ref().child('watches/${id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-        final uploadTask = await ref.putFile(file);
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
-      }
+      final imageUrls = await CloudinaryService.uploadImages(imageFiles, folder: 'watches');
       updates['images'] = FieldValue.arrayUnion(imageUrls);
     }
 
@@ -396,10 +424,9 @@ class AdminService {
     if (doc.exists) {
       final images = List<String>.from(doc.data()?['images'] ?? []);
       for (var url in images) {
-        try {
-          await _storage.refFromURL(url).delete();
-        } catch (e) {
-          // Ignore if file not found
+        final publicId = CloudinaryService.extractPublicId(url);
+        if (publicId != null) {
+          await CloudinaryService.deleteImage(publicId);
         }
       }
       await doc.reference.delete();

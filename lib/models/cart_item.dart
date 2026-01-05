@@ -8,6 +8,8 @@ class CartItem {
   final int quantity;
   final DateTime createdAt;
   final Watch? watch;
+  final String? strapType; // 'belt' or 'chain' (selected by user)
+  final String? strapColor; // Color in hex format (selected by user)
 
   CartItem({
     required this.id,
@@ -16,6 +18,8 @@ class CartItem {
     required this.quantity,
     required this.createdAt,
     this.watch,
+    this.strapType,
+    this.strapColor,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,8 @@ class CartItem {
               : DateTime.parse(json['createdAt'] as String))
           : DateTime.now(),
       watch: json['watch'] != null ? Watch.fromJson(json['watch'] as Map<String, dynamic>) : null,
+      strapType: json['strapType'] as String?,
+      strapColor: json['strapColor'] as String?,
     );
   }
 
@@ -40,6 +46,8 @@ class CartItem {
       userId: data['userId'] ?? '',
       watchId: data['watchId'] ?? '',
       quantity: data['quantity'] ?? 1,
+      strapType: data['strapType'] as String?,
+      strapColor: data['strapColor'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -49,6 +57,8 @@ class CartItem {
       'userId': userId,
       'watchId': watchId,
       'quantity': quantity,
+      'strapType': strapType,
+      'strapColor': strapColor,
       'createdAt': createdAt,
     };
   }

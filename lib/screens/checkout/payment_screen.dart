@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:watchhub/models/coupon.dart';
+import '../../models/watch.dart';
+import '../../models/cart_item.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -26,6 +28,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final _couponController = TextEditingController();
   Coupon? _appliedCoupon;
   String _paymentMethod = 'card'; // 'card' or 'cod'
+  // Map of cartItemId -> {strapType, strapColor}
+  final Map<String, Map<String, String?>> _strapSelections = {};
 
   @override
   void dispose() {
@@ -148,6 +152,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         cartItemIds: cartProvider.selectedItemIds.toList(),
         paymentMethod: _paymentMethod,
         couponId: _appliedCoupon?.id,
+        strapSelections: _strapSelections,
       );
 
       if (order == null) {
@@ -202,6 +207,325 @@ class _PaymentScreenState extends State<PaymentScreen> {
           _isProcessing = false;
         });
       }
+    }
+  }
+
+  Widget _buildStrapSelectionSection(CartProvider cartProvider) {
+    // Get watches with strap options
+    final watchesWithStrapOptions = cartProvider.cartItems
+        .where((item) => 
+            item.watch != null && 
+            (item.watch!.hasBeltOption || item.watch!.hasChainOption) &&
+            cartProvider.selectedItemIds.contains(item.id))
+        .toList();
+
+    if (watchesWithStrapOptions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Strap Options',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Please select strap type and color for each watch:',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...watchesWithStrapOptions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final watch = item.watch!;
+          final cartItemId = item.id;
+          
+          // Initialize selection if not exists
+          if (!_strapSelections.containsKey(cartItemId)) {
+            _strapSelections[cartItemId] = {'strapType': null, 'strapColor': null};
+          }
+          
+          return _buildWatchStrapSelector(
+            watch: watch,
+            cartItemId: cartItemId,
+            item: item,
+            index: index + 1,
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildWatchStrapSelector({
+    required Watch watch,
+    required String cartItemId,
+    required CartItem item,
+    required int index,
+  }) {
+    final currentSelection = _strapSelections[cartItemId]!;
+    final selectedType = currentSelection['strapType'];
+    final selectedColor = currentSelection['strapColor'];
+
+    return material.Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Watch Header with Image and Details
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Watch Image
+                if (watch.images.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      watch.images.first,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.watch, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                if (watch.images.isNotEmpty) const SizedBox(width: 12),
+                // Watch Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Watch Number Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Watch #$index',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Brand Name
+                      if (watch.brand != null)
+                        Text(
+                          watch.brand!.name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      // Watch Name
+                      Text(
+                        watch.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+            
+            // Strap Type Selection
+            if (watch.hasBeltOption || watch.hasChainOption) ...[
+              const Text(
+                'Select Strap Type:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: [
+                  if (watch.hasBeltOption)
+                    const ButtonSegment(value: 'belt', label: Text('Belt')),
+                  if (watch.hasChainOption)
+                    const ButtonSegment(value: 'chain', label: Text('Chain')),
+                ],
+                selected: selectedType != null ? {selectedType} : <String>{},
+                emptySelectionAllowed: true,
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() {
+                    _strapSelections[cartItemId] = {
+                      'strapType': newSelection.isNotEmpty ? newSelection.first : null,
+                      'strapColor': null, // Reset color when type changes
+                    };
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Color Selection
+            if (selectedType != null) ...[
+              if (selectedType == 'belt')
+                _buildBeltColorPicker(watch, cartItemId, selectedColor)
+              else if (selectedType == 'chain')
+                _buildChainColorSelector(watch, cartItemId, selectedColor),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBeltColorPicker(Watch watch, String cartItemId, String? selectedColor) {
+    final colors = [
+      {'name': 'Black', 'color': Colors.black, 'hex': '#000000'},
+      {'name': 'White', 'color': Colors.white, 'hex': '#FFFFFF'},
+      {'name': 'Brown', 'color': Colors.brown, 'hex': '#795548'},
+      {'name': 'Dark Brown', 'color': Colors.brown[800]!, 'hex': '#3E2723'},
+      {'name': 'Tan', 'color': const Color(0xFFD2B48C), 'hex': '#D2B48C'},
+      {'name': 'Red', 'color': Colors.red, 'hex': '#F44336'},
+      {'name': 'Blue', 'color': Colors.blue, 'hex': '#2196F3'},
+      {'name': 'Green', 'color': Colors.green, 'hex': '#4CAF50'},
+      {'name': 'Gray', 'color': Colors.grey, 'hex': '#9E9E9E'},
+      {'name': 'Navy', 'color': Colors.indigo[900]!, 'hex': '#1A237E'},
+      {'name': 'Beige', 'color': const Color(0xFFF5F5DC), 'hex': '#F5F5DC'},
+      {'name': 'Burgundy', 'color': const Color(0xFF800020), 'hex': '#800020'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Belt Color:',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: colors.map((colorData) {
+            final isSelected = selectedColor == colorData['hex'];
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _strapSelections[cartItemId]!['strapColor'] = colorData['hex'] as String;
+                });
+              },
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: colorData['color'] as Color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? Colors.blue : Colors.grey.shade300,
+                    width: isSelected ? 3 : 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 24)
+                    : null,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChainColorSelector(Watch watch, String cartItemId, String? selectedColor) {
+    final chainColors = [
+      {'name': 'Black', 'hex': '#000000'},
+      {'name': 'Silver', 'hex': '#C0C0C0'},
+      {'name': 'Gold', 'hex': '#FFD700'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Chain Color:',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedColor,
+          decoration: const InputDecoration(
+            labelText: 'Chain Color',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.color_lens),
+          ),
+          items: chainColors.map((colorData) {
+            return DropdownMenuItem(
+              value: colorData['hex'] as String,
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: _hexToColor(colorData['hex'] as String),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(colorData['name'] as String),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _strapSelections[cartItemId]!['strapColor'] = value;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Color _hexToColor(String hex) {
+    try {
+      if (hex.startsWith('#')) {
+        return Color(int.parse('0xFF${hex.substring(1)}'));
+      }
+      return Color(int.parse('0xFF$hex'));
+    } catch (_) {
+      return Colors.grey;
     }
   }
 
@@ -331,6 +655,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 24),
+
+                      // Strap Selection Section
+                      _buildStrapSelectionSection(cartProvider),
+
                       const SizedBox(height: 24),
 
                       // Coupon Section

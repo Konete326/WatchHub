@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
-import 'package:firebase_storage/firebase_storage.dart';
 import '../models/user.dart';
 import '../models/address.dart';
+import 'cloudinary_service.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String? get uid => _auth.currentUser?.uid;
 
@@ -33,9 +32,11 @@ class UserService {
   Future<User> updateProfileImage(String filePath) async {
     if (uid == null) throw Exception('User not logged in');
     
-    final ref = _storage.ref().child('users/$uid/profile.jpg');
-    final uploadTask = await ref.putFile(File(filePath));
-    final imageUrl = await uploadTask.ref.getDownloadURL();
+    final imageUrl = await CloudinaryService.uploadImage(
+      File(filePath),
+      folder: 'users',
+      publicId: 'users/$uid/profile',
+    );
 
     await _firestore.collection('users').doc(uid).update({'profileImage': imageUrl});
     final doc = await _firestore.collection('users').doc(uid).get();
