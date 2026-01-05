@@ -286,7 +286,7 @@ class AdminService {
     return {
       'totalUsers': usersCount,
       'totalOrders': ordersCount,
-      'totalProducts': watchesCount,
+      'totalWatches': watchesCount,
       'totalRevenue': totalRevenue,
     };
   }
@@ -344,6 +344,8 @@ class AdminService {
     Map<String, dynamic>? specifications,
     int? discountPercentage,
     List<dynamic>? imageFiles, // XFile for web, File for mobile
+    bool hasBeltOption = false,
+    bool hasChainOption = false,
   }) async {
     final imageUrls = <String>[];
     if (imageFiles != null && imageFiles.isNotEmpty) {
@@ -365,6 +367,8 @@ class AdminService {
       'category': category,
       'specifications': specifications,
       'discountPercentage': discountPercentage,
+      'hasBeltOption': hasBeltOption,
+      'hasChainOption': hasChainOption,
       'images': imageUrls,
       'popularity': 0,
       'reviewCount': 0,
@@ -390,6 +394,8 @@ class AdminService {
     Map<String, dynamic>? specifications,
     int? discountPercentage,
     List<dynamic>? imageFiles, // XFile for web, File for mobile
+    bool? hasBeltOption,
+    bool? hasChainOption,
   }) async {
     final updates = <String, dynamic>{};
     if (brandId != null) updates['brandId'] = brandId;
@@ -400,6 +406,8 @@ class AdminService {
     if (category != null) updates['category'] = category;
     if (specifications != null) updates['specifications'] = specifications;
     if (discountPercentage != null) updates['discountPercentage'] = discountPercentage;
+    if (hasBeltOption != null) updates['hasBeltOption'] = hasBeltOption;
+    if (hasChainOption != null) updates['hasChainOption'] = hasChainOption;
 
     if (imageFiles != null && imageFiles.isNotEmpty) {
       final imageUrls = await CloudinaryService.uploadImages(imageFiles, folder: 'watches');

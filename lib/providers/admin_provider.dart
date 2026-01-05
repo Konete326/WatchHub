@@ -40,7 +40,7 @@ class AdminProvider with ChangeNotifier {
 
   // Getters for stats
   int get totalUsers {
-    final value = _dashboardStats?['stats']?['totalUsers'];
+    final value = _dashboardStats?['totalUsers'];
     if (value == null) return 0;
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
@@ -48,7 +48,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   int get totalOrders {
-    final value = _dashboardStats?['stats']?['totalOrders'];
+    final value = _dashboardStats?['totalOrders'];
     if (value == null) return 0;
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
@@ -56,7 +56,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   int get totalWatches {
-    final value = _dashboardStats?['stats']?['totalWatches'];
+    final value = _dashboardStats?['totalWatches'];
     if (value == null) return 0;
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
@@ -64,7 +64,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   double get totalRevenue {
-    final value = _dashboardStats?['stats']?['totalRevenue'];
+    final value = _dashboardStats?['totalRevenue'];
     if (value == null) return 0.0;
     if (value is double) return value;
     if (value is int) return value.toDouble();

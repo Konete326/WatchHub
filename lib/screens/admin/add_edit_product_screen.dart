@@ -46,6 +46,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   bool _isLoading = false;
   bool _isLoadingBrands = false;
   bool _isLoadingCategories = false;
+  bool _hasBeltOption = false; // Whether belt option is available
+  bool _hasChainOption = false; // Whether chain option is available
 
   @override
   void initState() {
@@ -74,6 +76,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (widget.watch!.discountPercentage != null) {
         _discountController.text = widget.watch!.discountPercentage.toString();
       }
+      _hasBeltOption = widget.watch!.hasBeltOption;
+      _hasChainOption = widget.watch!.hasChainOption;
     }
   }
 
@@ -272,6 +276,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ? int.tryParse(_discountController.text)
               : null,
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
         );
       } else {
         // Create new watch
@@ -287,6 +293,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ? int.tryParse(_discountController.text)
               : null,
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
         );
       }
 
@@ -315,6 +323,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
     }
   }
+
+  // Helper method to build belt color picker with full color palette
 
   @override
   Widget build(BuildContext context) {
@@ -517,8 +527,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           validator: (value) {
                             if (value?.isEmpty ?? true)
                               return 'Please enter a price';
-                            if (double.tryParse(value!) == null)
+                            final price = double.tryParse(value!);
+                            if (price == null)
                               return 'Invalid price';
+                            if (price < 0)
+                              return 'Price cannot be negative';
                             return null;
                           },
                         ),
@@ -584,6 +597,48 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         setState(() => _selectedCategory = value),
                     validator: (value) =>
                         value == null ? 'Please select a category' : null,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Strap Options Availability
+                  const Text(
+                    'Strap Options Available',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Belt Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose belt with color options',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasBeltOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasBeltOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Chain Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose chain with color options (Black, Silver, Gold)',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasChainOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasChainOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 24),
 

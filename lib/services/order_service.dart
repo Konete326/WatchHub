@@ -87,6 +87,7 @@ class OrderService {
     List<String>? cartItemIds,
     String paymentMethod = 'card',
     String? couponId,
+    Map<String, Map<String, String?>>? strapSelections, // cartItemId -> {strapType, strapColor}
   }) async {
     if (uid == null) throw Exception('User not logged in');
 
@@ -120,10 +121,16 @@ class OrderService {
           throw Exception('Not enough stock for ${watchData['name']}');
 
         totalAmount += price * quantity;
+        
+        // Get strap selections for this cart item
+        final strapSelection = strapSelections?[doc.id];
+        
         orderItemsData.add({
           'watchId': data['watchId'],
           'quantity': quantity,
           'priceAtPurchase': price,
+          'strapType': strapSelection?['strapType'],
+          'strapColor': strapSelection?['strapColor'],
         });
 
         watchesToUpdate[watchRef] = stock - quantity;

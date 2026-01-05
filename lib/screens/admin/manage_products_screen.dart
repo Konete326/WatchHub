@@ -174,7 +174,12 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search watches...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    _onSearch(_searchController.text);
+                  },
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -190,6 +195,7 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
               ),
               onSubmitted: _onSearch,
               onChanged: (value) {
+                setState(() {}); // Rebuild to update suffixIcon visibility
                 if (value.isEmpty) {
                   _onSearch('');
                 }

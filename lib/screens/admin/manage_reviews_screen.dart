@@ -74,10 +74,12 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
         sortOrder: _sortOrder,
       );
 
-      final reviews = (result['reviews'] as List?)
-              ?.map((json) => Review.fromJson(json))
-              .toList() ??
-          [];
+      final reviewsData = result['reviews'];
+      List<Review> reviews = [];
+      if (reviewsData != null && reviewsData is List) {
+        // Service already returns Review objects, so cast directly
+        reviews = reviewsData.cast<Review>();
+      }
 
       final pagination = result['pagination'] as Map<String, dynamic>? ?? {};
 
