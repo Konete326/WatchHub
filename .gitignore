@@ -32,6 +32,4 @@ build/web/
 .vscode/
 
 # Environment variables
-.env
-.env.*
 functions/.env
