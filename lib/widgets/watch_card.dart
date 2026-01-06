@@ -88,12 +88,37 @@ class WatchCard extends StatelessWidget {
                                 ? AppTheme.errorColor
                                 : AppTheme.textSecondaryColor,
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             final wishlistItem = wishlistProvider.wishlistItems
                                 .where((item) => item.watchId == watch.id)
                                 .firstOrNull;
-                            wishlistProvider.toggleWishlist(
-                                watch.id, wishlistItem?.id);
+                            final success = await wishlistProvider
+                                .toggleWishlist(watch.id, wishlistItem?.id);
+
+                            if (context.mounted) {
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isInWishlist
+                                        ? 'Removed from wishlist'
+                                        : 'Added to wishlist'),
+                                    backgroundColor: AppTheme.successColor,
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        wishlistProvider.errorMessage ??
+                                            'Something went wrong'),
+                                    backgroundColor: AppTheme.errorColor,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
                           },
                         ),
                       );

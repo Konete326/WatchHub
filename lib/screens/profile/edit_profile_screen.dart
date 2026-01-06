@@ -87,6 +87,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your name';
                   }
+                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
+                    return 'Name can only contain alphabets';
+                  }
                   return null;
                 },
               ),

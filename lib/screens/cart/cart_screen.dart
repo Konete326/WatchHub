@@ -58,7 +58,17 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          await cartProvider.deleteSelectedItems();
+                          final success =
+                              await cartProvider.deleteSelectedItems();
+                          if (success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Selected items removed'),
+                                backgroundColor: AppTheme.successColor,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
                       },
                       tooltip: 'Delete Selected',
@@ -85,8 +95,18 @@ class _CartScreenState extends State<CartScreen> {
                       );
 
                       if (confirm == true && mounted) {
-                        await Provider.of<CartProvider>(context, listen: false)
+                        final success = await Provider.of<CartProvider>(context,
+                                listen: false)
                             .clearCart();
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cart cleared'),
+                              backgroundColor: AppTheme.successColor,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
                       }
                     },
                     child: const Text(
@@ -312,12 +332,31 @@ class _CartScreenState extends State<CartScreen> {
                                               icon: const Icon(Icons.remove,
                                                   size: 14),
                                               onPressed: item.quantity > 1
-                                                  ? () {
-                                                      cartProvider
-                                                          .updateQuantity(
+                                                  ? () async {
+                                                      final success =
+                                                          await cartProvider
+                                                              .updateQuantity(
                                                         item.id,
                                                         item.quantity - 1,
                                                       );
+                                                      if (!success &&
+                                                          context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(cartProvider
+                                                                    .errorMessage ??
+                                                                'Update failed'),
+                                                            backgroundColor:
+                                                                AppTheme
+                                                                    .errorColor,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                          ),
+                                                        );
+                                                      }
                                                     }
                                                   : null,
                                               padding: EdgeInsets.zero,
@@ -333,16 +372,35 @@ class _CartScreenState extends State<CartScreen> {
                                             IconButton(
                                               icon: const Icon(Icons.add,
                                                   size: 14),
-                                              onPressed:
-                                                  item.quantity < watch.stock
-                                                      ? () {
-                                                          cartProvider
+                                              onPressed: item.quantity <
+                                                      watch.stock
+                                                  ? () async {
+                                                      final success =
+                                                          await cartProvider
                                                               .updateQuantity(
-                                                            item.id,
-                                                            item.quantity + 1,
-                                                          );
-                                                        }
-                                                      : null,
+                                                        item.id,
+                                                        item.quantity + 1,
+                                                      );
+                                                      if (!success &&
+                                                          context.mounted) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(cartProvider
+                                                                    .errorMessage ??
+                                                                'Update failed'),
+                                                            backgroundColor:
+                                                                AppTheme
+                                                                    .errorColor,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                          ),
+                                                        );
+                                                      }
+                                                    }
+                                                  : null,
                                               padding: EdgeInsets.zero,
                                               constraints: const BoxConstraints(
                                                   minWidth: 32),
@@ -355,8 +413,24 @@ class _CartScreenState extends State<CartScreen> {
                                         icon: const Icon(Icons.delete_outline,
                                             color: AppTheme.errorColor,
                                             size: 20),
-                                        onPressed: () {
-                                          cartProvider.removeItem(item.id);
+                                        onPressed: () async {
+                                          final success = await cartProvider
+                                              .removeItem(item.id);
+                                          if (success && context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    '${watch.name} removed from cart'),
+                                                backgroundColor:
+                                                    AppTheme.successColor,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                duration:
+                                                    const Duration(seconds: 1),
+                                              ),
+                                            );
+                                          }
                                         },
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(

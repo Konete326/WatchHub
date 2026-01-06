@@ -271,9 +271,25 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
-                                        onPressed: () {
-                                          wishlistProvider.toggleWishlist(
-                                              watch.id, item.id);
+                                        onPressed: () async {
+                                          final success = await wishlistProvider
+                                              .toggleWishlist(
+                                                  watch.id, item.id);
+                                          if (success && context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Removed ${watch.name} from wishlist'),
+                                                backgroundColor:
+                                                    AppTheme.successColor,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                duration:
+                                                    const Duration(seconds: 1),
+                                              ),
+                                            );
+                                          }
                                         },
                                         icon: const Icon(Icons.favorite,
                                             color: AppTheme.errorColor),

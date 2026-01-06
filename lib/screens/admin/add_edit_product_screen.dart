@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,7 @@ import '../../models/watch.dart';
 import '../../models/brand.dart';
 import '../../models/category.dart' as model;
 import '../../utils/theme.dart';
+import '../../utils/constants.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Watch? watch;
@@ -24,6 +26,7 @@ class AddEditProductScreen extends StatefulWidget {
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _skuController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
@@ -42,6 +45,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   String? _selectedBrandId;
   String? _selectedCategory;
   List<File> _selectedImages = [];
+  List<Uint8List> _selectedImageBytes = []; // For web platform
+  List<String> _selectedImageDataUrls = []; // For web preview
   List<String> _existingImageUrls = [];
   bool _isLoading = false;
   bool _isLoadingBrands = false;
@@ -54,6 +59,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _loadCategories();
     if (widget.watch != null) {
       _nameController.text = widget.watch!.name;
+      _skuController.text = widget.watch!.sku;
       _descriptionController.text = widget.watch!.description;
       _priceController.text = widget.watch!.price.toString();
       _stockController.text = widget.watch!.stock.toString();
@@ -80,6 +86,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _skuController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
@@ -98,6 +105,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (mounted) {
         setState(() {
           _brands = brands;
+          // Validate that selected brand still exists in the list
+          if (_selectedBrandId != null &&
+              !_brands.any((b) => b.id == _selectedBrandId)) {
+            _selectedBrandId = null;
+          }
           _isLoadingBrands = false;
         });
       }
@@ -118,6 +130,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (mounted) {
         setState(() {
           _categories = categories;
+          // Validate that selected category still exists in the list
+          if (_selectedCategory != null &&
+              !_categories.any((c) => c.name == _selectedCategory)) {
+            _selectedCategory = null;
+          }
           _isLoadingCategories = false;
         });
       }
@@ -133,21 +150,41 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Future<void> _pickImages() async {
     try {
-      final images = await _imagePicker.pickMultiImage();
-      if (images != null && images.isNotEmpty) {
-        setState(() {
-          final remainingSlots =
-              5 - _selectedImages.length - _existingImageUrls.length;
-          if (remainingSlots > 0) {
-            _selectedImages.addAll(
-              images.take(remainingSlots).map((path) => File(path.path)),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Maximum 5 images allowed')),
-            );
+      final images = await _imagePicker.pickMultiImage(imageQuality: 70);
+      if (images.isNotEmpty) {
+        final totalExisting = _existingImageUrls.length;
+        final totalSelected =
+            kIsWeb ? _selectedImageBytes.length : _selectedImages.length;
+        final remainingSlots =
+            Constants.maxProductImages - totalSelected - totalExisting;
+
+        if (remainingSlots <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'Maximum ${Constants.maxProductImages} images allowed')),
+          );
+          return;
+        }
+
+        final imagesToAdd = images.take(remainingSlots);
+
+        if (kIsWeb) {
+          // Web platform: read as bytes
+          for (final xfile in imagesToAdd) {
+            final bytes = await xfile.readAsBytes();
+            _selectedImageBytes.add(bytes);
+            // Create a data URL for preview
+            _selectedImageDataUrls.add(xfile.path);
           }
-        });
+        } else {
+          // Mobile platform: use File
+          for (final xfile in imagesToAdd) {
+            _selectedImages.add(File(xfile.path));
+          }
+        }
+
+        setState(() {});
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,12 +198,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (isExisting) {
         _existingImageUrls.removeAt(index);
       } else {
-        _selectedImages.removeAt(index);
+        if (kIsWeb) {
+          _selectedImageBytes.removeAt(index);
+          _selectedImageDataUrls.removeAt(index);
+        } else {
+          _selectedImages.removeAt(index);
+        }
       }
     });
   }
 
-  void _showDuplicateError() {
+  void _showDuplicateError(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -174,11 +216,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Duplicate Product'),
+            Text('Duplicate Found'),
           ],
         ),
-        content: const Text(
-            'A product with this name already exists. Please use a different name.'),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -208,20 +249,36 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     try {
       final name = _nameController.text.trim();
+      final sku = _skuController.text.trim();
 
-      // Check for duplicate name
-      // We search for watches with this name.
-      // Since AdminService fetches all watches when searching, we can use it.
-      final result = await _adminService.getAllWatches(search: name);
-      final List<Watch> existingWatches = result['watches'] ?? [];
+      // Check for duplicate name/sku using search functionality
+      final result =
+          await _adminService.getAllWatches(search: name, limit: 100);
+      final existingWatches = (result['watches'] as List<Watch>?) ?? <Watch>[];
 
-      final isDuplicate = existingWatches.any((w) =>
+      final isNameDuplicate = existingWatches.any((w) =>
           w.name.toLowerCase() == name.toLowerCase() &&
           w.id != widget.watch?.id);
 
-      if (isDuplicate) {
+      if (isNameDuplicate) {
         setState(() => _isLoading = false);
-        _showDuplicateError();
+        _showDuplicateError(
+            'A product with this name already exists. Please use a different name.');
+        return;
+      }
+
+      // Check for SKU duplicate - we need to fetch more carefully if name check didn't catch it
+      // For now, we search by SKU as well if possible, or filter retrieved list
+      // Since AdminService search checks name, we might need a separate check or a broader search
+      // But for small-mid catalog, checking the fetched list + a specific SKU search is better
+
+      final isSkuDuplicate = existingWatches.any((w) =>
+          w.sku.toLowerCase() == sku.toLowerCase() && w.id != widget.watch?.id);
+
+      if (isSkuDuplicate) {
+        setState(() => _isLoading = false);
+        _showDuplicateError(
+            'A product with this SKU already exists. Please use a unique SKU.');
         return;
       }
 
@@ -239,12 +296,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         specifications['diameter'] = _diameterController.text;
       }
 
+      // Prepare image data based on platform
+      final hasNewImages =
+          kIsWeb ? _selectedImageBytes.isNotEmpty : _selectedImages.isNotEmpty;
+
       if (widget.watch != null) {
         // Update existing watch
         await _adminService.updateWatch(
           id: widget.watch!.id,
           brandId: _selectedBrandId,
           name: name,
+          sku: sku,
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text),
           stock: int.parse(_stockController.text),
@@ -253,13 +315,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
-          imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
+          imageBytes:
+              kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
         );
       } else {
         // Create new watch
         await _adminService.createWatch(
           brandId: _selectedBrandId!,
           name: name,
+          sku: sku,
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text),
           stock: int.parse(_stockController.text),
@@ -268,7 +333,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
-          imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
+          imageBytes:
+              kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
         );
       }
 
@@ -309,128 +376,183 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   // Images Section
-                  Text(
-                    'Images (${_selectedImages.length + _existingImageUrls.length}/5)',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      // Existing images
-                      ..._existingImageUrls.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final url = entry.value;
-                        return Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl: url,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  width: 80,
-                                  height: 80,
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  width: 80,
-                                  height: 80,
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.image),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => _removeImage(index, true),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.close,
-                                      size: 16, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-                      // New selected images
-                      ..._selectedImages.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final file = entry.value;
-                        return Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: kIsWeb
-                                  ? Image.network(
-                                      file.path,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      file,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => _removeImage(index, false),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.close,
-                                      size: 16, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-                      // Add image button
-                      if (_selectedImages.length + _existingImageUrls.length <
-                          5)
-                        GestureDetector(
-                          onTap: _pickImages,
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.add, size: 32),
+                  Builder(
+                    builder: (context) {
+                      final selectedCount = kIsWeb
+                          ? _selectedImageBytes.length
+                          : _selectedImages.length;
+                      final totalCount =
+                          selectedCount + _existingImageUrls.length;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Images ($totalCount/${Constants.maxProductImages})',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                    ],
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              // Existing images
+                              ..._existingImageUrls
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
+                                final index = entry.key;
+                                final url = entry.value;
+                                return Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: CachedNetworkImage(
+                                        imageUrl: url,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            Container(
+                                          width: 80,
+                                          height: 80,
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2),
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) =>
+                                            Container(
+                                          width: 80,
+                                          height: 80,
+                                          color: Colors.grey[300],
+                                          child: const Icon(Icons.image),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: () => _removeImage(index, true),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.close,
+                                              size: 16, color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
+                              // New selected images - Platform aware
+                              if (kIsWeb)
+                                ..._selectedImageBytes
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                  final index = entry.key;
+                                  final bytes = entry.value;
+                                  return Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.memory(
+                                          bytes,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: GestureDetector(
+                                          onTap: () =>
+                                              _removeImage(index, false),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.close,
+                                                size: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                })
+                              else
+                                ..._selectedImages.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final file = entry.value;
+                                  return Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          file,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: GestureDetector(
+                                          onTap: () =>
+                                              _removeImage(index, false),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.close,
+                                                size: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              // Add image button
+                              if (totalCount < Constants.maxProductImages)
+                                GestureDetector(
+                                  onTap: _pickImages,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.add, size: 32),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
 
                   // Brand Selection
                   DropdownButtonFormField<String>(
-                    value: _selectedBrandId,
+                    // Only set value if it exists in the items list to avoid assertion error
+                    value: _brands.any((b) => b.id == _selectedBrandId)
+                        ? _selectedBrandId
+                        : null,
                     decoration: const InputDecoration(
                       labelText: 'Brand *',
                       border: OutlineInputBorder(),
@@ -457,6 +579,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                     validator: (value) =>
                         value?.isEmpty ?? true ? 'Please enter a name' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // SKU / Model Number
+                  TextFormField(
+                    controller: _skuController,
+                    decoration: const InputDecoration(
+                      labelText: 'SKU / Model Number *',
+                      border: OutlineInputBorder(),
+                      helperText: 'Unique identifier for inventory management',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please enter an SKU or Model Number'
+                        : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -488,8 +624,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           validator: (value) {
                             if (value?.isEmpty ?? true)
                               return 'Please enter a price';
-                            if (double.tryParse(value!) == null)
-                              return 'Invalid price';
+                            if (!RegExp(r'^[0-9]+\.?[0-9]*$').hasMatch(value!))
+                              return 'Price must be a valid positive number';
+                            final price = double.tryParse(value);
+                            if (price == null) return 'Invalid price format';
+                            if (price <= 0)
+                              return 'Price must be greater than 0';
                             return null;
                           },
                         ),
@@ -506,8 +646,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           validator: (value) {
                             if (value?.isEmpty ?? true)
                               return 'Please enter stock';
-                            if (int.tryParse(value!) == null)
-                              return 'Invalid stock';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(value!))
+                              return 'Stock must be a valid positive number';
+                            final stock = int.tryParse(value);
+                            if (stock == null) return 'Invalid stock format';
+                            if (stock < 0) return 'Stock cannot be negative';
                             return null;
                           },
                         ),
@@ -540,7 +683,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
                   // Category
                   DropdownButtonFormField<String>(
-                    value: _selectedCategory,
+                    // Only set value if it exists in the items list to avoid assertion error
+                    value: _categories.any((c) => c.name == _selectedCategory)
+                        ? _selectedCategory
+                        : null,
                     decoration: const InputDecoration(
                       labelText: 'Category *',
                       border: OutlineInputBorder(),

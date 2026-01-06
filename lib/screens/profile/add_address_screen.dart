@@ -133,6 +133,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter city';
                   }
+                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
+                    return 'City can only contain alphabets';
+                  }
                   return null;
                 },
               ),
@@ -146,6 +149,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter state';
+                  }
+                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
+                    return 'State can only contain alphabets';
                   }
                   return null;
                 },
@@ -199,6 +205,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter country';
+                  }
+                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
+                    return 'Country can only contain alphabets';
                   }
                   return null;
                 },

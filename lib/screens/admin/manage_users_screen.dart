@@ -49,16 +49,14 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         page: page,
         limit: 20,
         search: search,
+        role: _selectedRoleFilter,
       );
 
       if (mounted) {
         setState(() {
           final usersData = result['users'];
-          _users = usersData != null && usersData is List
-              ? (usersData as List)
-                  .map((json) => User.fromJson(json as Map<String, dynamic>))
-                  .toList()
-              : [];
+          _users =
+              usersData != null && usersData is List<User> ? usersData : [];
 
           final pagination = result['pagination'];
           if (pagination != null) {
@@ -156,6 +154,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
+  String _selectedRoleFilter = 'ALL';
+
   void _onSearch(String query) {
     setState(() {
       _searchQuery = query.isEmpty ? null : query;
@@ -169,7 +169,23 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Users'),
+        title: const Text('User Role Management'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.filter_list),
+            onSelected: (value) {
+              setState(() => _selectedRoleFilter = value);
+              _loadUsers(page: 1, search: _searchQuery);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'ALL', child: Text('All Roles')),
+              const PopupMenuItem(value: 'ADMIN', child: Text('Admins Only')),
+              const PopupMenuItem(
+                  value: 'EMPLOYEE', child: Text('Employees Only')),
+              const PopupMenuItem(value: 'USER', child: Text('Users Only')),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [

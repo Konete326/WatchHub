@@ -1,9 +1,16 @@
-2025/12/31-19:18:23.480 2d90 Reusing MANIFEST C:\Users\LENOVO\AppData\Local\Temp\flutter_tools.360607ea\flutter_tools_chrome_device.992019db\Default\Site Characteristics Database/MANIFEST-000001
-2025/12/31-19:18:23.481 2e04 Compacting 4@0 + 0@1 files
-2025/12/31-19:18:23.484 2e04 Generated table #11@0: 2 keys, 194 bytes
-2025/12/31-19:18:23.484 2e04 Compacted 4@0 + 0@1 files => 194 bytes
-2025/12/31-19:18:23.485 2e04 compacted to: files[ 0 1 0 0 0 0 0 ]
-2025/12/31-19:18:23.486 2e04 Delete type=2 #4
-2025/12/31-19:18:23.486 2e04 Delete type=2 #6
-2025/12/31-19:18:23.486 2e04 Delete type=2 #7
-2025/12/31-19:18:23.486 2e04 Delete type=2 #8
+2026/01/01-22:04:21.027 2a38 Log #3: 5 ops saved to Table #15 OK
+2026/01/01-22:04:21.030 2a38 Archiving C:\Users\ahmed\AppData\Local\Temp\flutter_tools.ce6292de\flutter_tools_chrome_device.3916f5c9\Default\Site Characteristics Database/000003.log: OK
+2026/01/01-22:04:21.303 2a38 Log #6: 2 ops saved to Table #16 OK
+2026/01/01-22:04:21.389 2a38 Archiving C:\Users\ahmed\AppData\Local\Temp\flutter_tools.ce6292de\flutter_tools_chrome_device.3916f5c9\Default\Site Characteristics Database/000006.log: OK
+2026/01/01-22:04:21.393 2a38 Log #10: 5 ops saved to Table #17 OK
+2026/01/01-22:04:21.394 2a38 Archiving C:\Users\ahmed\AppData\Local\Temp\flutter_tools.ce6292de\flutter_tools_chrome_device.3916f5c9\Default\Site Characteristics Database/000010.log: OK
+2026/01/01-22:04:21.395 2a38 Table #4: 5 entries OK
+2026/01/01-22:04:21.395 2a38 Table #6: 5 entries OK
+2026/01/01-22:04:21.395 2a38 Table #11: 2 entries OK
+2026/01/01-22:04:21.396 2a38 Table #13: 5 entries OK
+2026/01/01-22:04:21.396 2a38 Table #14: 2 entries OK
+2026/01/01-22:04:21.396 2a38 Table #15: 5 entries OK
+2026/01/01-22:04:21.397 2a38 Table #16: 2 entries OK
+2026/01/01-22:04:21.397 2a38 Table #17: 5 entries OK
+2026/01/01-22:04:21.401 2a38 Archiving C:\Users\ahmed\AppData\Local\Temp\flutter_tools.ce6292de\flutter_tools_chrome_device.3916f5c9\Default\Site Characteristics Database/MANIFEST-000001: OK
+2026/01/01-22:04:21.407 2a38 **** Repaired leveldb C:\Users\ahmed\AppData\Local\Temp\flutter_tools.ce6292de\flutter_tools_chrome_device.3916f5c9\Default\Site Characteristics Database; recovered 8 files; 1983 bytes. Some data may have been lost. ****

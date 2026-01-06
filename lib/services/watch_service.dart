@@ -78,8 +78,12 @@ class WatchService {
 
     query = query.orderBy(sortBy, descending: sortOrder == 'desc');
 
-    final snapshot =
-        await query.limit(100).get(); // Fetch up to 100 for client-side search
+    final aggregateQuery = await query.count().get();
+    final totalCount = aggregateQuery.count ?? 0;
+
+    // Fetch only what's needed for the current page request
+    // We allow up to 200 for client-side search within current filters
+    final snapshot = await query.limit(page * limit).get();
 
     var allWatches =
         snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
@@ -94,7 +98,7 @@ class WatchService {
           .toList();
     }
 
-    // Manual slicing for "pagination" as a quick migration step
+    // Manual slicing
     final startIndex = (page - 1) * limit;
     final paginatedWatches = allWatches.length > startIndex
         ? allWatches.sublist(
@@ -106,8 +110,8 @@ class WatchService {
       'pagination': {
         'page': page,
         'limit': limit,
-        'total': allWatches.length,
-        'totalPages': (allWatches.length / limit).ceil()
+        'total': totalCount,
+        'totalPages': (totalCount / limit).ceil()
       },
     };
   }

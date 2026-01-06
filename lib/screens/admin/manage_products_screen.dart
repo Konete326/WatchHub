@@ -55,12 +55,11 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
 
       if (mounted) {
         setState(() {
+          // AdminService.getAllWatches already returns a list of Watch objects
           final watchesData = result['watches'];
-          _watches = watchesData != null && watchesData is List
-              ? (watchesData as List)
-                  .map((json) => Watch.fromJson(json as Map<String, dynamic>))
-                  .toList()
-              : [];
+          _watches = watchesData != null && watchesData is List<Watch>
+              ? watchesData
+              : <Watch>[];
 
           final pagination = result['pagination'];
           if (pagination != null) {

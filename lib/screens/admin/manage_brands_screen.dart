@@ -75,7 +75,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                     GestureDetector(
                       onTap: () async {
                         final XFile? image = await _picker.pickImage(
-                            source: ImageSource.gallery);
+                            source: ImageSource.gallery, imageQuality: 70);
                         if (image != null) {
                           setDialogState(
                               () => selectedImage = File(image.path));

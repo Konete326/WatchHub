@@ -104,6 +104,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your name';
                     }
+                    if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
+                      return 'Name can only contain alphabets';
+                    }
                     return null;
                   },
                 ),
@@ -119,7 +122,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!value.contains('@')) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;

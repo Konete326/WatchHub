@@ -23,6 +23,13 @@ class SettingsProvider with ChangeNotifier {
       _settings = await _adminService.getSettings();
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
+      // Provide default settings on error to prevent app from breaking
+      _settings ??= AppSettings(
+        deliveryCharge: 0.0,
+        freeDeliveryThreshold: 0,
+        currencyCode: 'USD',
+        currencyExchangeRate: 1.0,
+      );
     } finally {
       _isLoading = false;
       notifyListeners();

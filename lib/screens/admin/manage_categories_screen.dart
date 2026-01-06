@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/category.dart';
@@ -12,6 +15,7 @@ class ManageCategoriesScreen extends StatefulWidget {
 }
 
 class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
+  final ImagePicker _picker = ImagePicker();
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
   void _showAddEditDialog({Category? category}) {
     final nameController = TextEditingController(text: category?.name ?? '');
+    File? selectedImage;
     final formKey = GlobalKey<FormState>();
 
     // Dialog khulne se pehle purana error clear kar dein
@@ -62,6 +67,41 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final XFile? image = await _picker.pickImage(
+                          source: ImageSource.gallery, imageQuality: 70);
+                      if (image != null) {
+                        setDialogState(() => selectedImage = File(image.path));
+                      }
+                    },
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
+                        image: selectedImage != null
+                            ? DecorationImage(
+                                image: FileImage(selectedImage!),
+                                fit: BoxFit.contain)
+                            : (category?.imageUrl != null &&
+                                    category!.imageUrl!.isNotEmpty
+                                ? DecorationImage(
+                                    image: CachedNetworkImageProvider(
+                                        category.imageUrl!),
+                                    fit: BoxFit.contain)
+                                : null),
+                      ),
+                      child: (selectedImage == null &&
+                              (category?.imageUrl == null ||
+                                  category!.imageUrl!.isEmpty))
+                          ? const Icon(Icons.add_a_photo,
+                              size: 40, color: Colors.grey)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(
@@ -118,11 +158,13 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         if (category == null) {
                           success = await adminProvider.createCategory(
                             name: newName,
+                            imageFile: selectedImage,
                           );
                         } else {
                           success = await adminProvider.updateCategory(
                             id: category.id,
                             name: newName,
+                            imageFile: selectedImage,
                           );
                         }
 
@@ -206,7 +248,14 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               final category = provider.categories[index];
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.category),
+                  leading:
+                      category.imageUrl != null && category.imageUrl!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: category.imageUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.contain)
+                          : const Icon(Icons.category),
                   title: Text(category.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   trailing: Row(

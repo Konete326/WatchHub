@@ -12,15 +12,10 @@ class Constants {
 
   // Pagination
   static const int pageSize = 10;
+  static const int maxProductImages = 5;
 
-  // Categories
-  static const List<String> categories = [
-    'Luxury',
-    'Sports',
-    'Dress',
-    'Casual',
-    'Smart',
-  ];
+  // NOTE: Categories are now dynamic and fetched from Firestore.
+  // Admin can manage categories via the Manage Categories screen.
 
   // Order Status
   static const Map<String, String> orderStatus = {
