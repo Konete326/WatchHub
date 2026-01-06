@@ -130,8 +130,6 @@ class NotificationProvider with ChangeNotifier {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     if (index == -1) return;
 
-    final notification = _notifications[index];
-
     // Optimistic update
     _notifications[index] = _notifications[index].copyWith(isRead: true);
     _calculateUnreadCount();

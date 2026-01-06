@@ -15,6 +15,9 @@ class SettingsProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  // Theme mode - defaults to system
+  ThemeMode get themeMode => ThemeMode.system;
+
   Future<void> fetchSettings() async {
     _isLoading = true;
     _errorMessage = null;

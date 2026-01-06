@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:watchhub/widgets/admin/admin_drawer.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/theme.dart';
 import '../../services/admin_service.dart';
 import '../../models/user.dart';
 import 'admin_user_detail_screen.dart';
