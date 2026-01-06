@@ -349,6 +349,21 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
                               ),
                             ],
                           ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.remove_red_eye_outlined,
+                                  size: 16, color: Colors.grey),
+                              Text(
+                                '${item['seenCount'] ?? 0}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
                           isThreeLine: true,
                         );
                       },

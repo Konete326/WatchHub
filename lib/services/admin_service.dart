@@ -513,7 +513,7 @@ class AdminService {
 
     if (userId != null) {
       // Send to specific user
-      await _firestore
+      final notifRef = await _firestore
           .collection('users')
           .doc(userId)
           .collection('notifications')
@@ -529,13 +529,13 @@ class AdminService {
       // Save to Admin History
       await _firestore.collection('admin_notification_history').add({
         ...notificationData,
+        'notificationId': notifRef.id,
         'target': 'User: $userId',
+        'seenCount': 0,
       });
-    } else {
       // Send to all users (Broadcast)
-      // 1. Add to announcements for in-app feed
-      // Using a valid collection for Broadcasts that users can query
-      await _firestore.collection('announcements').add(notificationData);
+      final announcementRef =
+          await _firestore.collection('announcements').add(notificationData);
 
       // 2. Add to queue for Cloud Functions to send to 'all_users' topic
       await _firestore.collection('notification_queue').add({
@@ -547,7 +547,9 @@ class AdminService {
       // Save to Admin History
       await _firestore.collection('admin_notification_history').add({
         ...notificationData,
+        'notificationId': announcementRef.id,
         'target': 'Broadcast (All Users)',
+        'seenCount': 0,
       });
     }
   }
@@ -559,7 +561,10 @@ class AdminService {
         .limit(50)
         .get();
 
-    return snapshot.docs.map((doc) => doc.data()).toList();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {...data, 'id': doc.id};
+    }).toList();
   }
 
   Future<Watch> createWatch({
