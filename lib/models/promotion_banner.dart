@@ -10,6 +10,7 @@ class PromotionBanner {
   final String? textColor;
   final String? link;
   final bool isActive;
+  final DateTime? expiryDate;
 
   PromotionBanner({
     required this.id,
@@ -21,6 +22,7 @@ class PromotionBanner {
     this.textColor,
     this.link,
     this.isActive = true,
+    this.expiryDate,
   });
 
   factory PromotionBanner.fromFirestore(DocumentSnapshot doc) {
@@ -35,6 +37,7 @@ class PromotionBanner {
       textColor: data['textColor'],
       link: data['link'],
       isActive: data['isActive'] ?? true,
+      expiryDate: (data['expiryDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -48,6 +51,7 @@ class PromotionBanner {
       'textColor': textColor,
       'link': link,
       'isActive': isActive,
+      'expiryDate': expiryDate,
     };
   }
 }

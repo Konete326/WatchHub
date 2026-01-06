@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/admin_service.dart';
 import '../../models/watch.dart';
-import '../../utils/theme.dart';
-
 import 'add_edit_product_screen.dart';
+import '../../widgets/empty_state.dart';
+
+import '../../widgets/admin/admin_drawer.dart';
 
 class ManageProductsScreen extends StatefulWidget {
   const ManageProductsScreen({super.key});
@@ -39,7 +39,10 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     super.dispose();
   }
 
-  Future<void> _loadWatches({int page = 1, String? search, bool refresh = false}) async {
+  Future<void> _loadWatches(
+      {int page = 1, String? search, bool refresh = false}) async {
+    if (_isLoading) return;
+
     if (refresh) {
       setState(() {
         _currentPage = 1;
@@ -47,7 +50,7 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
       });
       page = 1;
     }
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -63,20 +66,12 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
 
       if (mounted) {
         setState(() {
-          // AdminService.getAllWatches already returns a list of Watch objects
           final watchesData = result['watches'];
-<<<<<<< HEAD
-          _watches = watchesData != null && watchesData is List<Watch>
-              ? watchesData
-              : <Watch>[];
-=======
           if (watchesData != null && watchesData is List) {
-            // getAllWatches returns List<Watch> directly
             _watches = watchesData.cast<Watch>();
           } else {
             _watches = [];
           }
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 
           final pagination = result['pagination'];
           if (pagination != null) {
@@ -101,7 +96,7 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Watch'),
+        title: const Text('Delete Product'),
         content: Text('Are you sure you want to delete "$name"?'),
         actions: [
           TextButton(
@@ -118,21 +113,21 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     );
 
     if (confirmed == true) {
+      setState(() => _isLoading = true);
       try {
         await _adminService.deleteWatch(id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Watch deleted successfully')),
+            const SnackBar(content: Text('Product deleted successfully')),
           );
           _loadWatches(page: _currentPage, search: _searchQuery);
         }
       } catch (e) {
         if (mounted) {
+          setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete watch: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
+                content: Text('Failed to delete product: ${e.toString()}')),
           );
         }
       }
@@ -157,24 +152,24 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.of(context).push(
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
                 MaterialPageRoute(
                   builder: (context) => const AddEditProductScreen(),
                 ),
-              );
-              if (result == true) {
-                // Refresh the list to show the new/updated watch
-                _loadWatches(page: 1, search: _searchQuery, refresh: true);
-              }
+              )
+                  .then((_) {
+                _loadWatches(page: _currentPage, search: _searchQuery);
+              });
             },
             tooltip: 'Add Product',
           ),
         ],
       ),
+      drawer: const AdminDrawer(),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -209,8 +204,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
               },
             ),
           ),
-
-          // Results count
           if (!_isLoading && _watches.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -222,8 +215,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                 ),
               ),
             ),
-
-          // Content
           Expanded(
             child: _isLoading && _watches.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -250,19 +241,27 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                         ),
                       )
                     : _watches.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.watch_off,
-                                    size: 64, color: Colors.grey[400]),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No watches found',
-                                  style: TextStyle(color: Colors.grey[600]),
+                        ? EmptyState(
+                            icon: Icons.inventory_2_outlined,
+                            title: 'No watches found',
+                            message: _searchQuery != null
+                                ? 'No products match your search "$_searchQuery".'
+                                : 'You haven\'t added any products yet to your inventory.',
+                            actionLabel: 'Add Product',
+                            onActionPressed: () async {
+                              final result = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AddEditProductScreen(),
                                 ),
-                              ],
-                            ),
+                              );
+                              if (result == true) {
+                                _loadWatches(
+                                    page: 1,
+                                    search: _searchQuery,
+                                    refresh: true);
+                              }
+                            },
                           )
                         : RefreshIndicator(
                             onRefresh: () => _loadWatches(
@@ -275,20 +274,17 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   child: ListTile(
-                                    leading: watch.images.isNotEmpty &&
-                                            watch.images.first.isNotEmpty
-                                        ? ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            child: CachedNetworkImage(
+                                    contentPadding: const EdgeInsets.all(8),
+                                    leading: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: watch.images.isNotEmpty
+                                          ? CachedNetworkImage(
                                               imageUrl: watch.images.first,
                                               width: 60,
                                               height: 60,
                                               fit: BoxFit.cover,
                                               placeholder: (context, url) =>
                                                   Container(
-                                                width: 60,
-                                                height: 60,
                                                 color: Colors.grey[200],
                                                 child: const Center(
                                                   child:
@@ -298,33 +294,41 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                                               ),
                                               errorWidget:
                                                   (context, url, error) =>
-                                                      const Icon(Icons.watch,
-                                                          size: 40),
+                                                      Container(
+                                                color: Colors.grey[300],
+                                                child: const Icon(Icons.error),
+                                              ),
+                                            )
+                                          : Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: Colors.grey[200],
+                                              child: const Icon(Icons.image),
                                             ),
-                                          )
-                                        : const Icon(Icons.watch, size: 40),
+                                    ),
                                     title: Text(
                                       watch.name,
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     subtitle: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        if (watch.brand != null)
-                                          Text('Brand: ${watch.brand!.name}'),
+                                        Text('SKU: ${watch.sku}'),
                                         Text(
                                             'Price: ${currencyFormat.format(watch.price)}'),
-                                        Text('Stock: ${watch.stock}'),
-                                        if (watch.isLowStock)
-                                          Text(
-                                            'Low Stock!',
+                                        Text('Stock: ${watch.stock}',
                                             style: TextStyle(
-                                              color: Colors.orange[700],
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                              color: watch.stock <= 5
+                                                  ? Colors.red
+                                                  : Colors.grey[600],
+                                              fontWeight: watch.stock <= 5
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            )),
                                       ],
                                     ),
                                     trailing: Row(
@@ -363,8 +367,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                             ),
                           ),
           ),
-
-          // Pagination
           if (_totalPages > 1)
             Padding(
               padding: const EdgeInsets.all(16),

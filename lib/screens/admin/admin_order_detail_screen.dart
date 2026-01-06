@@ -7,6 +7,8 @@ import '../../models/order.dart';
 import '../../utils/theme.dart';
 import '../../providers/settings_provider.dart';
 
+import '../../services/invoice_service.dart';
+
 class AdminOrderDetailScreen extends StatefulWidget {
   final String orderId;
 
@@ -26,7 +28,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
 
   final List<String> _statuses = [
     'PENDING',
-    'PROCESSING',
+    'CONFIRMED',
     'SHIPPED',
     'DELIVERED',
     'CANCELLED',
@@ -111,7 +113,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     switch (status) {
       case 'PENDING':
         return Colors.orange;
-      case 'PROCESSING':
+      case 'CONFIRMED':
         return Colors.blue;
       case 'SHIPPED':
         return Colors.purple;
@@ -131,6 +133,17 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin: Order Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            tooltip: 'Print Invoice',
+            onPressed: () async {
+              if (_order != null) {
+                await InvoiceService.generateAndPrintInvoice(_order!);
+              }
+            },
+          ),
+        ],
       ),
       body: Consumer<SettingsProvider>(
         builder: (context, settings, child) {
@@ -166,6 +179,10 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Order Status Timeline
+                _buildStatusTimeline(order.status),
+                const SizedBox(height: 24),
+
                 // Summary Card
                 Card(
                   elevation: 0,
@@ -381,6 +398,116 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
                       fontSize: 14, fontWeight: FontWeight.w500)),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusTimeline(String currentStatus) {
+    if (currentStatus == 'CANCELLED') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.cancel, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(
+              'This order has been cancelled.',
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final steps = [
+      {'label': 'Pending', 'status': 'PENDING', 'icon': Icons.access_time},
+      {
+        'label': 'Confirmed',
+        'status': 'CONFIRMED',
+        'icon': Icons.check_circle_outline
+      },
+      {
+        'label': 'Shipped',
+        'status': 'SHIPPED',
+        'icon': Icons.local_shipping_outlined
+      },
+      {
+        'label': 'Delivered',
+        'status': 'DELIVERED',
+        'icon': Icons.home_outlined
+      },
+    ];
+
+    int currentIndex = steps.indexWhere((s) => s['status'] == currentStatus);
+    if (currentIndex == -1) currentIndex = 0; // Default or fallback
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            for (int i = 0; i < steps.length; i++) ...[
+              // Step Icon
+              Expanded(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: i <= currentIndex
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade200,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        steps[i]['icon'] as IconData,
+                        size: 18,
+                        color: i <= currentIndex
+                            ? Colors.white
+                            : Colors.grey.shade500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      steps[i]['label'] as String,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: i == currentIndex
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: i <= currentIndex
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              // Line Connector
+              if (i < steps.length - 1)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: i < currentIndex
+                        ? AppTheme.primaryColor
+                        : Colors.grey.shade200,
+                    margin: const EdgeInsets.only(
+                        bottom: 20), // Align with circle center roughly
+                  ),
+                ),
+            ],
+          ],
         ),
       ],
     );

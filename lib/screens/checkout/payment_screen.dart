@@ -13,6 +13,7 @@ import '../../utils/theme.dart';
 import '../../utils/constants.dart';
 import 'order_confirmation_screen.dart';
 import 'stripe_web_payment_dialog.dart';
+import '../../widgets/checkout_progress_bar.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String addressId;
@@ -30,6 +31,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String _paymentMethod = 'card'; // 'card' or 'cod'
   // Map of cartItemId -> {strapType, strapColor}
   final Map<String, Map<String, String?>> _strapSelections = {};
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      Provider.of<OrderProvider>(context, listen: false)
+          .fetchAvailableCoupons();
+    });
+  }
 
   @override
   void dispose() {
@@ -213,8 +223,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildStrapSelectionSection(CartProvider cartProvider) {
     // Get watches with strap options
     final watchesWithStrapOptions = cartProvider.cartItems
-        .where((item) => 
-            item.watch != null && 
+        .where((item) =>
+            item.watch != null &&
             (item.watch!.hasBeltOption || item.watch!.hasChainOption) &&
             cartProvider.selectedItemIds.contains(item.id))
         .toList();
@@ -247,12 +257,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           final item = entry.value;
           final watch = item.watch!;
           final cartItemId = item.id;
-          
+
           // Initialize selection if not exists
           if (!_strapSelections.containsKey(cartItemId)) {
-            _strapSelections[cartItemId] = {'strapType': null, 'strapColor': null};
+            _strapSelections[cartItemId] = {
+              'strapType': null,
+              'strapColor': null
+            };
           }
-          
+
           return _buildWatchStrapSelector(
             watch: watch,
             cartItemId: cartItemId,
@@ -315,7 +328,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     children: [
                       // Watch Number Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -358,7 +372,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
-            
+
             // Strap Type Selection
             if (watch.hasBeltOption || watch.hasChainOption) ...[
               const Text(
@@ -378,7 +392,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 onSelectionChanged: (Set<String> newSelection) {
                   setState(() {
                     _strapSelections[cartItemId] = {
-                      'strapType': newSelection.isNotEmpty ? newSelection.first : null,
+                      'strapType':
+                          newSelection.isNotEmpty ? newSelection.first : null,
                       'strapColor': null, // Reset color when type changes
                     };
                   });
@@ -400,7 +415,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildBeltColorPicker(Watch watch, String cartItemId, String? selectedColor) {
+  Widget _buildBeltColorPicker(
+      Watch watch, String cartItemId, String? selectedColor) {
     final colors = [
       {'name': 'Black', 'color': Colors.black, 'hex': '#000000'},
       {'name': 'White', 'color': Colors.white, 'hex': '#FFFFFF'},
@@ -432,7 +448,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _strapSelections[cartItemId]!['strapColor'] = colorData['hex'] as String;
+                  _strapSelections[cartItemId]!['strapColor'] =
+                      colorData['hex'] as String;
                 });
               },
               child: Container(
@@ -466,7 +483,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildChainColorSelector(Watch watch, String cartItemId, String? selectedColor) {
+  Widget _buildChainColorSelector(
+      Watch watch, String cartItemId, String? selectedColor) {
     final chainColors = [
       {'name': 'Black', 'hex': '#000000'},
       {'name': 'Silver', 'hex': '#C0C0C0'},
@@ -544,6 +562,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         builder: (context, cartProvider, settings, child) {
           return Column(
             children: [
+              const CheckoutProgressBar(currentStep: 1),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
@@ -707,6 +726,91 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Available Coupons Gallery
+                      Consumer<OrderProvider>(
+                        builder: (context, orderProvider, child) {
+                          if (orderProvider.availableCoupons.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Available Offers',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                height: 50,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount:
+                                      orderProvider.availableCoupons.length,
+                                  itemBuilder: (context, index) {
+                                    final coupon =
+                                        orderProvider.availableCoupons[index];
+                                    return GestureDetector(
+                                      onTap: _appliedCoupon != null
+                                          ? null
+                                          : () {
+                                              _couponController.text =
+                                                  coupon.code;
+                                              _applyCoupon();
+                                            },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryColor
+                                              .withOpacity(0.05),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: AppTheme.primaryColor
+                                                .withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              coupon.code,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.primaryColor,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            Text(
+                                              coupon.type == 'percentage'
+                                                  ? '${coupon.value.toInt()}% Off'
+                                                  : '${Provider.of<SettingsProvider>(context, listen: false).formatPrice(coupon.value)} Off',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 32),
 

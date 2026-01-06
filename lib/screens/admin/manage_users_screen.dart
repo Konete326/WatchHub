@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:watchhub/widgets/admin/admin_drawer.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
 import '../../services/admin_service.dart';
 import '../../models/user.dart';
+import 'admin_user_detail_screen.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -38,6 +40,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   }
 
   Future<void> _loadUsers({int page = 1, String? search}) async {
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -55,17 +59,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       if (mounted) {
         setState(() {
           final usersData = result['users'];
-<<<<<<< HEAD
-          _users =
-              usersData != null && usersData is List<User> ? usersData : [];
-=======
           if (usersData != null && usersData is List) {
             // Service already returns User objects, so cast directly
             _users = usersData.cast<User>();
           } else {
             _users = [];
           }
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 
           final pagination = result['pagination'];
           if (pagination != null) {
@@ -196,6 +195,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           ),
         ],
       ),
+      drawer: const AdminDrawer(),
       body: Column(
         children: [
           // Search Bar
@@ -363,17 +363,41 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                         ),
                                       ],
                                     ),
-                                    trailing: (user.id ==
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.visibility),
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AdminUserDetailScreen(
+                                                        user: user),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        if (user.id !=
                                             Provider.of<AuthProvider>(context,
                                                     listen: false)
                                                 .user
                                                 ?.id)
-                                        ? null
-                                        : IconButton(
+                                          IconButton(
                                             icon: const Icon(Icons.edit),
                                             onPressed: () =>
                                                 _showRoleDialog(user),
                                           ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              AdminUserDetailScreen(user: user),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 );
                               },

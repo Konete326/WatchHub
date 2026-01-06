@@ -74,62 +74,111 @@ class WatchService {
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
   }) async {
-    Query query = _firestore.collection('watches');
+    final searchTrimmed = search?.trim();
+    final brandIdTrimmed = brandId?.trim();
+    final categoryTrimmed = category?.trim();
 
-    // For robust search without Algolia, we'll fetch wider results and filter client-side
-    // This supports "contains" and case-insensitivity which Firestore lacks natively
-    if (search != null && search.isNotEmpty) {
-      // Don't apply 'where' filter here to get more results for client-side filtering
+    try {
+      Query query = _firestore.collection('watches');
+
+      // Attempt server-side filtering
+      if (brandIdTrimmed != null)
+        query = query.where('brandId', isEqualTo: brandIdTrimmed);
+      if (categoryTrimmed != null)
+        query = query.where('category', isEqualTo: categoryTrimmed);
+
+      if (minPrice != null)
+        query = query.where('price', isGreaterThanOrEqualTo: minPrice);
+      if (maxPrice != null)
+        query = query.where('price', isLessThanOrEqualTo: maxPrice);
+
+      query = query.orderBy(sortBy, descending: sortOrder == 'desc');
+
+      final aggregateQuery = await query.count().get();
+      final totalCount = aggregateQuery.count ?? 0;
+
+      final snapshot = await query.limit(page * limit).get();
+
+      var allWatches =
+          snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+
+      // Client-side Search Filtering
+      if (searchTrimmed != null && searchTrimmed.isNotEmpty) {
+        final searchLower = searchTrimmed.toLowerCase();
+        allWatches = allWatches
+            .where((w) =>
+                w.name.toLowerCase().contains(searchLower) ||
+                w.category.toLowerCase().contains(searchLower))
+            .toList();
+      }
+
+      final startIndex = (page - 1) * limit;
+      final paginatedWatches = allWatches.length > startIndex
+          ? allWatches.sublist(
+              startIndex, (startIndex + limit).clamp(0, allWatches.length))
+          : <Watch>[];
+
+      return {
+        'watches': paginatedWatches,
+        'pagination': {
+          'page': page,
+          'limit': limit,
+          'total': totalCount,
+          'totalPages': (totalCount / limit).ceil()
+        },
+      };
+    } catch (e) {
+      print('Error in getWatches server-side query: $e');
+      // FALLBACK: Load all watches and filter client-side if server-side query fails (e.g. missing index)
+      Query query = _firestore
+          .collection('watches')
+          .orderBy('createdAt', descending: true);
+      final snapshot =
+          await query.limit(200).get(); // Limit to 200 for fallback
+      var allWatches =
+          snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+
+      if (brandIdTrimmed != null) {
+        allWatches =
+            allWatches.where((w) => w.brandId == brandIdTrimmed).toList();
+      }
+      if (categoryTrimmed != null) {
+        final categoryLower = categoryTrimmed.toLowerCase();
+        allWatches = allWatches
+            .where((w) => w.category.toLowerCase() == categoryLower)
+            .toList();
+      }
+      if (searchTrimmed != null && searchTrimmed.isNotEmpty) {
+        final searchLower = searchTrimmed.toLowerCase();
+        allWatches = allWatches
+            .where((w) =>
+                w.name.toLowerCase().contains(searchLower) ||
+                w.category.toLowerCase().contains(searchLower))
+            .toList();
+      }
+      if (minPrice != null) {
+        allWatches = allWatches.where((w) => w.price >= minPrice).toList();
+      }
+      if (maxPrice != null) {
+        allWatches = allWatches.where((w) => w.price <= maxPrice).toList();
+      }
+
+      final startIndex = (page - 1) * limit;
+      final paginatedWatches = allWatches.length > startIndex
+          ? allWatches.sublist(
+              startIndex, (startIndex + limit).clamp(0, allWatches.length))
+          : <Watch>[];
+
+      return {
+        'watches': paginatedWatches,
+        'pagination': {
+          'page': page,
+          'limit': limit,
+          'total': allWatches.length,
+          'totalPages': (allWatches.length / limit).ceil()
+        },
+      };
     }
-
-    if (brandId != null) query = query.where('brandId', isEqualTo: brandId);
-    if (category != null) query = query.where('category', isEqualTo: category);
-
-    // Note: Firestore requires composite indexes for range filters on multiple fields
-    // We might need to apply price filtering client-side if indexes are missing
-    if (minPrice != null)
-      query = query.where('price', isGreaterThanOrEqualTo: minPrice);
-    if (maxPrice != null)
-      query = query.where('price', isLessThanOrEqualTo: maxPrice);
-
-    query = query.orderBy(sortBy, descending: sortOrder == 'desc');
-
-    final aggregateQuery = await query.count().get();
-    final totalCount = aggregateQuery.count ?? 0;
-
-    // Fetch only what's needed for the current page request
-    // We allow up to 200 for client-side search within current filters
-    final snapshot = await query.limit(page * limit).get();
-
-    var allWatches =
-        snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
-
-    // Client-side Search Filtering
-    if (search != null && search.isNotEmpty) {
-      final searchLower = search.toLowerCase();
-      allWatches = allWatches
-          .where((w) =>
-              w.name.toLowerCase().contains(searchLower) ||
-              w.category.toLowerCase().contains(searchLower))
-          .toList();
-    }
-
-    // Manual slicing
-    final startIndex = (page - 1) * limit;
-    final paginatedWatches = allWatches.length > startIndex
-        ? allWatches.sublist(
-            startIndex, (startIndex + limit).clamp(0, allWatches.length))
-        : <Watch>[];
-
-    return {
-      'watches': paginatedWatches,
-      'pagination': {
-        'page': page,
-        'limit': limit,
-        'total': totalCount,
-        'totalPages': (totalCount / limit).ceil()
-      },
-    };
   }
 
   Future<List<Watch>> getFeaturedWatches({int limit = 10}) async {
@@ -142,9 +191,8 @@ class WatchService {
           .limit(limit)
           .get();
 
-      var featuredWatches = snapshot.docs
-          .map((doc) => Watch.fromFirestore(doc))
-          .toList();
+      var featuredWatches =
+          snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
 
       // If no featured watches found, get the most recent watches instead
       if (featuredWatches.isEmpty) {
@@ -154,9 +202,8 @@ class WatchService {
             .limit(limit)
             .get();
 
-        featuredWatches = snapshot.docs
-            .map((doc) => Watch.fromFirestore(doc))
-            .toList();
+        featuredWatches =
+            snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
       }
 
       return featuredWatches;
@@ -170,9 +217,7 @@ class WatchService {
             .limit(limit)
             .get();
 
-        return snapshot.docs
-            .map((doc) => Watch.fromFirestore(doc))
-            .toList();
+        return snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
       } catch (e2) {
         print('Error fetching watches fallback: $e2');
         return [];

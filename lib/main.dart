@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -15,6 +16,7 @@ import 'providers/user_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/notification_provider.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 import 'screens/splash/splash_screen.dart';
@@ -51,6 +53,16 @@ void main() async {
   // Initialize Stripe only on mobile platforms (not web)
   if (!kIsWeb) {
     Stripe.publishableKey = Constants.stripePublishableKey;
+
+    // Enable Edge-to-Edge Experience
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   runApp(const MyApp());
@@ -72,6 +84,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'WatchHub',

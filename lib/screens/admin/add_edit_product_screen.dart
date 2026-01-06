@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:flutter/foundation.dart';
-import 'dart:io';
-=======
 import 'package:flutter/foundation.dart' show kIsWeb;
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/admin_service.dart';
 import '../../services/watch_service.dart';
 import '../../models/watch.dart';
 import '../../models/brand.dart';
 import '../../models/category.dart' as model;
-import '../../utils/theme.dart';
-import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Watch? watch;
@@ -48,19 +41,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<model.Category> _categories = [];
   String? _selectedBrandId;
   String? _selectedCategory;
-<<<<<<< HEAD
-  List<File> _selectedImages = [];
-  List<Uint8List> _selectedImageBytes = []; // For web platform
-  List<String> _selectedImageDataUrls = []; // For web preview
-=======
   List<XFile> _selectedImages = []; // Use XFile for both web and mobile
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
   List<String> _existingImageUrls = [];
   bool _isLoading = false;
   bool _isLoadingBrands = false;
   bool _isLoadingCategories = false;
-  bool _hasBeltOption = false; // Whether belt option is available
-  bool _hasChainOption = false; // Whether chain option is available
+  bool _hasBeltOption = false;
+  bool _hasChainOption = false;
 
   @override
   void initState() {
@@ -117,7 +104,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (mounted) {
         setState(() {
           _brands = brands;
-          // Validate that selected brand still exists in the list
           if (_selectedBrandId != null &&
               !_brands.any((b) => b.id == _selectedBrandId)) {
             _selectedBrandId = null;
@@ -142,7 +128,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (mounted) {
         setState(() {
           _categories = categories;
-          // Validate that selected category still exists in the list
           if (_selectedCategory != null &&
               !_categories.any((c) => c.name == _selectedCategory)) {
             _selectedCategory = null;
@@ -162,44 +147,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Future<void> _pickImages() async {
     try {
-<<<<<<< HEAD
-      final images = await _imagePicker.pickMultiImage(imageQuality: 70);
-      if (images.isNotEmpty) {
-        final totalExisting = _existingImageUrls.length;
-        final totalSelected =
-            kIsWeb ? _selectedImageBytes.length : _selectedImages.length;
-        final remainingSlots =
-            Constants.maxProductImages - totalSelected - totalExisting;
-
-        if (remainingSlots <= 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Maximum ${Constants.maxProductImages} images allowed')),
-          );
-          return;
-        }
-
-        final imagesToAdd = images.take(remainingSlots);
-
-        if (kIsWeb) {
-          // Web platform: read as bytes
-          for (final xfile in imagesToAdd) {
-            final bytes = await xfile.readAsBytes();
-            _selectedImageBytes.add(bytes);
-            // Create a data URL for preview
-            _selectedImageDataUrls.add(xfile.path);
-          }
-        } else {
-          // Mobile platform: use File
-          for (final xfile in imagesToAdd) {
-            _selectedImages.add(File(xfile.path));
-          }
-        }
-
-        setState(() {});
-=======
-      final images = await _imagePicker.pickMultiImage();
+      // Image Optimization: compress to 70% and limit max width
+      final images = await _imagePicker.pickMultiImage(
+        imageQuality: 70,
+        maxWidth: 1000,
+      );
       if (images != null && images.isNotEmpty) {
         final remainingSlots =
             5 - _selectedImages.length - _existingImageUrls.length;
@@ -207,21 +159,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           final newFiles = <XFile>[];
           for (var xFile in images.take(remainingSlots)) {
             try {
-              // Verify file is readable by trying to read bytes
-              try {
-                final bytes = await xFile.readAsBytes();
-                if (bytes.isNotEmpty) {
-                  newFiles.add(xFile);
-                }
-              } catch (e) {
-                // If reading fails, skip this file
-                print('Failed to read file ${xFile.path}: $e');
+              final bytes = await xFile.readAsBytes();
+              if (bytes.isNotEmpty) {
+                newFiles.add(xFile);
               }
             } catch (e) {
-              print('Error processing file ${xFile.path}: $e');
+              print('Failed to read file ${xFile.path}: $e');
             }
           }
-          
+
           if (mounted) {
             setState(() {
               _selectedImages.addAll(newFiles);
@@ -234,7 +180,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             );
           }
         }
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
       }
     } catch (e) {
       if (mounted) {
@@ -250,12 +195,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (isExisting) {
         _existingImageUrls.removeAt(index);
       } else {
-        if (kIsWeb) {
-          _selectedImageBytes.removeAt(index);
-          _selectedImageDataUrls.removeAt(index);
-        } else {
-          _selectedImages.removeAt(index);
-        }
+        _selectedImages.removeAt(index);
       }
     });
   }
@@ -300,47 +240,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final name = _nameController.text.trim();
-      final sku = _skuController.text.trim();
+      final name = InputSanitizer.sanitize(_nameController.text);
+      final sku = InputSanitizer.sanitize(_skuController.text);
+      final description = InputSanitizer.sanitize(_descriptionController.text);
 
-<<<<<<< HEAD
-      // Check for duplicate name/sku using search functionality
-      final result =
-          await _adminService.getAllWatches(search: name, limit: 100);
-      final existingWatches = (result['watches'] as List<Watch>?) ?? <Watch>[];
-
-      final isNameDuplicate = existingWatches.any((w) =>
-          w.name.toLowerCase() == name.toLowerCase() &&
-          w.id != widget.watch?.id);
-
-      if (isNameDuplicate) {
-=======
-      // Check for duplicate name (case-insensitive, exact match)
+      // Duplicate check optimized via specialized method
       final nameExists = await _adminService.watchNameExists(
         name,
         excludeWatchId: widget.watch?.id,
       );
 
       if (nameExists) {
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         setState(() => _isLoading = false);
         _showDuplicateError(
             'A product with this name already exists. Please use a different name.');
-        return;
-      }
-
-      // Check for SKU duplicate - we need to fetch more carefully if name check didn't catch it
-      // For now, we search by SKU as well if possible, or filter retrieved list
-      // Since AdminService search checks name, we might need a separate check or a broader search
-      // But for small-mid catalog, checking the fetched list + a specific SKU search is better
-
-      final isSkuDuplicate = existingWatches.any((w) =>
-          w.sku.toLowerCase() == sku.toLowerCase() && w.id != widget.watch?.id);
-
-      if (isSkuDuplicate) {
-        setState(() => _isLoading = false);
-        _showDuplicateError(
-            'A product with this SKU already exists. Please use a unique SKU.');
         return;
       }
 
@@ -358,58 +271,44 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         specifications['diameter'] = _diameterController.text;
       }
 
-      // Prepare image data based on platform
-      final hasNewImages =
-          kIsWeb ? _selectedImageBytes.isNotEmpty : _selectedImages.isNotEmpty;
-
       if (widget.watch != null) {
-        // Update existing watch
         await _adminService.updateWatch(
           id: widget.watch!.id,
           brandId: _selectedBrandId,
           name: name,
           sku: sku,
-          description: _descriptionController.text.trim(),
-          price: double.parse(_priceController.text),
-          stock: int.parse(_stockController.text),
+          description: description,
+          price: double.parse(
+              InputSanitizer.sanitizeNumeric(_priceController.text)),
+          stock:
+              int.parse(InputSanitizer.sanitizeNumeric(_stockController.text)),
           category: _selectedCategory!,
           specifications: specifications.isNotEmpty ? specifications : null,
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
-<<<<<<< HEAD
-          imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
-          imageBytes:
-              kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
-=======
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
           hasBeltOption: _hasBeltOption,
           hasChainOption: _hasChainOption,
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         );
       } else {
-        // Create new watch
         await _adminService.createWatch(
           brandId: _selectedBrandId!,
           name: name,
           sku: sku,
-          description: _descriptionController.text.trim(),
-          price: double.parse(_priceController.text),
-          stock: int.parse(_stockController.text),
+          description: description,
+          price: double.parse(
+              InputSanitizer.sanitizeNumeric(_priceController.text)),
+          stock:
+              int.parse(InputSanitizer.sanitizeNumeric(_stockController.text)),
           category: _selectedCategory!,
           specifications: specifications.isNotEmpty ? specifications : null,
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
-<<<<<<< HEAD
-          imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
-          imageBytes:
-              kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
-=======
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
           hasBeltOption: _hasBeltOption,
           hasChainOption: _hasChainOption,
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         );
       }
 
@@ -439,8 +338,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
-  // Helper method to build belt color picker with full color palette
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -455,23 +352,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   // Images Section
-<<<<<<< HEAD
-                  Builder(
-                    builder: (context) {
-                      final selectedCount = kIsWeb
-                          ? _selectedImageBytes.length
-                          : _selectedImages.length;
-                      final totalCount =
-                          selectedCount + _existingImageUrls.length;
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Images ($totalCount/${Constants.maxProductImages})',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-=======
                   Text(
                     'Images (${_selectedImages.length + _existingImageUrls.length}/5)',
                     style: const TextStyle(
@@ -482,7 +362,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      // Existing images
                       ..._existingImageUrls.asMap().entries.map((entry) {
                         final index = entry.key;
                         final url = entry.value;
@@ -531,7 +410,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           ],
                         );
                       }),
-                      // New selected images
                       ..._selectedImages.asMap().entries.map((entry) {
                         final index = entry.key;
                         final file = entry.value;
@@ -540,26 +418,27 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: FutureBuilder<Uint8List>(
-                                  future: file.readAsBytes(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      return Image.memory(
-                                        snapshot.data!,
-                                        width: 80,
-                                        height: 80,
-                                        fit: BoxFit.cover,
-                                      );
-                                    }
-                                    return Container(
+                                future: file.readAsBytes(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return Image.memory(
+                                      snapshot.data!,
                                       width: 80,
                                       height: 80,
-                                      color: Colors.grey[300],
-                                      child: const Center(
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      ),
+                                      fit: BoxFit.cover,
                                     );
-                                  },
-                                ),
+                                  }
+                                  return Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                             Positioned(
                               top: 0,
@@ -580,7 +459,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           ],
                         );
                       }),
-                      // Add image button
                       if (_selectedImages.length + _existingImageUrls.length <
                           5)
                         GestureDetector(
@@ -593,166 +471,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(Icons.add, size: 32),
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
                           ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              // Existing images
-                              ..._existingImageUrls
-                                  .asMap()
-                                  .entries
-                                  .map((entry) {
-                                final index = entry.key;
-                                final url = entry.value;
-                                return Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: CachedNetworkImage(
-                                        imageUrl: url,
-                                        width: 80,
-                                        height: 80,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[200],
-                                          child: const Center(
-                                            child: CircularProgressIndicator(
-                                                strokeWidth: 2),
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[300],
-                                          child: const Icon(Icons.image),
-                                        ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: GestureDetector(
-                                        onTap: () => _removeImage(index, true),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(Icons.close,
-                                              size: 16, color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }),
-                              // New selected images - Platform aware
-                              if (kIsWeb)
-                                ..._selectedImageBytes
-                                    .asMap()
-                                    .entries
-                                    .map((entry) {
-                                  final index = entry.key;
-                                  final bytes = entry.value;
-                                  return Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.memory(
-                                          bytes,
-                                          width: 80,
-                                          height: 80,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 0,
-                                        right: 0,
-                                        child: GestureDetector(
-                                          onTap: () =>
-                                              _removeImage(index, false),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.close,
-                                                size: 16, color: Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                })
-                              else
-                                ..._selectedImages.asMap().entries.map((entry) {
-                                  final index = entry.key;
-                                  final file = entry.value;
-                                  return Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.file(
-                                          file,
-                                          width: 80,
-                                          height: 80,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 0,
-                                        right: 0,
-                                        child: GestureDetector(
-                                          onTap: () =>
-                                              _removeImage(index, false),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.close,
-                                                size: 16, color: Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }),
-                              // Add image button
-                              if (totalCount < Constants.maxProductImages)
-                                GestureDetector(
-                                  onTap: _pickImages,
-                                  child: Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.add, size: 32),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
-                  // Brand Selection
                   DropdownButtonFormField<String>(
-                    // Only set value if it exists in the items list to avoid assertion error
                     value: _brands.any((b) => b.id == _selectedBrandId)
                         ? _selectedBrandId
                         : null,
@@ -773,19 +498,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Name
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
                       labelText: 'Name *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? 'Please enter a name' : null,
+                    validator: (value) => Validators.required(value, 'Name'),
                   ),
                   const SizedBox(height: 16),
 
-                  // SKU / Model Number
                   TextFormField(
                     controller: _skuController,
                     decoration: const InputDecoration(
@@ -793,13 +515,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       border: OutlineInputBorder(),
                       helperText: 'Unique identifier for inventory management',
                     ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please enter an SKU or Model Number'
-                        : null,
+                    validator: (value) => Validators.required(value, 'SKU'),
                   ),
                   const SizedBox(height: 16),
 
-                  // Description
                   TextFormField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
@@ -807,13 +526,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please enter a description'
-                        : null,
+                    validator: (value) =>
+                        Validators.required(value, 'Description'),
                   ),
                   const SizedBox(height: 16),
 
-                  // Price and Stock
                   Row(
                     children: [
                       Expanded(
@@ -824,25 +541,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true)
-                              return 'Please enter a price';
-<<<<<<< HEAD
-                            if (!RegExp(r'^[0-9]+\.?[0-9]*$').hasMatch(value!))
-                              return 'Price must be a valid positive number';
-                            final price = double.tryParse(value);
-                            if (price == null) return 'Invalid price format';
-                            if (price <= 0)
-                              return 'Price must be greater than 0';
-=======
-                            final price = double.tryParse(value!);
-                            if (price == null)
-                              return 'Invalid price';
-                            if (price < 0)
-                              return 'Price cannot be negative';
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
-                            return null;
-                          },
+                          validator: Validators.price,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -854,23 +553,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true)
-                              return 'Please enter stock';
-                            if (!RegExp(r'^[0-9]+$').hasMatch(value!))
-                              return 'Stock must be a valid positive number';
-                            final stock = int.tryParse(value);
-                            if (stock == null) return 'Invalid stock format';
-                            if (stock < 0) return 'Stock cannot be negative';
-                            return null;
-                          },
+                          validator: Validators.stock,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // Sale / Discount
                   TextFormField(
                     controller: _discountController,
                     decoration: const InputDecoration(
@@ -892,9 +581,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Category
                   DropdownButtonFormField<String>(
-                    // Only set value if it exists in the items list to avoid assertion error
                     value: _categories.any((c) => c.name == _selectedCategory)
                         ? _selectedCategory
                         : null,
@@ -904,7 +591,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                     items: _categories.map((category) {
                       return DropdownMenuItem(
-                        value: category.name, // The model stores name as string
+                        value: category.name,
                         child: Text(category.name),
                       );
                     }).toList(),
@@ -915,7 +602,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Strap Options Availability
                   const Text(
                     'Strap Options Available',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -924,7 +610,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   CheckboxListTile(
                     title: const Text(
                       'Belt Option Available',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     subtitle: const Text(
                       'Enable if customers can choose belt with color options',
@@ -941,7 +628,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   CheckboxListTile(
                     title: const Text(
                       'Chain Option Available',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     subtitle: const Text(
                       'Enable if customers can choose chain with color options (Black, Silver, Gold)',
@@ -957,7 +645,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Specifications
                   const Text(
                     'Specifications (Optional)',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -1004,7 +691,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Submit Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(

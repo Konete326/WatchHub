@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/brand.dart';
 import '../../utils/theme.dart';
+import '../../utils/validators.dart';
 
 class ManageBrandsScreen extends StatefulWidget {
   const ManageBrandsScreen({super.key});
@@ -113,7 +114,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                       decoration: const InputDecoration(
                           labelText: 'Brand Name',
                           border: OutlineInputBorder()),
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                      validator: (v) => Validators.required(v, 'Name'),
                       // Jab user type kare toh error gaib ho jaye
                       onChanged: (_) => adminProvider.clearError(),
                     ),
@@ -159,7 +160,10 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                     : () async {
                         if (!formKey.currentState!.validate()) return;
 
-                        final newName = nameController.text.trim();
+                        final newName =
+                            InputSanitizer.sanitize(nameController.text);
+                        final newDesc =
+                            InputSanitizer.sanitize(descController.text);
                         // Check for duplicate name
                         final isDuplicate = adminProvider.brands.any((b) =>
                             b.name.toLowerCase() == newName.toLowerCase() &&
@@ -174,14 +178,14 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                         if (brand == null) {
                           success = await adminProvider.createBrand(
                             name: newName,
-                            description: descController.text.trim(),
+                            description: newDesc.isEmpty ? null : newDesc,
                             logoFile: selectedImage,
                           );
                         } else {
                           success = await adminProvider.updateBrand(
                             id: brand.id,
                             name: newName,
-                            description: descController.text.trim(),
+                            description: newDesc.isEmpty ? null : newDesc,
                             logoFile: selectedImage,
                           );
                         }

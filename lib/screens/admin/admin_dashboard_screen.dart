@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../utils/theme.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../providers/admin_provider.dart';
 import 'manage_products_screen.dart';
 import 'manage_orders_screen.dart';
@@ -15,6 +16,8 @@ import 'manage_coupons_screen.dart';
 import 'manage_promotion_screen.dart';
 import 'manage_brands_screen.dart';
 import 'manage_categories_screen.dart';
+import 'send_notification_screen.dart';
+import '../../widgets/admin/admin_drawer.dart';
 import '../../providers/auth_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -41,43 +44,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: const Text('Admin Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirm == true && mounted) {
-                await Provider.of<AuthProvider>(context, listen: false)
-                    .logout();
-                if (mounted) {
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/login', (route) => false);
-                }
-              }
-            },
-            tooltip: 'Logout',
-          ),
-        ],
       ),
+      drawer: const AdminDrawer(),
       body: Consumer<AdminProvider>(
         builder: (context, adminProvider, child) {
           if (adminProvider.isLoading && adminProvider.dashboardStats == null) {
@@ -165,6 +134,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 '${adminProvider.lowStockWatches.length} watch(es) have low stock (≤5 units)',
                                 style: TextStyle(color: Colors.orange[700]),
                               ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => _showLowStockDialog(
+                                      context, adminProvider.lowStockWatches),
+                                  icon: const Icon(Icons.inventory),
+                                  label: const Text('Resolve'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.orange[700],
+                                    backgroundColor:
+                                        Colors.white.withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -173,7 +157,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                   const SizedBox(height: 16),
 
+                  // Sales Trend Graph
+                  _buildSectionHeader('Weekly Sales Trend'),
+                  _buildSalesChart(adminProvider.salesTrend),
+
+                  const SizedBox(height: 16),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Selling Products
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader('Top Selling'),
+                            _buildTopSellingList(adminProvider.topSelling),
+                          ],
+                        ),
+                      ),
+                      // Category Revenue Pie Chart
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader('Categories'),
+                            _buildCategoryPieChart(
+                                adminProvider.categoryRevenue),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Recent Activity
+                  _buildSectionHeader('Recent Activity'),
+                  _buildActivityFeed(adminProvider.recentActivity),
+
+                  const SizedBox(height: 16),
+
                   // Management Cards
+                  _buildSectionHeader('Quick Actions'),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Consumer<AuthProvider>(
@@ -377,6 +405,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   );
                                 },
                               ),
+                            _buildDashboardCard(
+                              context,
+                              icon: Icons.notifications_active,
+                              title: 'Broadcast',
+                              subtitle: 'Send push notification',
+                              color: Colors.redAccent,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SendNotificationScreen(),
+                                  ),
+                                );
+                              },
+                            ),
                           ],
                         );
                       },
@@ -483,6 +526,390 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSalesChart(Map<String, double> salesTrend) {
+    if (salesTrend.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('No sales data available')),
+      );
+    }
+
+    final dates = salesTrend.keys.toList();
+    dates.sort();
+    final values = dates.map((d) => salesTrend[d]!).toList();
+
+    double maxValue =
+        values.isEmpty ? 100 : values.reduce((a, b) => a > b ? a : b);
+    if (maxValue == 0) maxValue = 100;
+
+    // Add margin to max value for better visualization
+    maxValue = maxValue * 1.2;
+
+    return Container(
+      height: 250,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 24, 24, 8), // Added right padding
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: LineChart(
+        LineChartData(
+          minY: 0,
+          maxY: maxValue,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: maxValue / 5,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.grey[200],
+                strokeWidth: 1,
+              );
+            },
+          ),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    NumberFormat.compact().format(value),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
+                  );
+                },
+              ),
+            ),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  int index = value.toInt();
+                  if (index >= 0 && index < dates.length) {
+                    final date = DateTime.parse(dates[index]);
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        DateFormat('E').format(date),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 10,
+                        ),
+                      ),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: List.generate(
+                  values.length, (i) => FlSpot(i.toDouble(), values[i])),
+              isCurved: true,
+              color: Colors.blue,
+              barWidth: 4,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                color: Colors.blue.withOpacity(0.1),
+              ),
+            ),
+          ],
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  return LineTooltipItem(
+                    '\$${spot.y.toStringAsFixed(2)}',
+                    const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSellingList(List<dynamic> topSelling) {
+    if (topSelling.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text('No products sold yet'),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: topSelling.length,
+      itemBuilder: (context, index) {
+        final watch = topSelling[index];
+        return ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: watch.images.isNotEmpty
+                ? Image.network(watch.images[0], fit: BoxFit.cover)
+                : const Icon(Icons.watch),
+          ),
+          title: Text(
+            watch.name,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '${watch.popularity} orders',
+            style: const TextStyle(fontSize: 10),
+          ),
+          trailing: Text(
+            '\$${watch.price.toInt()}',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryPieChart(Map<String, double> categoryRevenue) {
+    if (categoryRevenue.isEmpty) {
+      return const SizedBox(
+        height: 150,
+        child: Center(child: Text('No data')),
+      );
+    }
+
+    final List<Color> colors = [
+      Colors.blue,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.pink,
+    ];
+
+    int colorIndex = 0;
+    final sections = categoryRevenue.entries.map((e) {
+      final color = colors[colorIndex % colors.length];
+      colorIndex++;
+      return PieChartSectionData(
+        value: e.value,
+        title: '',
+        radius: 40,
+        color: color,
+      );
+    }).toList();
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 150,
+          child: PieChart(
+            PieChartData(
+              sections: sections,
+              sectionsSpace: 2,
+              centerSpaceRadius: 30,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...categoryRevenue.keys.take(3).map((cat) {
+          final index = categoryRevenue.keys.toList().indexOf(cat);
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  color: colors[index % colors.length],
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    cat,
+                    style: const TextStyle(fontSize: 10),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActivityFeed(List<Map<String, dynamic>> activities) {
+    if (activities.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text('No recent activity'),
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: activities.length,
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          final type = activity['type'];
+          final time = activity['time'] as DateTime;
+
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor:
+                  type == 'order' ? Colors.green[50] : Colors.blue[50],
+              child: Icon(
+                type == 'order' ? Icons.shopping_cart : Icons.person_add,
+                color: type == 'order' ? Colors.green : Colors.blue,
+                size: 20,
+              ),
+            ),
+            title: Text(
+              activity['title'],
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              activity['subtitle'],
+              style: const TextStyle(fontSize: 11),
+            ),
+            trailing: Text(
+              DateFormat('HH:mm').format(time),
+              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showLowStockDialog(
+      BuildContext context, List<dynamic> lowStockWatches) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Low Stock Items'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: lowStockWatches.length,
+            itemBuilder: (context, index) {
+              final watch = lowStockWatches[index];
+              final TextEditingController controller =
+                  TextEditingController(text: watch.stock.toString());
+
+              return ListTile(
+                title: Text(watch.name),
+                subtitle: Text('Current Stock: ${watch.stock}'),
+                trailing: SizedBox(
+                  width: 100,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.all(8),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.check, color: Colors.green),
+                        onPressed: () async {
+                          final newStock = int.tryParse(controller.text);
+                          if (newStock != null) {
+                            final success = await Provider.of<AdminProvider>(
+                                    context,
+                                    listen: false)
+                                .updateWatchStock(watch.id, newStock);
+
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success
+                                      ? 'Stock updated for ${watch.name}'
+                                      : 'Failed to update stock'),
+                                  backgroundColor:
+                                      success ? Colors.green : Colors.red,
+                                ),
+                              );
+                              if (success) {
+                                Navigator.pop(
+                                    context); // Close dialog to refresh or keep open?
+                                // Better to keep open but state needs update.
+                                // Since provider updates, if we use consumer here or just rely on parent rebuild..
+                                // Actually Dialog needs to rebuild to show new stock.
+                                // For simplicity, let's close it or maybe just clear focus.
+                              }
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

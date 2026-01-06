@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
+import '../../utils/validators.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -36,12 +37,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final success = await authProvider.register(
-      email: _emailController.text.trim(),
+      email: InputSanitizer.sanitize(_emailController.text),
       password: _passwordController.text,
-      name: _nameController.text.trim(),
+      name: InputSanitizer.sanitize(_nameController.text),
       phone: _phoneController.text.trim().isEmpty
           ? null
-          : _phoneController.text.trim(),
+          : InputSanitizer.sanitizePhone(_phoneController.text),
     );
 
     if (!mounted) return;
@@ -100,15 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Full Name',
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
-                      return 'Name can only contain alphabets';
-                    }
-                    return null;
-                  },
+                  validator: (value) => Validators.required(value, 'Full Name'),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -118,16 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
+                  validator: Validators.email,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -137,17 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: 'Phone (Optional)',
                     prefixIcon: Icon(Icons.phone),
                   ),
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      if (value.length < 10 || value.length > 15) {
-                        return 'Phone number must be 10-15 digits';
-                      }
-                      if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                        return 'Phone number must contain only digits';
-                      }
-                    }
-                    return null;
-                  },
+                  validator: Validators.phone,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -169,15 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
+                  validator: Validators.password,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(

@@ -70,19 +70,13 @@ class Watch {
           ? double.parse(json['salePrice'].toString())
           : null,
       discountPercentage: json['discountPercentage'] as int?,
-<<<<<<< HEAD
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] is Timestamp
-              ? (json['createdAt'] as Timestamp).toDate()
-=======
       hasBeltOption: json['hasBeltOption'] as bool? ?? false,
       hasChainOption: json['hasChainOption'] as bool? ?? false,
       strapType: json['strapType'] as String?,
       strapColor: json['strapColor'] as String?,
-      createdAt: json['createdAt'] != null 
-          ? (json['createdAt'] is Timestamp 
-              ? (json['createdAt'] as Timestamp).toDate() 
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] is Timestamp
+              ? (json['createdAt'] as Timestamp).toDate()
               : DateTime.parse(json['createdAt'] as String))
           : DateTime.now(),
       brand: json['brand'] != null
@@ -150,7 +144,33 @@ class Watch {
 
   bool get isInStock => stock > 0;
   bool get isLowStock => stock > 0 && stock <= 5;
-  
+
   // Helper to check if any strap options are available
   bool get hasAnyStrapOption => hasBeltOption || hasChainOption;
+
+  Watch copyWith({required int stock}) {
+    return Watch(
+      id: id,
+      brandId: brandId,
+      name: name,
+      description: description,
+      price: price,
+      stock: stock,
+      images: images,
+      specifications: specifications,
+      category: category,
+      popularity: popularity,
+      salePrice: salePrice,
+      discountPercentage: discountPercentage,
+      averageRating: averageRating,
+      reviewCount: reviewCount,
+      sku: sku,
+      createdAt: createdAt,
+      brand: brand,
+      hasBeltOption: hasBeltOption,
+      hasChainOption: hasChainOption,
+      strapType: strapType,
+      strapColor: strapColor,
+    );
+  }
 }

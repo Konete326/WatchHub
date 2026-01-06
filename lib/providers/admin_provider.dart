@@ -74,6 +74,30 @@ class AdminProvider with ChangeNotifier {
     return (value as num).toDouble();
   }
 
+  Map<String, double> get salesTrend {
+    final trend = _dashboardStats?['salesTrend'];
+    if (trend == null) return {};
+    return Map<String, double>.from(trend);
+  }
+
+  List<Watch> get topSelling {
+    final top = _dashboardStats?['topSelling'];
+    if (top == null) return [];
+    return List<Watch>.from(top);
+  }
+
+  Map<String, double> get categoryRevenue {
+    final revenue = _dashboardStats?['categoryRevenue'];
+    if (revenue == null) return {};
+    return Map<String, double>.from(revenue);
+  }
+
+  List<Map<String, dynamic>> get recentActivity {
+    final activity = _dashboardStats?['recentActivity'];
+    if (activity == null) return [];
+    return List<Map<String, dynamic>>.from(activity);
+  }
+
   Future<void> fetchDashboardStats() async {
     _isLoading = true;
     _errorMessage = null;
@@ -83,11 +107,17 @@ class AdminProvider with ChangeNotifier {
       final data = await _adminService.getDashboardStats();
       _dashboardStats = data;
 
-      // In the new Firestore-based getDashboardStats, I don't fetch recent orders or low stock watches
-      // yet to keep it simple. If the UI needs them, I should add them back or let the UI fetch them.
-      // For now, I'll clear them to avoid showing stale data.
+      // Extract low stock watches from the fetched watches in stats
+      final allWatches = data['allWatches'] as List<Watch>? ?? [];
+      if (allWatches.isEmpty) {
+        // Fallback if not provided in data (though it should be)
+        _lowStockWatches = [];
+      } else {
+        _lowStockWatches = allWatches.where((w) => w.isLowStock).toList();
+      }
+
+      // Recent orders are already used in activity, but we can store them if needed
       _recentOrders = [];
-      _lowStockWatches = [];
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
     } finally {
@@ -307,13 +337,12 @@ class AdminProvider with ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    
+
     try {
       // 1. Pehle check karein ke kya is naam ka brand list mein maujood hai
       // Case-insensitive check ke liye .toLowerCase() use kiya hai
-      bool exists = _brands.any((brand) => 
-        brand.name.trim().toLowerCase() == name.trim().toLowerCase()
-      );
+      bool exists = _brands.any((brand) =>
+          brand.name.trim().toLowerCase() == name.trim().toLowerCase());
 
       if (exists) {
         _errorMessage = "Brand with this name already exists!";
@@ -328,7 +357,7 @@ class AdminProvider with ChangeNotifier {
         description: description,
         logoFile: logoFile,
       );
-      
+
       await fetchAllBrands();
       return true;
     } catch (e) {
@@ -458,6 +487,36 @@ class AdminProvider with ChangeNotifier {
     try {
       await _adminService.deleteCategory(id);
       await fetchAllCategories();
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateWatchStock(String watchId, int newStock) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _adminService.updateWatch(id: watchId, stock: newStock);
+      // Update local state if successful
+      if (_dashboardStats != null) {
+        // Update in all watches
+        final allWatches = _dashboardStats!['allWatches'] as List<Watch>?;
+        if (allWatches != null) {
+          final index = allWatches.indexWhere((w) => w.id == watchId);
+          if (index != -1) {
+            allWatches[index] = allWatches[index].copyWith(stock: newStock);
+          }
+
+          // Re-evaluate low stock list
+          _lowStockWatches = allWatches.where((w) => w.isLowStock).toList();
+        }
+      }
       return true;
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);

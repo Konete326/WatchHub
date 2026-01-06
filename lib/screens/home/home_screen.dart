@@ -9,6 +9,12 @@ import '../../widgets/shimmer_loading.dart';
 import '../../utils/theme.dart';
 import '../product/product_detail_screen.dart';
 import '../search/search_screen.dart';
+import '../notifications/notifications_screen.dart';
+import '../browse/browse_screen.dart';
+import '../../providers/notification_provider.dart';
+import '../../providers/wishlist_provider.dart';
+import '../wishlist/wishlist_screen.dart';
+import '../../widgets/countdown_timer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +32,10 @@ class _HomeScreenState extends State<HomeScreen> {
       watchProvider.fetchFeaturedWatches();
       watchProvider.fetchBanners();
       watchProvider.fetchBrands();
+      watchProvider.fetchCategories();
       watchProvider.fetchPromotionHighlight();
+      Provider.of<NotificationProvider>(context, listen: false)
+          .fetchNotifications();
     });
   }
 
@@ -35,12 +44,99 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('WatchHub'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SearchScreen()),
+              );
+            },
+          ),
+          Consumer<WishlistProvider>(
+            builder: (context, wishlistProvider, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const WishlistScreen()),
+                      );
+                    },
+                  ),
+                  if (wishlistProvider.itemCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${wishlistProvider.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          Consumer<NotificationProvider>(
+            builder: (context, provider, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const NotificationsScreen()),
+                      );
+                    },
+                  ),
+                  if (provider.unreadCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${provider.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -240,6 +336,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
 
+                  // Categories Horizontal Slider
+                  _buildCategorySlider(watchProvider),
+
                   // Sale Highlight
                   if (watchProvider.promotionHighlight != null)
                     _buildPromotionHighlight(watchProvider.promotionHighlight!),
@@ -310,6 +409,97 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildCategorySlider(WatchProvider watchProvider) {
+    if (watchProvider.categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
+          child: Text(
+            'Categories',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 110,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: watchProvider.categories.length,
+            itemBuilder: (context, index) {
+              final category = watchProvider.categories[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BrowseScreen(
+                          initialCategory: category.name,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 65,
+                        height: 65,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: category.imageUrl != null &&
+                                category.imageUrl!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: category.imageUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    Container(color: Colors.grey[200]),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.category, size: 30),
+                              )
+                            : Container(
+                                color: AppTheme.primaryColor.withOpacity(0.1),
+                                child: const Icon(Icons.category,
+                                    color: AppTheme.primaryColor, size: 30),
+                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -386,6 +576,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (promotion.expiryDate != null) ...[
+                      const SizedBox(height: 16),
+                      CountdownTimer(
+                        targetDate: promotion.expiryDate!,
+                        textColor: Color(
+                            int.parse(promotion.textColor ?? '0xFFFFFFFF')),
                       ),
                     ],
                   ],

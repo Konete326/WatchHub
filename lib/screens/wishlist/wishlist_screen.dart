@@ -6,6 +6,7 @@ import '../../providers/wishlist_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
 import '../../utils/theme.dart';
 import '../product/product_detail_screen.dart';
 
@@ -36,47 +37,23 @@ class _WishlistScreenState extends State<WishlistScreen> {
           await Provider.of<WishlistProvider>(context, listen: false)
               .fetchWishlist();
         },
-        child: Consumer2<WishlistProvider, SettingsProvider>(
-          builder: (context, wishlistProvider, settings, child) {
+        child: Consumer3<WishlistProvider, CartProvider, SettingsProvider>(
+          builder: (context, wishlistProvider, cartProvider, settings, child) {
             if (wishlistProvider.isLoading && wishlistProvider.isEmpty) {
               return const ListShimmer();
             }
 
             if (wishlistProvider.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.favorite_outline,
-                      size: 100,
-                      color: Colors.grey.shade300,
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Your wishlist is empty',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Save items you love here',
-                        style: TextStyle(color: Colors.grey.shade600)),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context)
-                            .pushNamedAndRemoveUntil('/home', (route) => false);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Browse Collections'),
-                    ),
-                  ],
-                ),
+              return EmptyState(
+                icon: Icons.favorite_border_rounded,
+                title: 'Your wishlist is empty',
+                message:
+                    'Save items you love here to find them easily later and get notified of price drops.',
+                actionLabel: 'Start Shopping',
+                onActionPressed: () {
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/home', (route) => false);
+                },
               );
             }
 
@@ -217,12 +194,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                       Expanded(
                                         child: ElevatedButton.icon(
                                           onPressed: watch.isInStock &&
-                                                  !wishlistProvider.isLoading
+                                                  !wishlistProvider.isLoading &&
+                                                  (cartProvider
+                                                          .getQuantityInCart(
+                                                              watch.id) <
+                                                      watch.stock)
                                               ? () async {
-                                                  final cartProvider =
-                                                      Provider.of<CartProvider>(
-                                                          context,
-                                                          listen: false);
                                                   final success =
                                                       await wishlistProvider
                                                           .moveToCart(item.id);
@@ -261,9 +238,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                               : const Icon(Icons.info_outline,
                                                   size: 16),
                                           label: Text(
-                                              watch.isInStock
-                                                  ? 'Move to Cart'
-                                                  : 'Out of Stock',
+                                              !watch.isInStock
+                                                  ? 'Out of Stock'
+                                                  : (cartProvider
+                                                              .getQuantityInCart(
+                                                                  watch.id) >=
+                                                          watch.stock
+                                                      ? 'Stock Limit'
+                                                      : 'Move to Cart'),
                                               style: const TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold)),
