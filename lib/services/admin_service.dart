@@ -490,17 +490,20 @@ class AdminService {
   }
 
   // Notifications
+  // Notifications
   Future<void> sendNotification({
     String? userId,
     required String title,
     required String body,
     required String type,
+    int expiryDays = 7, // Default 7 days
   }) async {
     final notificationData = {
       'title': title,
       'body': body,
       'type': type,
       'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': DateTime.now().add(Duration(days: expiryDays)),
       'isRead': false,
       'sentBy': 'admin',
     };
@@ -519,9 +522,16 @@ class AdminService {
         'targetUser': userId,
         'status': 'pending',
       });
+
+      // Save to Admin History
+      await _firestore.collection('admin_notification_history').add({
+        ...notificationData,
+        'target': 'User: $userId',
+      });
     } else {
       // Send to all users (Broadcast)
       // 1. Add to announcements for in-app feed
+      // Using a valid collection for Broadcasts that users can query
       await _firestore.collection('announcements').add(notificationData);
 
       // 2. Add to queue for Cloud Functions to send to 'all_users' topic
@@ -530,7 +540,23 @@ class AdminService {
         'targetTopic': 'all_users',
         'status': 'pending',
       });
+
+      // Save to Admin History
+      await _firestore.collection('admin_notification_history').add({
+        ...notificationData,
+        'target': 'Broadcast (All Users)',
+      });
     }
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationHistory() async {
+    final snapshot = await _firestore
+        .collection('admin_notification_history')
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .get();
+
+    return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<Watch> createWatch({

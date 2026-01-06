@@ -10,6 +10,7 @@ import '../orders/order_history_screen.dart';
 import '../profile/addresses_screen.dart';
 import '../support/support_screen.dart';
 import 'edit_profile_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -230,6 +231,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => const OrderHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.notifications,
+                title: 'Notifications',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationsScreen(),
                     ),
                   );
                 },
