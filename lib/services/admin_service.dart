@@ -464,11 +464,13 @@ class AdminService {
     final ordersSnapshot = await _firestore
         .collection('orders')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .get();
 
     final orders =
         ordersSnapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+
+    // Sort client-side: most recent first
+    orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     int totalOrders = orders.length;
     int cancelledOrders = 0;
