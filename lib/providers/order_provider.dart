@@ -56,6 +56,7 @@ class OrderProvider with ChangeNotifier {
     List<String>? cartItemIds,
     String paymentMethod = 'card',
     String? couponId,
+    Map<String, Map<String, String?>>? strapSelections,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -69,6 +70,7 @@ class OrderProvider with ChangeNotifier {
         cartItemIds: cartItemIds,
         paymentMethod: paymentMethod,
         couponId: couponId,
+        strapSelections: strapSelections,
       );
       _orders.insert(0, order); // Add to beginning of list
       _isLoading = false;

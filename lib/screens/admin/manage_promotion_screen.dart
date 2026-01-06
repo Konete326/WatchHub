@@ -270,9 +270,23 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                               labelText: 'BG Color (HEX)',
                               hintText: '0xFFB71C1C',
                               border: const OutlineInputBorder(),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: _buildColorIndicator(_bgController.text),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: _buildColorIndicator(_bgController.text),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.palette),
+                                    onPressed: () => _showColorPicker(
+                                      context,
+                                      _bgController,
+                                      'Background Color',
+                                    ),
+                                    tooltip: 'Pick Color',
+                                  ),
+                                ],
                               ),
                             ),
                             onChanged: (_) => setState(() {}),
@@ -286,10 +300,24 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                               labelText: 'Text Color (HEX)',
                               hintText: '0xFFFFFFFF',
                               border: const OutlineInputBorder(),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: _buildColorIndicator(
-                                    _textColController.text),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: _buildColorIndicator(
+                                        _textColController.text),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.palette),
+                                    onPressed: () => _showColorPicker(
+                                      context,
+                                      _textColController,
+                                      'Text Color',
+                                    ),
+                                    tooltip: 'Pick Color',
+                                  ),
+                                ],
                               ),
                             ),
                             onChanged: (_) => setState(() {}),
@@ -468,5 +496,380 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
     } catch (_) {
       return fallback;
     }
+  }
+
+  String _colorToHex(Color color) {
+    return '0xFF${color.value.toRadixString(16).substring(2).toUpperCase()}';
+  }
+
+  Future<void> _showColorPicker(
+    BuildContext context,
+    TextEditingController controller,
+    String title,
+  ) async {
+    final currentColor = _safeColor(controller.text, Colors.black);
+    
+    final selectedColor = await showDialog<Color>(
+      context: context,
+      builder: (context) => ColorPickerDialog(
+        initialColor: currentColor,
+        title: title,
+      ),
+    );
+
+    if (selectedColor != null) {
+      controller.text = _colorToHex(selectedColor);
+      setState(() {});
+    }
+  }
+}
+
+class ColorPickerDialog extends StatefulWidget {
+  final Color initialColor;
+  final String title;
+
+  const ColorPickerDialog({
+    super.key,
+    required this.initialColor,
+    required this.title,
+  });
+
+  @override
+  State<ColorPickerDialog> createState() => _ColorPickerDialogState();
+}
+
+class _ColorPickerDialogState extends State<ColorPickerDialog> {
+  late Color _selectedColor;
+
+  // Comprehensive color palette
+  final List<List<Color>> _colorPalette = [
+    // Reds
+    [
+      const Color(0xFFFF0000),
+      const Color(0xFFFF1744),
+      const Color(0xFFD32F2F),
+      const Color(0xFFC62828),
+      const Color(0xFFB71C1C),
+    ],
+    // Pinks
+    [
+      const Color(0xFFFFC0CB),
+      const Color(0xFFFF69B4),
+      const Color(0xFFFF1493),
+      const Color(0xFFE91E63),
+      const Color(0xFFC2185B),
+    ],
+    // Purples
+    [
+      const Color(0xFFE1BEE7),
+      const Color(0xFFBA68C8),
+      const Color(0xFF9C27B0),
+      const Color(0xFF7B1FA2),
+      const Color(0xFF4A148C),
+    ],
+    // Deep Purples
+    [
+      const Color(0xFFD1C4E9),
+      const Color(0xFF9575CD),
+      const Color(0xFF673AB7),
+      const Color(0xFF512DA8),
+      const Color(0xFF311B92),
+    ],
+    // Indigos
+    [
+      const Color(0xFFC5CAE9),
+      const Color(0xFF7986CB),
+      const Color(0xFF3F51B5),
+      const Color(0xFF303F9F),
+      const Color(0xFF1A237E),
+    ],
+    // Blues
+    [
+      const Color(0xFFBBDEFB),
+      const Color(0xFF64B5F6),
+      const Color(0xFF2196F3),
+      const Color(0xFF1976D2),
+      const Color(0xFF0D47A1),
+    ],
+    // Light Blues
+    [
+      const Color(0xFFB3E5FC),
+      const Color(0xFF4FC3F7),
+      const Color(0xFF03A9F4),
+      const Color(0xFF0277BD),
+      const Color(0xFF01579B),
+    ],
+    // Cyans
+    [
+      const Color(0xFFB2EBF2),
+      const Color(0xFF4DD0E1),
+      const Color(0xFF00BCD4),
+      const Color(0xFF0097A7),
+      const Color(0xFF006064),
+    ],
+    // Teals
+    [
+      const Color(0xFFB2DFDB),
+      const Color(0xFF4DB6AC),
+      const Color(0xFF009688),
+      const Color(0xFF00796B),
+      const Color(0xFF004D40),
+    ],
+    // Greens
+    [
+      const Color(0xFFC8E6C9),
+      const Color(0xFF81C784),
+      const Color(0xFF4CAF50),
+      const Color(0xFF388E3C),
+      const Color(0xFF1B5E20),
+    ],
+    // Light Greens
+    [
+      const Color(0xFFDCEDC8),
+      const Color(0xFFAED581),
+      const Color(0xFF8BC34A),
+      const Color(0xFF689F38),
+      const Color(0xFF33691E),
+    ],
+    // Limes
+    [
+      const Color(0xFFF0F4C3),
+      const Color(0xFFDCE775),
+      const Color(0xFFCDDC39),
+      const Color(0xFFAFB42B),
+      const Color(0xFF827717),
+    ],
+    // Yellows
+    [
+      const Color(0xFFFFF9C4),
+      const Color(0xFFFFF176),
+      const Color(0xFFFFEB3B),
+      const Color(0xFFF9A825),
+      const Color(0xFFF57F17),
+    ],
+    // Ambers
+    [
+      const Color(0xFFFFE082),
+      const Color(0xFFFFD54F),
+      const Color(0xFFFFC107),
+      const Color(0xFFFF8F00),
+      const Color(0xFFFF6F00),
+    ],
+    // Oranges
+    [
+      const Color(0xFFFFE0B2),
+      const Color(0xFFFFB74D),
+      const Color(0xFFFF9800),
+      const Color(0xFFF57C00),
+      const Color(0xFFE65100),
+    ],
+    // Deep Oranges
+    [
+      const Color(0xFFFFCCBC),
+      const Color(0xFFFF8A65),
+      const Color(0xFFFF5722),
+      const Color(0xFFD84315),
+      const Color(0xFFBF360C),
+    ],
+    // Browns
+    [
+      const Color(0xFFD7CCC8),
+      const Color(0xFFA1887F),
+      const Color(0xFF795548),
+      const Color(0xFF5D4037),
+      const Color(0xFF3E2723),
+    ],
+    // Greys
+    [
+      const Color(0xFFF5F5F5),
+      const Color(0xFFE0E0E0),
+      const Color(0xFF9E9E9E),
+      const Color(0xFF616161),
+      const Color(0xFF212121),
+    ],
+    // Blue Greys
+    [
+      const Color(0xFFCFD8DC),
+      const Color(0xFF90A4AE),
+      const Color(0xFF607D8B),
+      const Color(0xFF455A64),
+      const Color(0xFF263238),
+    ],
+    // Black and White
+    [
+      const Color(0xFFFFFFFF),
+      const Color(0xFFFAFAFA),
+      const Color(0xFF000000),
+      const Color(0xFF424242),
+      const Color(0xFF757575),
+    ],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedColor = widget.initialColor;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Color Palette
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Current Selection Preview
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _selectedColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Selected Color',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black54,
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '0xFF${_selectedColor.value.toRadixString(16).substring(2).toUpperCase()}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black54,
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Color Grid
+                    ..._colorPalette.map((row) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: row.map((color) {
+                              final isSelected = color.value == _selectedColor.value;
+                              return Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedColor = color;
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Colors.black
+                                            : Colors.grey.shade300,
+                                        width: isSelected ? 3 : 1,
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.3),
+                                                blurRadius: 8,
+                                                spreadRadius: 2,
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black54,
+                                                blurRadius: 4,
+                                              ),
+                                            ],
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+            // Footer with buttons
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(_selectedColor),
+                    child: const Text('Select'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

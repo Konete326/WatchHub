@@ -55,8 +55,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       if (mounted) {
         setState(() {
           final usersData = result['users'];
+<<<<<<< HEAD
           _users =
               usersData != null && usersData is List<User> ? usersData : [];
+=======
+          if (usersData != null && usersData is List) {
+            // Service already returns User objects, so cast directly
+            _users = usersData.cast<User>();
+          } else {
+            _users = [];
+          }
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 
           final pagination = result['pagination'];
           if (pagination != null) {
@@ -196,7 +205,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search users...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    _onSearch(_searchController.text);
+                  },
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -212,6 +226,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               ),
               onSubmitted: _onSearch,
               onChanged: (value) {
+                setState(() {}); // Rebuild to update suffixIcon visibility
                 if (value.isEmpty) {
                   _onSearch('');
                 }
