@@ -1,20 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../screens/admin/admin_dashboard_screen.dart';
-import '../../screens/admin/manage_products_screen.dart';
-import '../../screens/admin/manage_orders_screen.dart';
-import '../../screens/admin/manage_users_screen.dart';
-import '../../screens/admin/manage_categories_screen.dart';
-import '../../screens/admin/manage_brands_screen.dart';
-import '../../screens/admin/manage_reviews_screen.dart';
-import '../../screens/admin/manage_banners_screen.dart';
-import '../../screens/admin/manage_promotion_screen.dart';
-import '../../screens/admin/manage_coupons_screen.dart';
-import '../../screens/admin/shipping_settings_screen.dart';
-import '../../screens/admin/manage_faqs_screen.dart';
-import '../../screens/admin/manage_tickets_screen.dart';
-import '../../screens/admin/send_notification_screen.dart';
 
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
@@ -41,34 +27,34 @@ class AdminDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 _buildDrawerItem(context, Icons.dashboard, 'Dashboard',
-                    const AdminDashboardScreen(),
-                    isReplacement: true),
+                    routeName: '/admin', isReplacement: true),
                 _buildDrawerItem(context, Icons.watch, 'Products',
-                    const ManageProductsScreen()),
+                    routeName: '/admin/products'),
                 _buildDrawerItem(context, Icons.shopping_bag, 'Orders',
-                    const ManageOrdersScreen()),
-                _buildDrawerItem(
-                    context, Icons.people, 'Users', const ManageUsersScreen()),
+                    routeName: '/admin/orders'),
+                _buildDrawerItem(context, Icons.people, 'Users',
+                    routeName: '/admin/users'),
                 _buildDrawerItem(context, Icons.category, 'Categories',
-                    const ManageCategoriesScreen()),
+                    routeName: '/admin/categories'),
                 _buildDrawerItem(context, Icons.business, 'Brands',
-                    const ManageBrandsScreen()),
+                    routeName: '/admin/brands'),
                 _buildDrawerItem(context, Icons.star, 'Reviews',
-                    const ManageReviewsScreen()),
+                    routeName: '/admin/reviews'),
                 _buildDrawerItem(context, Icons.image, 'Banners',
-                    const ManageBannersScreen()),
+                    routeName: '/admin/banners'),
                 _buildDrawerItem(context, Icons.campaign, 'Promotions',
-                    const ManagePromotionScreen()),
+                    routeName: '/admin/promotions'),
                 _buildDrawerItem(context, Icons.confirmation_number, 'Coupons',
-                    const ManageCouponsScreen()),
+                    routeName: '/admin/coupons'),
                 _buildDrawerItem(context, Icons.local_shipping, 'Shipping',
-                    const ShippingSettingsScreen()),
+                    routeName: '/admin/shipping'),
                 _buildDrawerItem(context, Icons.help_outline, 'FAQs',
-                    const ManageFAQsScreen()),
+                    routeName: '/admin/faqs'),
                 _buildDrawerItem(context, Icons.support_agent, 'Tickets',
-                    const ManageTicketsScreen()),
-                _buildDrawerItem(context, Icons.notifications_active,
-                    'Notifications', const SendNotificationScreen()),
+                    routeName: '/admin/tickets'),
+                _buildDrawerItem(
+                    context, Icons.notifications_active, 'Notifications',
+                    routeName: '/admin/notifications'),
               ],
             ),
           ),
@@ -110,37 +96,17 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerItem(
-      BuildContext context, IconData icon, String title, Widget page,
-      {bool isReplacement = false}) {
-    // Check if we are currently on this page to highlight it or disable navigation
-    // Determining exactly which page we are on from context is tricky without named routes
-    // For now, we just allow navigation.
-
+  Widget _buildDrawerItem(BuildContext context, IconData icon, String title,
+      {bool isReplacement = false, required String routeName}) {
     return ListTile(
       leading: Icon(icon, color: Colors.grey[700]),
       title: Text(title, style: TextStyle(color: Colors.grey[800])),
       onTap: () {
         Navigator.pop(context); // Close drawer
         if (isReplacement) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => page),
-          );
+          Navigator.of(context).pushReplacementNamed(routeName);
         } else {
-          // If we are already on this page (e.g. from Dashboard -> Products),
-          // pushing again stacks it. Ideally we should replace if we are "switching" tabs.
-          // But since we are not using a ShellRoute matching structure, simple push is safer
-          // to avoid losing the dashboard history if they want to go back.
-          // However, for a sidebar, usuallly users expect "Switching sections".
-          // Let's use pushReplacement to act like a tab switch, but keep Dashboard as "Home".
-
-          // Actually, if we use pushReplacement everywhere, we lose the "Back" to Dashboard.
-          // Safe bet: Push. But if the user clicks Products, then Orders, they have a stack [Dash, Prod, Ord].
-          // Back goes Ord -> Prod -> Dash.
-          // If they want "Root" navigation, they should click Dashboard.
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => page),
-          );
+          Navigator.of(context).pushNamed(routeName);
         }
       },
     );
