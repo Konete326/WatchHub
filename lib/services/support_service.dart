@@ -45,28 +45,30 @@ class SupportService {
 
   Future<List<SupportTicket>> getUserTickets() async {
     if (uid == null) throw Exception('User not logged in');
-    
+
     final snapshot = await _firestore
         .collection('support_tickets')
         .where('userId', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
         .get();
-        
-    return snapshot.docs.map((doc) => SupportTicket.fromFirestore(doc)).toList();
+
+    final tickets =
+        snapshot.docs.map((doc) => SupportTicket.fromFirestore(doc)).toList();
+    tickets.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return tickets;
   }
 
   Future<SupportTicket> getTicketById(String id) async {
     final doc = await _firestore.collection('support_tickets').doc(id).get();
     if (!doc.exists) throw Exception('Ticket not found');
-    
-    final messagesSnapshot = await doc.reference
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .get();
-    
+
+    final messagesSnapshot = await doc.reference.collection('messages').get();
+
     final ticket = SupportTicket.fromFirestore(doc);
-    final messages = messagesSnapshot.docs.map((m) => TicketMessage.fromFirestore(m)).toList();
-    
+    final messages = messagesSnapshot.docs
+        .map((m) => TicketMessage.fromFirestore(m))
+        .toList();
+    messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     return SupportTicket(
       id: ticket.id,
       userId: ticket.userId,
@@ -81,7 +83,11 @@ class SupportService {
   Future<void> addMessageToTicket(String ticketId, String message) async {
     if (uid == null) throw Exception('User not logged in');
 
-    await _firestore.collection('support_tickets').doc(ticketId).collection('messages').add({
+    await _firestore
+        .collection('support_tickets')
+        .doc(ticketId)
+        .collection('messages')
+        .add({
       'ticketId': ticketId,
       'message': message,
       'isAdmin': false,
@@ -90,21 +96,24 @@ class SupportService {
   }
 
   // FAQs
-  Future<Map<String, dynamic>> getFAQs({String? category, String? search}) async {
-    Query query = _firestore.collection('faqs').orderBy('order', descending: true);
-    
+  Future<Map<String, dynamic>> getFAQs(
+      {String? category, String? search}) async {
+    Query query = _firestore.collection('faqs');
+
     if (category != null && category.isNotEmpty) {
       query = query.where('category', isEqualTo: category);
     }
 
     final snapshot = await query.get();
     var faqs = snapshot.docs.map((doc) => FAQ.fromFirestore(doc)).toList();
+    faqs.sort((a, b) => b.order.compareTo(a.order));
 
     if (search != null && search.isNotEmpty) {
-      faqs = faqs.where((f) => 
-        f.question.toLowerCase().contains(search.toLowerCase()) || 
-        f.answer.toLowerCase().contains(search.toLowerCase())
-      ).toList();
+      faqs = faqs
+          .where((f) =>
+              f.question.toLowerCase().contains(search.toLowerCase()) ||
+              f.answer.toLowerCase().contains(search.toLowerCase()))
+          .toList();
     }
 
     final categories = faqs.map((f) => f.category).toSet().toList();
@@ -115,4 +124,3 @@ class SupportService {
     };
   }
 }
-

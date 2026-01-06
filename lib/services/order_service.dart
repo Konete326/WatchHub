@@ -223,12 +223,13 @@ class OrderService {
     final snapshot = await _firestore
         .collection('orders')
         .where('userId', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .limit(limit * page)
         .get();
 
     final allOrders =
         snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+
+    // Sort client-side: most recent first
+    allOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     // Manual slicing for migration speed
     final startIndex = (page - 1) * limit;
