@@ -193,8 +193,31 @@ class _ReviewsSectionState extends State<ReviewsSection> {
 
             const SizedBox(height: 16),
 
+            // Error Message
+            if (reviewProvider.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      const SizedBox(height: 8),
+                      Text(
+                        reviewProvider.errorMessage!,
+                        style: TextStyle(color: Colors.red[700]),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _refreshReviews,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
             // Reviews List
-            if (reviewProvider.isLoading && reviews.isEmpty)
+            else if (reviewProvider.isLoading && reviews.isEmpty)
               const ListShimmer(itemCount: 3)
             else if (reviews.isEmpty)
               Padding(
@@ -252,6 +275,16 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         if (item is Map && item['rating'] != null && item['_count'] != null) {
           final rating = item['rating'] as int;
           final count = item['_count']['rating'] as int? ?? 0;
+          ratingCounts[rating] = count;
+          total += count;
+        }
+      }
+    } else if (distribution is Map) {
+      // Handle Map<String, dynamic> format where keys are rating strings
+      for (var entry in distribution.entries) {
+        final rating = int.tryParse(entry.key.toString());
+        if (rating != null && rating >= 1 && rating <= 5) {
+          final count = (entry.value as num?)?.toInt() ?? 0;
           ratingCounts[rating] = count;
           total += count;
         }

@@ -19,6 +19,10 @@ class Watch {
   final String sku;
   final DateTime createdAt;
   final Brand? brand;
+  final bool hasBeltOption; // Whether belt option is available
+  final bool hasChainOption; // Whether chain option is available
+  final String? strapType; // 'belt' or 'chain' (selected by user)
+  final String? strapColor; // Color in hex format (selected by user)
 
   Watch({
     required this.id,
@@ -38,6 +42,10 @@ class Watch {
     required this.sku,
     required this.createdAt,
     this.brand,
+    this.hasBeltOption = false,
+    this.hasChainOption = false,
+    this.strapType,
+    this.strapColor,
   });
 
   factory Watch.fromJson(Map<String, dynamic> json) {
@@ -62,9 +70,19 @@ class Watch {
           ? double.parse(json['salePrice'].toString())
           : null,
       discountPercentage: json['discountPercentage'] as int?,
+<<<<<<< HEAD
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
+=======
+      hasBeltOption: json['hasBeltOption'] as bool? ?? false,
+      hasChainOption: json['hasChainOption'] as bool? ?? false,
+      strapType: json['strapType'] as String?,
+      strapColor: json['strapColor'] as String?,
+      createdAt: json['createdAt'] != null 
+          ? (json['createdAt'] is Timestamp 
+              ? (json['createdAt'] as Timestamp).toDate() 
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
               : DateTime.parse(json['createdAt'] as String))
           : DateTime.now(),
       brand: json['brand'] != null
@@ -95,6 +113,10 @@ class Watch {
           ? (data['salePrice'] as num).toDouble()
           : null,
       discountPercentage: data['discountPercentage'],
+      hasBeltOption: data['hasBeltOption'] as bool? ?? false,
+      hasChainOption: data['hasChainOption'] as bool? ?? false,
+      strapType: data['strapType'] as String?,
+      strapColor: data['strapColor'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -115,6 +137,10 @@ class Watch {
       'reviewCount': reviewCount,
       'salePrice': salePrice,
       'discountPercentage': discountPercentage,
+      'hasBeltOption': hasBeltOption,
+      'hasChainOption': hasChainOption,
+      'strapType': strapType,
+      'strapColor': strapColor,
       'createdAt': createdAt,
     };
   }
@@ -124,4 +150,7 @@ class Watch {
 
   bool get isInStock => stock > 0;
   bool get isLowStock => stock > 0 && stock <= 5;
+  
+  // Helper to check if any strap options are available
+  bool get hasAnyStrapOption => hasBeltOption || hasChainOption;
 }

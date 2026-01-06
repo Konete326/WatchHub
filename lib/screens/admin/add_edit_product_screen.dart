@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter/foundation.dart';
 import 'dart:io';
+=======
+import 'package:flutter/foundation.dart' show kIsWeb;
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
@@ -44,13 +48,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<model.Category> _categories = [];
   String? _selectedBrandId;
   String? _selectedCategory;
+<<<<<<< HEAD
   List<File> _selectedImages = [];
   List<Uint8List> _selectedImageBytes = []; // For web platform
   List<String> _selectedImageDataUrls = []; // For web preview
+=======
+  List<XFile> _selectedImages = []; // Use XFile for both web and mobile
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
   List<String> _existingImageUrls = [];
   bool _isLoading = false;
   bool _isLoadingBrands = false;
   bool _isLoadingCategories = false;
+  bool _hasBeltOption = false; // Whether belt option is available
+  bool _hasChainOption = false; // Whether chain option is available
 
   @override
   void initState() {
@@ -80,6 +90,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (widget.watch!.discountPercentage != null) {
         _discountController.text = widget.watch!.discountPercentage.toString();
       }
+      _hasBeltOption = widget.watch!.hasBeltOption;
+      _hasChainOption = widget.watch!.hasChainOption;
     }
   }
 
@@ -150,6 +162,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Future<void> _pickImages() async {
     try {
+<<<<<<< HEAD
       final images = await _imagePicker.pickMultiImage(imageQuality: 70);
       if (images.isNotEmpty) {
         final totalExisting = _existingImageUrls.length;
@@ -185,11 +198,50 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         }
 
         setState(() {});
+=======
+      final images = await _imagePicker.pickMultiImage();
+      if (images != null && images.isNotEmpty) {
+        final remainingSlots =
+            5 - _selectedImages.length - _existingImageUrls.length;
+        if (remainingSlots > 0) {
+          final newFiles = <XFile>[];
+          for (var xFile in images.take(remainingSlots)) {
+            try {
+              // Verify file is readable by trying to read bytes
+              try {
+                final bytes = await xFile.readAsBytes();
+                if (bytes.isNotEmpty) {
+                  newFiles.add(xFile);
+                }
+              } catch (e) {
+                // If reading fails, skip this file
+                print('Failed to read file ${xFile.path}: $e');
+              }
+            } catch (e) {
+              print('Error processing file ${xFile.path}: $e');
+            }
+          }
+          
+          if (mounted) {
+            setState(() {
+              _selectedImages.addAll(newFiles);
+            });
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Maximum 5 images allowed')),
+            );
+          }
+        }
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick images: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -251,6 +303,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       final name = _nameController.text.trim();
       final sku = _skuController.text.trim();
 
+<<<<<<< HEAD
       // Check for duplicate name/sku using search functionality
       final result =
           await _adminService.getAllWatches(search: name, limit: 100);
@@ -261,6 +314,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           w.id != widget.watch?.id);
 
       if (isNameDuplicate) {
+=======
+      // Check for duplicate name (case-insensitive, exact match)
+      final nameExists = await _adminService.watchNameExists(
+        name,
+        excludeWatchId: widget.watch?.id,
+      );
+
+      if (nameExists) {
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         setState(() => _isLoading = false);
         _showDuplicateError(
             'A product with this name already exists. Please use a different name.');
@@ -315,9 +377,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
+<<<<<<< HEAD
           imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
           imageBytes:
               kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
+=======
+          imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         );
       } else {
         // Create new watch
@@ -333,18 +401,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           discountPercentage: _discountController.text.isNotEmpty
               ? int.tryParse(_discountController.text)
               : null,
+<<<<<<< HEAD
           imageFiles: kIsWeb ? null : (hasNewImages ? _selectedImages : null),
           imageBytes:
               kIsWeb ? (hasNewImages ? _selectedImageBytes : null) : null,
+=======
+          imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+          hasBeltOption: _hasBeltOption,
+          hasChainOption: _hasChainOption,
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
         );
       }
 
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.watch != null
                 ? 'Watch updated successfully'
                 : 'Watch created successfully'),
+            backgroundColor: Colors.green,
           ),
         );
         Navigator.of(context).pop(true);
@@ -358,9 +434,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        print('Error creating/updating watch: $e');
       }
     }
   }
+
+  // Helper method to build belt color picker with full color palette
 
   @override
   Widget build(BuildContext context) {
@@ -376,6 +455,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   // Images Section
+<<<<<<< HEAD
                   Builder(
                     builder: (context) {
                       final selectedCount = kIsWeb
@@ -391,6 +471,129 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             'Images ($totalCount/${Constants.maxProductImages})',
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
+=======
+                  Text(
+                    'Images (${_selectedImages.length + _existingImageUrls.length}/5)',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      // Existing images
+                      ..._existingImageUrls.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final url = entry.value;
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: url,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.image),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () => _removeImage(index, true),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close,
+                                      size: 16, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                      // New selected images
+                      ..._selectedImages.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final file = entry.value;
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: FutureBuilder<Uint8List>(
+                                  future: file.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      );
+                                    }
+                                    return Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    );
+                                  },
+                                ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () => _removeImage(index, false),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close,
+                                      size: 16, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                      // Add image button
+                      if (_selectedImages.length + _existingImageUrls.length <
+                          5)
+                        GestureDetector(
+                          onTap: _pickImages,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.add, size: 32),
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -624,12 +827,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           validator: (value) {
                             if (value?.isEmpty ?? true)
                               return 'Please enter a price';
+<<<<<<< HEAD
                             if (!RegExp(r'^[0-9]+\.?[0-9]*$').hasMatch(value!))
                               return 'Price must be a valid positive number';
                             final price = double.tryParse(value);
                             if (price == null) return 'Invalid price format';
                             if (price <= 0)
                               return 'Price must be greater than 0';
+=======
+                            final price = double.tryParse(value!);
+                            if (price == null)
+                              return 'Invalid price';
+                            if (price < 0)
+                              return 'Price cannot be negative';
+>>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
                             return null;
                           },
                         ),
@@ -701,6 +912,48 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         setState(() => _selectedCategory = value),
                     validator: (value) =>
                         value == null ? 'Please select a category' : null,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Strap Options Availability
+                  const Text(
+                    'Strap Options Available',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Belt Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose belt with color options',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasBeltOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasBeltOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  CheckboxListTile(
+                    title: const Text(
+                      'Chain Option Available',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      'Enable if customers can choose chain with color options (Black, Silver, Gold)',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _hasChainOption,
+                    onChanged: (value) {
+                      setState(() {
+                        _hasChainOption = value ?? false;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 24),
 

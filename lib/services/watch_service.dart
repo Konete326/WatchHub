@@ -38,13 +38,29 @@ class WatchService {
   }
 
   Future<List<HomeBanner>> getBanners() async {
-    final snapshot = await _firestore
-        .collection('banners')
-        .where('isActive', isEqualTo: true)
-        .orderBy('createdAt', descending: true)
-        .get();
+    try {
+      // Get all banners, filter by isActive if it exists, otherwise include all
+      final snapshot = await _firestore
+          .collection('banners')
+          .orderBy('createdAt', descending: true)
+          .get();
 
-    return snapshot.docs.map((doc) => HomeBanner.fromFirestore(doc)).toList();
+      // Filter banners: include if isActive is true or if isActive field doesn't exist
+      final banners = snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            final isActive = data['isActive'];
+            // Include if isActive is true, or if isActive field doesn't exist (backward compatibility)
+            return isActive == null || isActive == true;
+          })
+          .map((doc) => HomeBanner.fromFirestore(doc))
+          .toList();
+
+      return banners;
+    } catch (e) {
+      print('Error fetching banners: $e');
+      return [];
+    }
   }
 
   Future<Map<String, dynamic>> getWatches({
@@ -117,13 +133,51 @@ class WatchService {
   }
 
   Future<List<Watch>> getFeaturedWatches({int limit = 10}) async {
-    final snapshot = await _firestore
-        .collection('watches')
-        .where('isFeatured', isEqualTo: true)
-        .limit(limit)
-        .get();
+    try {
+      // First try to get watches marked as featured
+      var snapshot = await _firestore
+          .collection('watches')
+          .where('isFeatured', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get();
 
-    return snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+      var featuredWatches = snapshot.docs
+          .map((doc) => Watch.fromFirestore(doc))
+          .toList();
+
+      // If no featured watches found, get the most recent watches instead
+      if (featuredWatches.isEmpty) {
+        snapshot = await _firestore
+            .collection('watches')
+            .orderBy('createdAt', descending: true)
+            .limit(limit)
+            .get();
+
+        featuredWatches = snapshot.docs
+            .map((doc) => Watch.fromFirestore(doc))
+            .toList();
+      }
+
+      return featuredWatches;
+    } catch (e) {
+      print('Error fetching featured watches: $e');
+      // If there's an error (e.g., missing index), try getting all watches
+      try {
+        final snapshot = await _firestore
+            .collection('watches')
+            .orderBy('createdAt', descending: true)
+            .limit(limit)
+            .get();
+
+        return snapshot.docs
+            .map((doc) => Watch.fromFirestore(doc))
+            .toList();
+      } catch (e2) {
+        print('Error fetching watches fallback: $e2');
+        return [];
+      }
+    }
   }
 
   Future<Map<String, dynamic>> getWatchById(String id) async {

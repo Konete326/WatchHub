@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -63,6 +63,13 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
             itemBuilder: (context, index) {
               final banner = adminProvider.banners[index];
               final imageUrl = banner.image;
+              
+              // Debug: Print image URL to console
+              if (imageUrl.isEmpty) {
+                print('Banner ${banner.id} has empty image URL');
+              } else {
+                print('Banner ${banner.id} image URL: $imageUrl');
+              }
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -72,23 +79,64 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
                   children: [
                     Stack(
                       children: [
-                        CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            height: 150,
-                            color: Colors.grey[200],
-                            child: const Center(
-                                child: CircularProgressIndicator()),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            height: 150,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.error),
-                          ),
-                        ),
+                        // Check if image URL is empty or invalid
+                        imageUrl.isEmpty
+                            ? Container(
+                                height: 150,
+                                width: double.infinity,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.image_not_supported,
+                                          color: Colors.grey),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'No image',
+                                        style: TextStyle(
+                                            color: Colors.grey, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                httpHeaders: const {
+                                  'Accept': 'image/*',
+                                },
+                                placeholder: (context, url) => Container(
+                                  height: 150,
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                      child: CircularProgressIndicator()),
+                                ),
+                                errorWidget: (context, url, error) {
+                                  // Log error for debugging
+                                  print('Banner image error: $error');
+                                  print('Banner image URL: $url');
+                                  return Container(
+                                    height: 150,
+                                    color: Colors.grey[300],
+                                    child: const Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.error, color: Colors.red),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Failed to load',
+                                          style: TextStyle(
+                                              color: Colors.red, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
                         Positioned(
                           top: 8,
                           right: 8,
@@ -155,6 +203,18 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                          // Debug: Show image URL if empty (remove this after fixing)
+                          if (imageUrl.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                '⚠️ Image URL is empty',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange[700],
+                                    fontStyle: FontStyle.italic),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -181,7 +241,7 @@ class _AddBannerSheetState extends State<AddBannerSheet> {
   final _titleController = TextEditingController();
   final _subtitleController = TextEditingController();
   final _linkController = TextEditingController();
-  File? _imageFile;
+  XFile? _imageFile; // Use XFile for both web and mobile
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
@@ -189,7 +249,7 @@ class _AddBannerSheetState extends State<AddBannerSheet> {
         await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (image != null) {
       setState(() {
-        _imageFile = File(image.path);
+        _imageFile = image;
       });
     }
   }
@@ -238,10 +298,38 @@ class _AddBannerSheetState extends State<AddBannerSheet> {
                   child: _imageFile != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: kIsWeb
-                              ? Image.network(_imageFile!.path,
-                                  fit: BoxFit.cover)
-                              : Image.file(_imageFile!, fit: BoxFit.cover),
+                          child: FutureBuilder<Uint8List>(
+                            future: _imageFile!.readAsBytes(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Image.memory(
+                                  snapshot.data!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 150,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.error),
+                                    );
+                                  },
+                                );
+                              }
+                              if (snapshot.hasError) {
+                                return Container(
+                                  height: 150,
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.error),
+                                );
+                              }
+                              return Container(
+                                height: 150,
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                          ),
                         )
                       : const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -312,6 +400,14 @@ class _AddBannerSheetState extends State<AddBannerSheet> {
                         if (!mounted) return;
 
                         if (success) {
+                          // Clear form
+                          _titleController.clear();
+                          _subtitleController.clear();
+                          _linkController.clear();
+                          setState(() {
+                            _imageFile = null;
+                          });
+                          
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
