@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,7 +26,7 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
       TextEditingController(text: '0xFFFFFFFF'); // Default White
 
   String _type = 'text'; // 'image' or 'text'
-  File? _imageFile;
+  XFile? _imageFile;
   bool _isActive = true;
   final ImagePicker _picker = ImagePicker();
 
@@ -66,7 +66,7 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
         await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (image != null) {
       setState(() {
-        _imageFile = File(image.path);
+        _imageFile = image;
       });
     }
   }
@@ -182,10 +182,8 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                           border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.grey.shade50,
-                          image: _imageFile != null && !kIsWeb
-                              ? DecorationImage(
-                                  image: FileImage(_imageFile!),
-                                  fit: BoxFit.cover)
+                          image: _imageFile != null
+                              ? null
                               : (provider.promotionHighlight?.imageUrl != null
                                   ? DecorationImage(
                                       image: CachedNetworkImageProvider(provider
@@ -193,19 +191,27 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                                       fit: BoxFit.cover)
                                   : null),
                         ),
-                        child: _imageFile != null && kIsWeb
+                        child: _imageFile != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  _imageFile!.path,
-                                  height: 160,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
+                                child: FutureBuilder<Uint8List>(
+                                  future: _imageFile!.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        fit: BoxFit.cover,
+                                        height: 160,
+                                        width: double.infinity,
+                                      );
+                                    }
+                                    return const Center(
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2));
+                                  },
                                 ),
                               )
-                            : (_imageFile == null &&
-                                    provider.promotionHighlight?.imageUrl ==
-                                        null)
+                            : (provider.promotionHighlight?.imageUrl == null)
                                 ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -275,7 +281,8 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: _buildColorIndicator(_bgController.text),
+                                    child: _buildColorIndicator(
+                                        _bgController.text),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.palette),
@@ -416,11 +423,24 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
       clipBehavior: Clip.antiAlias,
       child: isImage
           ? (_imageFile != null
-              ? (kIsWeb
-                  ? Image.network(_imageFile!.path,
-                      height: 120, width: double.infinity, fit: BoxFit.cover)
-                  : Image.file(_imageFile!,
-                      height: 120, width: double.infinity, fit: BoxFit.cover))
+              ? FutureBuilder<Uint8List>(
+                  future: _imageFile!.readAsBytes(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Image.memory(
+                        snapshot.data!,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    }
+                    return Container(
+                      height: 120,
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                )
               : (provider.promotionHighlight?.imageUrl != null
                   ? CachedNetworkImage(
                       imageUrl: provider.promotionHighlight!.imageUrl!,
@@ -508,7 +528,7 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
     String title,
   ) async {
     final currentColor = _safeColor(controller.text, Colors.black);
-    
+
     final selectedColor = await showDialog<Color>(
       context: context,
       builder: (context) => ColorPickerDialog(
@@ -797,7 +817,8 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
                             children: row.map((color) {
-                              final isSelected = color.value == _selectedColor.value;
+                              final isSelected =
+                                  color.value == _selectedColor.value;
                               return Expanded(
                                 child: GestureDetector(
                                   onTap: () {
@@ -806,7 +827,8 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                                     });
                                   },
                                   child: Container(
-                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4),
                                     height: 50,
                                     decoration: BoxDecoration(
                                       color: color,
@@ -820,7 +842,8 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                                       boxShadow: isSelected
                                           ? [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.3),
+                                                color: Colors.black
+                                                    .withOpacity(0.3),
                                                 blurRadius: 8,
                                                 spreadRadius: 2,
                                               ),

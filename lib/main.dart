@@ -35,6 +35,7 @@ import 'screens/admin/shipping_settings_screen.dart';
 import 'screens/admin/manage_faqs_screen.dart';
 import 'screens/admin/manage_tickets_screen.dart';
 import 'screens/admin/send_notification_screen.dart';
+import 'screens/admin/audit_logs_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,6 +107,7 @@ class MyApp extends StatelessWidget {
               '/admin/shipping': (context) => const ShippingSettingsScreen(),
               '/admin/faqs': (context) => const ManageFAQsScreen(),
               '/admin/tickets': (context) => const ManageTicketsScreen(),
+              '/admin/audit-logs': (context) => const AuditLogsScreen(),
               '/admin/notifications': (context) =>
                   const SendNotificationScreen(),
             },

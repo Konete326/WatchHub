@@ -184,15 +184,19 @@ class WatchService {
   Future<List<Watch>> getFeaturedWatches({int limit = 10}) async {
     try {
       // First try to get watches marked as featured
+      // Note: We remove orderBy here to avoid requiring a composite index
+      // We'll sort them client-side instead
       var snapshot = await _firestore
           .collection('watches')
           .where('isFeatured', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
 
       var featuredWatches =
           snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+
+      // Sort client-side: most recent first
+      featuredWatches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       // If no featured watches found, get the most recent watches instead
       if (featuredWatches.isEmpty) {

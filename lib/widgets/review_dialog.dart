@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -25,7 +25,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
   final _formKey = GlobalKey<FormState>();
   final _commentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   double _rating = 5.0;
   bool _isSubmitting = false;
   bool _imagesChanged = false;
@@ -59,7 +59,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
       setState(() {
-        _selectedImages.addAll(images.map((x) => File(x.path)));
+        _selectedImages.addAll(images);
         if (_selectedImages.length > 5) {
           _selectedImages = _selectedImages.sublist(0, 5);
         }
@@ -328,9 +328,31 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   margin: const EdgeInsets.only(right: 8),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
-                                    image: DecorationImage(
-                                      image: FileImage(image),
-                                      fit: BoxFit.cover,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: FutureBuilder<Uint8List>(
+                                      future: image.readAsBytes(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return Image.memory(
+                                            snapshot.data!,
+                                            fit: BoxFit.cover,
+                                            width: 100,
+                                            height: 100,
+                                          );
+                                        }
+                                        return Container(
+                                          width: 100,
+                                          height: 100,
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
