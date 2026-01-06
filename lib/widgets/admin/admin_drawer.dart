@@ -14,6 +14,7 @@ import '../../screens/admin/manage_coupons_screen.dart';
 import '../../screens/admin/shipping_settings_screen.dart';
 import '../../screens/admin/manage_faqs_screen.dart';
 import '../../screens/admin/manage_tickets_screen.dart';
+import '../../screens/admin/send_notification_screen.dart';
 
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
@@ -66,6 +67,8 @@ class AdminDrawer extends StatelessWidget {
                     const ManageFAQsScreen()),
                 _buildDrawerItem(context, Icons.support_agent, 'Tickets',
                     const ManageTicketsScreen()),
+                _buildDrawerItem(context, Icons.notifications_active,
+                    'Notifications', const SendNotificationScreen()),
               ],
             ),
           ),

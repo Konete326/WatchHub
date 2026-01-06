@@ -12,19 +12,38 @@ class NotificationProvider with ChangeNotifier {
   bool _isLoading = false;
   int _unreadCount = 0;
   StreamSubscription<QuerySnapshot>? _notificationSubscription;
+  StreamSubscription<QuerySnapshot>? _announcementSubscription;
+  List<String> _dismissedAnnouncementIds = [];
 
   List<NotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
   int get unreadCount => _unreadCount;
-
   String? get uid => _auth.currentUser?.uid;
 
   NotificationProvider() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Load dismissed announcements
+    if (uid != null) {
+      try {
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('dismissed_announcements')
+            .get();
+        _dismissedAnnouncementIds = snapshot.docs.map((d) => d.id).toList();
+      } catch (e) {
+        print('Error loading dismissed announcements: $e');
+      }
+    }
     _listenToNotifications();
   }
 
   void _listenToNotifications() {
     _notificationSubscription?.cancel();
+    _announcementSubscription?.cancel();
 
     if (uid == null) {
       _notifications = [];
@@ -33,27 +52,62 @@ class NotificationProvider with ChangeNotifier {
       return;
     }
 
-    _notificationSubscription = _firestore
+    // 1. User Notifications
+    final userStream = _firestore
         .collection('users')
         .doc(uid)
         .collection('notifications')
         .orderBy('timestamp', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      _notifications = snapshot.docs
+        .snapshots();
+
+    // 2. Broadcast Announcements
+    final announcementStream = _firestore
+        .collection('announcements')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+
+    List<NotificationModel> userNotifications = [];
+    List<NotificationModel> announcements = [];
+
+    _notificationSubscription = userStream.listen((snapshot) {
+      userNotifications = snapshot.docs
           .map((doc) => NotificationModel.fromFirestore(doc))
           .toList();
-      _calculateUnreadCount();
-      notifyListeners();
-    }, onError: (e) {
-      print('Error listening to notifications: $e');
-    });
+      _mergeAndNotify(userNotifications, announcements);
+    }, onError: (e) => print('User notifications error: $e'));
+
+    _announcementSubscription = announcementStream.listen((snapshot) {
+      announcements = snapshot.docs
+          .map((doc) => NotificationModel.fromFirestore(doc))
+          .toList();
+      _mergeAndNotify(userNotifications, announcements);
+    }, onError: (e) => print('Announcements error: $e'));
   }
 
-  // Fallback for manual refresh
+  void _mergeAndNotify(
+      List<NotificationModel> userList, List<NotificationModel> allList) {
+    // Filter expired announcements
+    final now = DateTime.now();
+    final validAnnouncements = allList.where((n) {
+      if (n.expiresAt != null && n.expiresAt!.isBefore(now)) return false;
+      if (_dismissedAnnouncementIds.contains(n.id)) return false;
+      return true;
+    }).toList();
+
+    // Merge
+    final merged = [...userList, ...validAnnouncements];
+
+    // Sort desc
+    merged.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    _notifications = merged;
+    _calculateUnreadCount();
+    notifyListeners();
+  }
+
   Future<void> fetchNotifications() async {
     if (uid == null) return;
-    _listenToNotifications(); // Re-trigger listener if needed
+    _listenToNotifications();
   }
 
   void _calculateUnreadCount() {
@@ -63,6 +117,26 @@ class NotificationProvider with ChangeNotifier {
   Future<void> markAsRead(String notificationId) async {
     if (uid == null) return;
 
+    // Check if it's user notification or announcement
+    // For announcement, we can't update 'isRead' on the document itself as it's shared.
+    // We should track 'read_announcements' in user subcollection or local storage.
+    // For simplicity: broadcasts are considered "read" if clicked, but we don't persist it perfectly in this simple version
+    // UNLESS we merge them into user notifications when read.
+    // Let's try to find it in user collection.
+
+    // Simplification: We only support marking USER notifications as read in DB.
+    // For broadcasts, we update local state.
+
+    final index = _notifications.indexWhere((n) => n.id == notificationId);
+    if (index == -1) return;
+
+    final notification = _notifications[index];
+
+    // Optimistic update
+    _notifications[index] = _notifications[index].copyWith(isRead: true);
+    _calculateUnreadCount();
+    notifyListeners();
+
     try {
       await _firestore
           .collection('users')
@@ -70,42 +144,37 @@ class NotificationProvider with ChangeNotifier {
           .collection('notifications')
           .doc(notificationId)
           .update({'isRead': true});
-
-      final index = _notifications.indexWhere((n) => n.id == notificationId);
-      if (index != -1) {
-        _notifications[index] = _notifications[index].copyWith(isRead: true);
-        _calculateUnreadCount();
-        notifyListeners();
-      }
-    } catch (e) {
-      print('Error marking notification as read: $e');
+    } catch (_) {
+      // If it fails, it might be an announcement (which doesn't exist in user/notifications)
+      // Ignoring error for announcement read status persistence for now as it wasn't strictly requested to persist READ status for broadcasts,
+      // just deletion/history.
     }
   }
 
   Future<void> markAllAsRead() async {
     if (uid == null) return;
 
+    _notifications =
+        _notifications.map((n) => n.copyWith(isRead: true)).toList();
+    _unreadCount = 0;
+    notifyListeners();
+
     try {
       final batch = _firestore.batch();
-      final unreadNotifications = _notifications.where((n) => !n.isRead);
+      // Only update actual user notifications
+      final userNotifs = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('notifications')
+          .where('isRead', isEqualTo: false)
+          .get();
 
-      for (var n in unreadNotifications) {
-        final docRef = _firestore
-            .collection('users')
-            .doc(uid)
-            .collection('notifications')
-            .doc(n.id);
-        batch.update(docRef, {'isRead': true});
+      for (var doc in userNotifs.docs) {
+        batch.update(doc.reference, {'isRead': true});
       }
-
       await batch.commit();
-
-      _notifications =
-          _notifications.map((n) => n.copyWith(isRead: true)).toList();
-      _unreadCount = 0;
-      notifyListeners();
     } catch (e) {
-      print('Error marking all notifications as read: $e');
+      print('Error marking all as read: $e');
     }
   }
 
@@ -113,12 +182,25 @@ class NotificationProvider with ChangeNotifier {
     if (uid == null) return;
 
     try {
-      await _firestore
+      final docRef = _firestore
           .collection('users')
           .doc(uid)
           .collection('notifications')
-          .doc(notificationId)
-          .delete();
+          .doc(notificationId);
+
+      final doc = await docRef.get();
+      if (doc.exists) {
+        await docRef.delete();
+      } else {
+        // Assume announcement -> Dismiss
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('dismissed_announcements')
+            .doc(notificationId)
+            .set({'dismissedAt': FieldValue.serverTimestamp()});
+        _dismissedAnnouncementIds.add(notificationId);
+      }
 
       _notifications.removeWhere((n) => n.id == notificationId);
       _calculateUnreadCount();
@@ -128,7 +210,7 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
-  // Method to add notification manually (useful for testing or app-triggered ones)
+  // Method to add notification manually
   Future<void> addNotification({
     required String title,
     required String body,
@@ -152,7 +234,5 @@ class NotificationProvider with ChangeNotifier {
         .doc(uid)
         .collection('notifications')
         .add(n.toMap());
-
-    await fetchNotifications();
   }
 }

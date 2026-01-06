@@ -15,6 +15,7 @@ class NotificationModel {
   final Map<String, dynamic>? data;
   final DateTime timestamp;
   final bool isRead;
+  final DateTime? expiresAt;
 
   NotificationModel({
     required this.id,
@@ -24,18 +25,33 @@ class NotificationModel {
     this.data,
     required this.timestamp,
     this.isRead = false,
+    this.expiresAt,
   });
 
   factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
     final map = doc.data() as Map<String, dynamic>;
+
+    // Handle timestamp/createdAt
+    DateTime timestamp;
+    if (map['timestamp'] != null) {
+      timestamp = (map['timestamp'] as Timestamp).toDate();
+    } else if (map['createdAt'] != null) {
+      timestamp = (map['createdAt'] as Timestamp).toDate();
+    } else {
+      timestamp = DateTime.now();
+    }
+
     return NotificationModel(
       id: doc.id,
       title: map['title'] ?? '',
       body: map['body'] ?? '',
       type: _typeFromString(map['type']),
       data: map['data'],
-      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: timestamp,
       isRead: map['isRead'] ?? false,
+      expiresAt: map['expiresAt'] != null
+          ? (map['expiresAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
