@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
@@ -65,7 +65,7 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> createReview(Review review, {List<File>? images}) async {
+  Future<bool> createReview(Review review, {List<XFile>? images}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -73,11 +73,11 @@ class ReviewProvider with ChangeNotifier {
     try {
       final newReview =
           await _reviewService.createReview(review, images: images);
-      
+
       // Add the new review to the list immediately
       _reviews.insert(0, newReview);
       notifyListeners();
-      
+
       // Refresh reviews to get updated rating distribution
       // Add a small delay to ensure Firestore has indexed the new review for queries
       await Future.delayed(const Duration(milliseconds: 300));
@@ -94,7 +94,7 @@ class ReviewProvider with ChangeNotifier {
   }
 
   Future<bool> updateReview(String id,
-      {int? rating, String? comment, List<File>? images}) async {
+      {int? rating, String? comment, List<XFile>? images}) async {
     try {
       final updatedReview = await _reviewService.updateReview(
         id,

@@ -52,6 +52,8 @@ class AdminDrawer extends StatelessWidget {
                     routeName: '/admin/faqs'),
                 _buildDrawerItem(context, Icons.support_agent, 'Tickets',
                     routeName: '/admin/tickets'),
+                _buildDrawerItem(context, Icons.history, 'Audit Logs',
+                    routeName: '/admin/audit-logs'),
                 _buildDrawerItem(
                     context, Icons.notifications_active, 'Notifications',
                     routeName: '/admin/notifications'),

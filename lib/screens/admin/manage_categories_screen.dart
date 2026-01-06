@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -49,7 +49,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
   void _showAddEditDialog({Category? category}) {
     final nameController = TextEditingController(text: category?.name ?? '');
-    File? selectedImage;
+    XFile? selectedImage;
     final formKey = GlobalKey<FormState>();
 
     // Dialog khulne se pehle purana error clear kar dein
@@ -73,7 +73,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       final XFile? image = await _picker.pickImage(
                           source: ImageSource.gallery, imageQuality: 70);
                       if (image != null) {
-                        setDialogState(() => selectedImage = File(image.path));
+                        setDialogState(() => selectedImage = image);
                       }
                     },
                     child: Container(
@@ -83,9 +83,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(8),
                         image: selectedImage != null
-                            ? DecorationImage(
-                                image: FileImage(selectedImage!),
-                                fit: BoxFit.contain)
+                            ? null
                             : (category?.imageUrl != null &&
                                     category!.imageUrl!.isNotEmpty
                                 ? DecorationImage(
@@ -94,12 +92,31 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                                     fit: BoxFit.contain)
                                 : null),
                       ),
-                      child: (selectedImage == null &&
-                              (category?.imageUrl == null ||
-                                  category!.imageUrl!.isEmpty))
-                          ? const Icon(Icons.add_a_photo,
-                              size: 40, color: Colors.grey)
-                          : null,
+                      child: selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: FutureBuilder<Uint8List>(
+                                future: selectedImage!.readAsBytes(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return Image.memory(
+                                      snapshot.data!,
+                                      fit: BoxFit.contain,
+                                      width: 100,
+                                      height: 100,
+                                    );
+                                  }
+                                  return const Center(
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2));
+                                },
+                              ),
+                            )
+                          : (category?.imageUrl == null ||
+                                  category!.imageUrl!.isEmpty)
+                              ? const Icon(Icons.add_a_photo,
+                                  size: 40, color: Colors.grey)
+                              : null,
                     ),
                   ),
                   const SizedBox(height: 16),

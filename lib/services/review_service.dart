@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import '../models/review.dart';
@@ -11,7 +11,7 @@ class ReviewService {
 
   String? get uid => _auth.currentUser?.uid;
 
-  Future<String> _uploadImage(String reviewId, File file, int index) async {
+  Future<String> _uploadImage(String reviewId, XFile file, int index) async {
     return await CloudinaryService.uploadImage(
       file,
       folder: 'reviews',
@@ -28,7 +28,13 @@ class ReviewService {
   }) async {
     try {
       final reviews = <Review>[];
-      final ratingDistribution = <String, dynamic>{'1': 0, '2': 0, '3': 0, '4': 0, '5': 0};
+      final ratingDistribution = <String, dynamic>{
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 0
+      };
 
       // Get all reviews for this watch (we'll sort client-side to avoid index issues)
       final allReviewsSnapshot = await _firestore
@@ -41,7 +47,8 @@ class ReviewService {
         final rating = doc.data()['rating'] as int?;
         if (rating != null && rating >= 1 && rating <= 5) {
           final ratingKey = rating.toString();
-          ratingDistribution[ratingKey] = (ratingDistribution[ratingKey] as int? ?? 0) + 1;
+          ratingDistribution[ratingKey] =
+              (ratingDistribution[ratingKey] as int? ?? 0) + 1;
         }
       }
 
@@ -55,16 +62,18 @@ class ReviewService {
       allDocs.sort((a, b) {
         final aData = a.data() as Map<String, dynamic>? ?? {};
         final bData = b.data() as Map<String, dynamic>? ?? {};
-        
+
         if (sortBy == 'rating') {
           final aRating = aData['rating'] as int? ?? 0;
           final bRating = bData['rating'] as int? ?? 0;
-          return sortOrder == 'desc' 
+          return sortOrder == 'desc'
               ? bRating.compareTo(aRating)
               : aRating.compareTo(bRating);
         } else if (sortBy == 'createdAt') {
-          final aTime = (aData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
-          final bTime = (bData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          final aTime =
+              (aData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          final bTime =
+              (bData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
           return sortOrder == 'desc'
               ? bTime.compareTo(aTime)
               : aTime.compareTo(bTime);
@@ -75,7 +84,8 @@ class ReviewService {
       // Paginate
       final startIndex = (page - 1) * limit;
       final paginatedDocs = allDocs.length > startIndex
-          ? allDocs.sublist(startIndex, (startIndex + limit).clamp(0, allDocs.length))
+          ? allDocs.sublist(
+              startIndex, (startIndex + limit).clamp(0, allDocs.length))
           : [];
 
       // Fetch user data for each review
@@ -83,10 +93,11 @@ class ReviewService {
         try {
           final review = Review.fromFirestore(doc);
           User? user;
-          
+
           // Try to fetch user data, but don't fail if user doesn't exist
           try {
-            final userDoc = await _firestore.collection('users').doc(review.userId).get();
+            final userDoc =
+                await _firestore.collection('users').doc(review.userId).get();
             if (userDoc.exists) {
               user = User.fromFirestore(userDoc);
             }
@@ -94,7 +105,7 @@ class ReviewService {
             print('Error fetching user for review ${review.id}: $e');
             // Continue without user data
           }
-          
+
           reviews.add(Review(
             id: review.id,
             userId: review.userId,
@@ -130,7 +141,7 @@ class ReviewService {
     }
   }
 
-  Future<Review> createReview(Review review, {List<File>? images}) async {
+  Future<Review> createReview(Review review, {List<XFile>? images}) async {
     if (uid == null) throw Exception('User not logged in');
 
     final reviewRef = _firestore.collection('reviews').doc();
@@ -171,13 +182,14 @@ class ReviewService {
         'reviewCount': newCount,
       });
     });
-    
+
     // Fetch the actual review document to get the server timestamp
     final doc = await reviewRef.get();
     if (doc.exists) {
       final reviewFromDoc = Review.fromFirestore(doc);
       // Fetch user data for the review
-      final userDoc = await _firestore.collection('users').doc(reviewFromDoc.userId).get();
+      final userDoc =
+          await _firestore.collection('users').doc(reviewFromDoc.userId).get();
       User? user;
       if (userDoc.exists) {
         user = User.fromFirestore(userDoc);
@@ -194,13 +206,13 @@ class ReviewService {
         user: user,
       );
     }
-    
+
     // Fallback if document doesn't exist (shouldn't happen)
     throw Exception('Failed to create review');
   }
 
   Future<Review> updateReview(String id,
-      {int? rating, String? comment, List<File>? images}) async {
+      {int? rating, String? comment, List<XFile>? images}) async {
     if (uid == null) throw Exception('User not logged in');
 
     final reviewRef = _firestore.collection('reviews').doc(id);

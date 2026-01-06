@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
+import 'package:watchhub/utils/audit_logger.dart';
 import '../models/watch.dart';
 import '../models/order.dart';
 import '../models/user.dart';
@@ -725,7 +726,22 @@ class AdminService {
   }
 
   Future<Order> updateOrderStatus(String id, String status) async {
+    // Get current order data for audit logging
+    final currentDoc = await _firestore.collection('orders').doc(id).get();
+    final oldStatus = currentDoc.data()?['status'] ?? 'UNKNOWN';
+
+    // Update the order status
     await _firestore.collection('orders').doc(id).update({'status': status});
+
+    // Log the audit event
+    try {
+      // Import at top of file: import '../utils/audit_logger.dart';
+      await AuditLogger.logOrderStatusChanged(id, oldStatus, status);
+    } catch (e) {
+      // Silent fail - don't break the update if audit logging fails
+      print('Failed to log audit event: $e');
+    }
+
     final doc = await _firestore.collection('orders').doc(id).get();
     return Order.fromFirestore(doc);
   }

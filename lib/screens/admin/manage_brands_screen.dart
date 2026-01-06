@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -52,7 +52,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
     final nameController = TextEditingController(text: brand?.name ?? '');
     final descController =
         TextEditingController(text: brand?.description ?? '');
-    File? selectedImage;
+    XFile? selectedImage;
     final formKey = GlobalKey<FormState>();
 
     // Dialog khulne se pehle purana error clear kar dein
@@ -78,8 +78,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                         final XFile? image = await _picker.pickImage(
                             source: ImageSource.gallery, imageQuality: 70);
                         if (image != null) {
-                          setDialogState(
-                              () => selectedImage = File(image.path));
+                          setDialogState(() => selectedImage = image);
                         }
                       },
                       child: Container(
@@ -89,9 +88,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(8),
                           image: selectedImage != null
-                              ? DecorationImage(
-                                  image: FileImage(selectedImage!),
-                                  fit: BoxFit.contain)
+                              ? null
                               : (brand?.logoUrl != null &&
                                       brand!.logoUrl!.isNotEmpty
                                   ? DecorationImage(
@@ -100,12 +97,31 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                                       fit: BoxFit.contain)
                                   : null),
                         ),
-                        child: (selectedImage == null &&
-                                (brand?.logoUrl == null ||
-                                    brand!.logoUrl!.isEmpty))
-                            ? const Icon(Icons.add_a_photo,
-                                size: 40, color: Colors.grey)
-                            : null,
+                        child: selectedImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: FutureBuilder<Uint8List>(
+                                  future: selectedImage!.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        fit: BoxFit.contain,
+                                        width: 100,
+                                        height: 100,
+                                      );
+                                    }
+                                    return const Center(
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2));
+                                  },
+                                ),
+                              )
+                            : (brand?.logoUrl == null ||
+                                    brand!.logoUrl!.isEmpty)
+                                ? const Icon(Icons.add_a_photo,
+                                    size: 40, color: Colors.grey)
+                                : null,
                       ),
                     ),
                     const SizedBox(height: 16),
