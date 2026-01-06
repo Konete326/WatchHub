@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (image != null && mounted) {
       final success = await Provider.of<UserProvider>(context, listen: false)
-          .updateProfileImage(image.path);
+          .updateProfileImage(image);
 
       if (!mounted) return;
 

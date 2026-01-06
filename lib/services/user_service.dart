@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import '../models/user.dart';
@@ -29,37 +29,52 @@ class UserService {
     return User.fromFirestore(doc);
   }
 
-  Future<User> updateProfileImage(String filePath) async {
+  Future<User> updateProfileImage(XFile file) async {
     if (uid == null) throw Exception('User not logged in');
-    
+
     final imageUrl = await CloudinaryService.uploadImage(
-      File(filePath),
+      file,
       folder: 'users',
       publicId: 'users/$uid/profile',
     );
 
-    await _firestore.collection('users').doc(uid).update({'profileImage': imageUrl});
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .update({'profileImage': imageUrl});
     final doc = await _firestore.collection('users').doc(uid).get();
     return User.fromFirestore(doc);
   }
 
   Future<List<Address>> getAddresses() async {
     if (uid == null) throw Exception('User not logged in');
-    final snapshot = await _firestore.collection('users').doc(uid).collection('addresses').get();
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .get();
     return snapshot.docs.map((doc) => Address.fromFirestore(doc)).toList();
   }
 
   Future<Address> createAddress(Address address) async {
     if (uid == null) throw Exception('User not logged in');
-    
-    final docRef = await _firestore.collection('users').doc(uid).collection('addresses').add({
+
+    final docRef = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .add({
       'userId': uid,
       ...address.toJson(),
     });
 
     if (address.isDefault) {
       // Set others to non-default
-      final snapshot = await _firestore.collection('users').doc(uid).collection('addresses').get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('addresses')
+          .get();
       for (var doc in snapshot.docs) {
         if (doc.id != docRef.id) {
           await doc.reference.update({'isDefault': false});
@@ -73,11 +88,20 @@ class UserService {
 
   Future<Address> updateAddress(String id, Address address) async {
     if (uid == null) throw Exception('User not logged in');
-    
-    await _firestore.collection('users').doc(uid).collection('addresses').doc(id).update(address.toJson());
+
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .doc(id)
+        .update(address.toJson());
 
     if (address.isDefault) {
-      final snapshot = await _firestore.collection('users').doc(uid).collection('addresses').get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('addresses')
+          .get();
       for (var doc in snapshot.docs) {
         if (doc.id != id) {
           await doc.reference.update({'isDefault': false});
@@ -85,13 +109,22 @@ class UserService {
       }
     }
 
-    final doc = await _firestore.collection('users').doc(uid).collection('addresses').doc(id).get();
+    final doc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .doc(id)
+        .get();
     return Address.fromFirestore(doc);
   }
 
   Future<void> deleteAddress(String id) async {
     if (uid == null) throw Exception('User not logged in');
-    await _firestore.collection('users').doc(uid).collection('addresses').doc(id).delete();
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('addresses')
+        .doc(id)
+        .delete();
   }
 }
-
