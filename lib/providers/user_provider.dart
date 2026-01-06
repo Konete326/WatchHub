@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/user_service.dart';
 import '../models/user.dart';
 import '../models/address.dart';
@@ -57,12 +58,12 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfileImage(String filePath) async {
+  Future<bool> updateProfileImage(XFile file) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      _user = await _userService.updateProfileImage(filePath);
+      _user = await _userService.updateProfileImage(file);
       _isLoading = false;
       notifyListeners();
       return true;
