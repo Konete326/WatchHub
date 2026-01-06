@@ -14,6 +14,7 @@ class NotificationProvider with ChangeNotifier {
   StreamSubscription<QuerySnapshot>? _notificationSubscription;
   StreamSubscription<QuerySnapshot>? _announcementSubscription;
   List<String> _dismissedAnnouncementIds = [];
+  List<String> _readAnnouncementIds = [];
 
   List<NotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
@@ -28,14 +29,22 @@ class NotificationProvider with ChangeNotifier {
     // Load dismissed announcements
     if (uid != null) {
       try {
-        final snapshot = await _firestore
+        final dismissedSnapshot = await _firestore
             .collection('users')
             .doc(uid)
             .collection('dismissed_announcements')
             .get();
-        _dismissedAnnouncementIds = snapshot.docs.map((d) => d.id).toList();
+        _dismissedAnnouncementIds =
+            dismissedSnapshot.docs.map((d) => d.id).toList();
+
+        final readSnapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('read_announcements')
+            .get();
+        _readAnnouncementIds = readSnapshot.docs.map((d) => d.id).toList();
       } catch (e) {
-        print('Error loading dismissed announcements: $e');
+        print('Error loading user notification preferences: $e');
       }
     }
     _listenToNotifications();
@@ -92,6 +101,11 @@ class NotificationProvider with ChangeNotifier {
       if (n.expiresAt != null && n.expiresAt!.isBefore(now)) return false;
       if (_dismissedAnnouncementIds.contains(n.id)) return false;
       return true;
+    }).map((n) {
+      if (_readAnnouncementIds.contains(n.id)) {
+        return n.copyWith(isRead: true);
+      }
+      return n;
     }).toList();
 
     // Merge
@@ -130,22 +144,50 @@ class NotificationProvider with ChangeNotifier {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     if (index == -1) return;
 
+    final notification = _notifications[index];
+    if (notification.isRead) return; // Already read
+
     // Optimistic update
-    _notifications[index] = _notifications[index].copyWith(isRead: true);
+    _notifications[index] = notification.copyWith(isRead: true);
     _calculateUnreadCount();
     notifyListeners();
 
     try {
-      await _firestore
+      // 1. Check if it's a private user notification
+      final userNotifRef = _firestore
           .collection('users')
           .doc(uid)
           .collection('notifications')
-          .doc(notificationId)
-          .update({'isRead': true});
-    } catch (_) {
-      // If it fails, it might be an announcement (which doesn't exist in user/notifications)
-      // Ignoring error for announcement read status persistence for now as it wasn't strictly requested to persist READ status for broadcasts,
-      // just deletion/history.
+          .doc(notificationId);
+
+      final userNotifDoc = await userNotifRef.get();
+      if (userNotifDoc.exists) {
+        await userNotifRef.update({'isRead': true});
+      } else {
+        // 2. It's an announcement (Broadcast)
+        // Mark as read for this user specifically
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('read_announcements')
+            .doc(notificationId)
+            .set({'readAt': FieldValue.serverTimestamp()});
+        _readAnnouncementIds.add(notificationId);
+      }
+
+      // 3. Update Global Seen Count in History
+      final historySnapshot = await _firestore
+          .collection('admin_notification_history')
+          .where('notificationId', isEqualTo: notificationId)
+          .limit(1)
+          .get();
+
+      if (historySnapshot.docs.isNotEmpty) {
+        await historySnapshot.docs.first.reference
+            .update({'seenCount': FieldValue.increment(1)});
+      }
+    } catch (e) {
+      print('Error marking notification as read: $e');
     }
   }
 
