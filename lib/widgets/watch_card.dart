@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../models/watch.dart';
 import '../providers/wishlist_provider.dart';
+import '../providers/cart_provider.dart';
 import '../providers/settings_provider.dart';
 import '../utils/theme.dart';
-import '../utils/image_utils.dart';
 
 class WatchCard extends StatelessWidget {
   final Watch watch;
@@ -21,6 +22,12 @@ class WatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
+      color: Colors.grey.shade50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -33,23 +40,20 @@ class WatchCard extends StatelessWidget {
                 AspectRatio(
                   aspectRatio: 1,
                   child: watch.images.isNotEmpty
-                      ? GestureDetector(
-                          onTap: () {
-                            final imageUrl = watch.images.first;
-                            ImageUtils.showFullScreenImage(context, imageUrl);
-                          },
+                      ? Container(
+                          color: Colors.white,
                           child: CachedNetworkImage(
                             imageUrl: watch.images.first,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
+                              baseColor: Colors.grey[200]!,
+                              highlightColor: Colors.grey[50]!,
                               child: Container(
                                 color: Colors.white,
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[100],
+                              color: Colors.grey[50],
                               child: const Icon(
                                 Icons.image_not_supported_outlined,
                                 size: 40,
@@ -59,7 +63,7 @@ class WatchCard extends StatelessWidget {
                           ),
                         )
                       : Container(
-                          color: Colors.grey[100],
+                          color: Colors.grey[50],
                           child: const Icon(
                             Icons.watch,
                             size: 64,
@@ -89,6 +93,7 @@ class WatchCard extends StatelessWidget {
                                 : AppTheme.textSecondaryColor,
                           ),
                           onPressed: () async {
+                            HapticFeedback.mediumImpact();
                             final wishlistItem = wishlistProvider.wishlistItems
                                 .where((item) => item.watchId == watch.id)
                                 .firstOrNull;
@@ -188,17 +193,39 @@ class WatchCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (watch.brand != null)
-                      Text(
-                        watch.brand!.name,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textSecondaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (watch.brand != null)
+                          Text(
+                            watch.brand!.name,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textSecondaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (watch.averageRating != null &&
+                            watch.averageRating! > 0)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star,
+                                  size: 10, color: Colors.amber),
+                              const SizedBox(width: 2),
+                              Text(
+                                watch.averageRating!.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       watch.name,
@@ -211,54 +238,80 @@ class WatchCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
-                    Consumer<SettingsProvider>(
-                        builder: (context, settings, child) {
+                    Consumer2<SettingsProvider, CartProvider>(
+                        builder: (context, settings, cartProvider, child) {
                       return Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (watch.isOnSale)
-                                  Text(
-                                    settings.formatPrice(watch.price),
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey,
-                                      decoration: TextDecoration.lineThrough,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (watch.isOnSale)
+                                    Text(
+                                      settings.formatPrice(watch.price),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade500,
+                                        decoration: TextDecoration.lineThrough,
+                                        decorationColor: Colors.grey.shade500,
+                                      ),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  Text(
+                                    settings.formatPrice(watch.currentPrice),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: watch.isOnSale
+                                          ? AppTheme.errorColor
+                                          : AppTheme.primaryColor,
+                                    ),
                                   ),
-                                Text(
-                                  settings.formatPrice(watch.currentPrice),
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          if (watch.averageRating != null &&
-                              watch.averageRating! > 0)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star,
-                                    size: 12, color: Colors.amber),
-                                const SizedBox(width: 2),
-                                Text(
-                                  watch.averageRating!.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold),
+                          if (watch.isInStock)
+                            Material(
+                              color: AppTheme.primaryColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomRight: Radius.circular(0),
+                              ),
+                              child: InkWell(
+                                onTap: () async {
+                                  HapticFeedback.lightImpact();
+                                  final success =
+                                      await cartProvider.addToCart(watch);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'Added to cart'
+                                            : 'Failed to add'),
+                                        backgroundColor: success
+                                            ? AppTheme.successColor
+                                            : AppTheme.errorColor,
+                                        duration: const Duration(seconds: 1),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                },
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(12),
                                 ),
-                              ],
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Icon(
+                                    Icons.add_shopping_cart_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
                             ),
                         ],
                       );

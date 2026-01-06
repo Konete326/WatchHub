@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/category.dart';
 import '../../utils/theme.dart';
+import '../../utils/validators.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   const ManageCategoriesScreen({super.key});
@@ -107,7 +108,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     decoration: const InputDecoration(
                         labelText: 'Category Name',
                         border: OutlineInputBorder()),
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                    validator: (v) => Validators.required(v, 'Name'),
                     onChanged: (_) => adminProvider.clearError(),
                   ),
 
@@ -142,7 +143,8 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     : () async {
                         if (!formKey.currentState!.validate()) return;
 
-                        final newName = nameController.text.trim();
+                        final newName =
+                            InputSanitizer.sanitize(nameController.text);
 
                         // Check for duplicate name
                         final isDuplicate = adminProvider.categories.any((c) =>

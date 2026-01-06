@@ -46,8 +46,8 @@ class Order {
       paymentIntentId: json['paymentIntentId'] as String?,
       paymentMethod: json['paymentMethod'] as String?,
       createdAt: json['createdAt'] != null
-          ? (json['createdAt'] is Timestamp 
-              ? (json['createdAt'] as Timestamp).toDate() 
+          ? (json['createdAt'] is Timestamp
+              ? (json['createdAt'] as Timestamp).toDate()
               : DateTime.parse(json['createdAt'] as String))
           : DateTime.now(),
       address: json['address'] != null
@@ -97,11 +97,13 @@ class Order {
   String get statusDisplay {
     switch (status) {
       case 'PENDING':
-        return 'Pending';
+        return 'Ordered';
       case 'PROCESSING':
         return 'Processing';
       case 'SHIPPED':
         return 'Shipped';
+      case 'OUT_FOR_DELIVERY':
+        return 'Out for Delivery';
       case 'DELIVERED':
         return 'Delivered';
       case 'CANCELLED':
@@ -111,4 +113,3 @@ class Order {
     }
   }
 }
-

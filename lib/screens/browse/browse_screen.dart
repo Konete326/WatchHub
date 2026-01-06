@@ -4,9 +4,20 @@ import '../../providers/watch_provider.dart';
 import '../../widgets/watch_card.dart';
 import '../product/product_detail_screen.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
+import '../../providers/wishlist_provider.dart';
+import '../wishlist/wishlist_screen.dart';
+import '../../utils/theme.dart';
 
 class BrowseScreen extends StatefulWidget {
-  const BrowseScreen({super.key});
+  final String? initialCategory;
+  final String? initialBrandId;
+
+  const BrowseScreen({
+    super.key,
+    this.initialCategory,
+    this.initialBrandId,
+  });
 
   @override
   State<BrowseScreen> createState() => _BrowseScreenState();
@@ -22,6 +33,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory;
+    _selectedBrandId = widget.initialBrandId;
     _fetchWatches();
     Future.microtask(() {
       final watchProvider = Provider.of<WatchProvider>(context, listen: false);
@@ -103,6 +116,49 @@ class _BrowseScreenState extends State<BrowseScreen> {
             icon: const Icon(Icons.filter_list),
             onPressed: () => _showFilters(),
           ),
+          Consumer<WishlistProvider>(
+            builder: (context, wishlistProvider, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const WishlistScreen()),
+                      );
+                    },
+                  ),
+                  if (wishlistProvider.itemCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${wishlistProvider.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -123,9 +179,44 @@ class _BrowseScreenState extends State<BrowseScreen> {
               );
             }
 
+            if (watchProvider.errorMessage != null &&
+                watchProvider.watches.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      watchProvider.errorMessage!,
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => _fetchWatches(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (watchProvider.watches.isEmpty) {
-              return const Center(
-                child: Text('No watches found'),
+              return EmptyState(
+                icon: Icons.search_off_rounded,
+                title: 'No watches found',
+                message:
+                    'Try adjusting your filters or search terms to find what you\'re looking for.',
+                actionLabel: 'Start Shopping',
+                onActionPressed: () {
+                  setState(() {
+                    _selectedCategory = null;
+                    _selectedBrandId = null;
+                  });
+                  _fetchWatches();
+                },
               );
             }
 

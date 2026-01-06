@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
-=======
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import '../models/watch.dart';
 import '../models/order.dart';
@@ -18,6 +12,7 @@ import '../models/promotion_banner.dart';
 import '../models/brand.dart';
 import '../models/category.dart';
 import 'cloudinary_service.dart';
+import 'package:intl/intl.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -35,15 +30,7 @@ class AdminService {
   }) async {
     String? logoUrl;
     if (logoFile != null) {
-<<<<<<< HEAD
-      final ref = _storage
-          .ref()
-          .child('brands/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(logoFile);
-      logoUrl = await uploadTask.ref.getDownloadURL();
-=======
       logoUrl = await CloudinaryService.uploadImage(logoFile, folder: 'brands');
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
     }
 
     final docRef = await _firestore.collection('brands').add({
@@ -68,19 +55,11 @@ class AdminService {
     if (description != null) updates['description'] = description;
 
     if (logoFile != null) {
-<<<<<<< HEAD
-      final ref = _storage
-          .ref()
-          .child('brands/${id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(logoFile);
-      updates['logoUrl'] = await uploadTask.ref.getDownloadURL();
-=======
       updates['logoUrl'] = await CloudinaryService.uploadImage(
         logoFile,
         folder: 'brands',
         publicId: 'brands/$id',
       );
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
     }
 
     await _firestore.collection('brands').doc(id).update(updates);
@@ -115,15 +94,8 @@ class AdminService {
   }) async {
     String? imageUrl;
     if (imageFile != null) {
-<<<<<<< HEAD
-      final ref = _storage
-          .ref()
-          .child('categories/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      imageUrl = await uploadTask.ref.getDownloadURL();
-=======
-      imageUrl = await CloudinaryService.uploadImage(imageFile, folder: 'categories');
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
+      imageUrl =
+          await CloudinaryService.uploadImage(imageFile, folder: 'categories');
     }
 
     final docRef = await _firestore.collection('categories').add({
@@ -148,18 +120,11 @@ class AdminService {
     if (description != null) updates['description'] = description;
 
     if (imageFile != null) {
-<<<<<<< HEAD
-      final ref = _storage.ref().child(
-          'categories/${id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      updates['imageUrl'] = await uploadTask.ref.getDownloadURL();
-=======
       updates['imageUrl'] = await CloudinaryService.uploadImage(
         imageFile,
         folder: 'categories',
         publicId: 'categories/$id',
       );
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
     }
 
     await _firestore.collection('categories').doc(id).update(updates);
@@ -289,21 +254,14 @@ class AdminService {
     String? subtitle,
     String? link,
   }) async {
-<<<<<<< HEAD
-    final ref = _storage
-        .ref()
-        .child('banners/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    final uploadTask = await ref.putFile(imageFile);
-    final imageUrl = await uploadTask.ref.getDownloadURL();
-=======
     final imageUrl = await CloudinaryService.uploadImage(
       imageFile,
       folder: 'banners',
     );
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
 
     final docRef = await _firestore.collection('banners').add({
-      'image': imageUrl, // Changed from 'imageUrl' to 'image' to match HomeBanner model
+      'image':
+          imageUrl, // Changed from 'imageUrl' to 'image' to match HomeBanner model
       'title': title,
       'subtitle': subtitle,
       'link': link,
@@ -332,8 +290,7 @@ class AdminService {
 
   // Dashboard Stats
   Future<Map<String, dynamic>> getDashboardStats() async {
-    // This is a simplified version. In production, consider using Cloud Functions
-    // or a dedicated stats document updated via triggers.
+    // Basic Counts
     final usersCount =
         (await _firestore.collection('users').count().get()).count;
     final ordersCount =
@@ -341,17 +298,111 @@ class AdminService {
     final watchesCount =
         (await _firestore.collection('watches').count().get()).count;
 
-    final ordersSnapshot = await _firestore.collection('orders').get();
-    double totalRevenue = 0;
-    for (var doc in ordersSnapshot.docs) {
-      totalRevenue += (doc.data()['totalAmount'] ?? 0.0).toDouble();
+    // Get all watches to have category info and names cached
+    final watchesSnapshot = await _firestore.collection('watches').get();
+    final watches =
+        watchesSnapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    // ignore: unused_local_variable
+    final watchMap = {for (var w in watches) w.id: w};
+
+    // Get last 100 orders for trend and recent activity calculation
+    // We order by createdAt descending to get the most recent ones
+    final ordersSnapshot = await _firestore
+        .collection('orders')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .get();
+
+    final orders =
+        ordersSnapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+
+    // Calculate Sales Trend (Last 7 days)
+    final salesTrend = <String, double>{};
+    final now = DateTime.now();
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateStr = DateFormat('yyyy-MM-dd').format(date);
+      salesTrend[dateStr] = 0.0;
+    }
+
+    // For category-wise revenue, we would ideally need order items.
+    // For now, let's use watches' popularity and category to estimate distribution
+    // if we want to avoid extra calls. Or better, just group watches by category.
+    final categoryRevenue = <String, double>{};
+
+    for (var order in orders) {
+      // We calculate total revenue from these fetched orders (which are the last 100)
+      // This might not be the complete total if there are more than 100 orders,
+      // but it provides a good sample for the dashboard.
+      final dateStr = DateFormat('yyyy-MM-dd').format(order.createdAt);
+      if (salesTrend.containsKey(dateStr)) {
+        salesTrend[dateStr] = (salesTrend[dateStr] ?? 0) + order.totalAmount;
+      }
+    }
+
+    // Since we can't easily get category-wise revenue without fetching all items for all orders,
+    // we'll estimate it using the watches' popularity * price for the top watches.
+    // This is a "workable" approximation for a client-side dashboard.
+    for (var w in watches) {
+      if (w.popularity > 0) {
+        categoryRevenue[w.category] =
+            (categoryRevenue[w.category] ?? 0) + (w.popularity * w.price);
+      }
+    }
+
+    // Top Selling (Using popularity based on watches)
+    final topSelling = [...watches];
+    topSelling.sort((a, b) => b.popularity.compareTo(a.popularity));
+    final top5Selling = topSelling.take(5).toList();
+
+    // Recent Activity
+    // Fetch latest 5 users
+    final usersSnapshot = await _firestore
+        .collection('users')
+        .orderBy('createdAt', descending: true)
+        .limit(5)
+        .get();
+    final recentUsers =
+        usersSnapshot.docs.map((doc) => User.fromFirestore(doc)).toList();
+
+    final activities = <Map<String, dynamic>>[];
+    for (var o in orders.take(5)) {
+      activities.add({
+        'type': 'order',
+        'title': 'New Order #${o.id.substring(o.id.length - 5).toUpperCase()}',
+        'subtitle': 'Order of \$${o.totalAmount.toStringAsFixed(2)}',
+        'time': o.createdAt,
+      });
+    }
+    for (var u in recentUsers) {
+      activities.add({
+        'type': 'user',
+        'title': 'User Registered',
+        'subtitle': u.name,
+        'time': u.createdAt,
+      });
+    }
+    activities.sort(
+        (a, b) => (b['time'] as DateTime).compareTo(a['time'] as DateTime));
+
+    // For total revenue across ALL orders, we still need a full scan if not using triggers.
+    // Let's use the most efficient way to get it for now.
+    final allOrdersSnapshot = await _firestore.collection('orders').get();
+    double absoluteTotalRevenue = 0;
+    for (var doc in allOrdersSnapshot.docs) {
+      absoluteTotalRevenue += (doc.data()['totalAmount'] ?? 0.0).toDouble();
     }
 
     return {
       'totalUsers': usersCount,
       'totalOrders': ordersCount,
       'totalWatches': watchesCount,
-      'totalRevenue': totalRevenue,
+      'totalRevenue': absoluteTotalRevenue,
+      'salesTrend': salesTrend,
+      'topSelling': top5Selling,
+      'categoryRevenue': categoryRevenue,
+      'recentActivity': activities,
+      'allWatches': watches,
     };
   }
 
@@ -368,8 +419,6 @@ class AdminService {
     final totalCount = aggregateQuery.count ?? 0;
 
     // Fetch only up to what we need
-    // For arbitrary page access in Firestore without document snapshots,
-    // we fetch (page * limit) and slice. Still better than fetching ALL docs.
     final snapshot = await query.limit(page * limit).get();
     var watches = snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
 
@@ -396,25 +445,94 @@ class AdminService {
     };
   }
 
-<<<<<<< HEAD
-  /// Creates a new watch product.
-  ///
-  /// Supports both mobile (using [imageFiles]) and web (using [imageBytes]) platforms.
-  /// On web, provide [imageBytes] as files are not supported.
-=======
   /// Check if a watch name already exists (case-insensitive)
   /// Returns true if a watch with the same name exists (excluding the current watch if editing)
   Future<bool> watchNameExists(String name, {String? excludeWatchId}) async {
     final snapshot = await _firestore.collection('watches').get();
-    final watches = snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
-    
-    return watches.any((w) => 
-      w.name.toLowerCase().trim() == name.toLowerCase().trim() &&
-      (excludeWatchId == null || w.id != excludeWatchId)
-    );
+    final watches =
+        snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+
+    return watches.any((w) =>
+        w.name.toLowerCase().trim() == name.toLowerCase().trim() &&
+        (excludeWatchId == null || w.id != excludeWatchId));
   }
 
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
+  // User Stats & History
+  Future<Map<String, dynamic>> getUserStats(String userId) async {
+    // Fetch all orders for this user
+    final ordersSnapshot = await _firestore
+        .collection('orders')
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    final orders =
+        ordersSnapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+
+    int totalOrders = orders.length;
+    int cancelledOrders = 0;
+    double totalSpent = 0.0;
+
+    for (var order in orders) {
+      if (order.status == 'CANCELLED') {
+        cancelledOrders++;
+      } else {
+        totalSpent += order.totalAmount;
+      }
+    }
+
+    return {
+      'totalOrders': totalOrders,
+      'cancelledOrders': cancelledOrders,
+      'totalSpent': totalSpent,
+      'orders': orders,
+    };
+  }
+
+  // Notifications
+  Future<void> sendNotification({
+    String? userId,
+    required String title,
+    required String body,
+    required String type,
+  }) async {
+    final notificationData = {
+      'title': title,
+      'body': body,
+      'type': type,
+      'createdAt': FieldValue.serverTimestamp(),
+      'isRead': false,
+      'sentBy': 'admin',
+    };
+
+    if (userId != null) {
+      // Send to specific user
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .add(notificationData);
+
+      // Also add to a queue for Cloud Functions to pick up and send FCM
+      await _firestore.collection('notification_queue').add({
+        ...notificationData,
+        'targetUser': userId,
+        'status': 'pending',
+      });
+    } else {
+      // Send to all users (Broadcast)
+      // 1. Add to announcements for in-app feed
+      await _firestore.collection('announcements').add(notificationData);
+
+      // 2. Add to queue for Cloud Functions to send to 'all_users' topic
+      await _firestore.collection('notification_queue').add({
+        ...notificationData,
+        'targetTopic': 'all_users',
+        'status': 'pending',
+      });
+    }
+  }
+
   Future<Watch> createWatch({
     required String brandId,
     required String name,
@@ -425,25 +543,6 @@ class AdminService {
     required String category,
     Map<String, dynamic>? specifications,
     int? discountPercentage,
-<<<<<<< HEAD
-    List<File>? imageFiles,
-    List<Uint8List>? imageBytes,
-  }) async {
-    final imageUrls = <String>[];
-
-    // Handle image uploads (cross-platform)
-    if (kIsWeb && imageBytes != null) {
-      // Web platform: use bytes
-      for (var i = 0; i < imageBytes.length; i++) {
-        final ref = _storage
-            .ref()
-            .child('watches/${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
-        final uploadTask = await ref.putData(
-          imageBytes[i],
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
-=======
     List<dynamic>? imageFiles, // XFile for web, File for mobile
     bool hasBeltOption = false,
     bool hasChainOption = false,
@@ -451,21 +550,10 @@ class AdminService {
     final imageUrls = <String>[];
     if (imageFiles != null && imageFiles.isNotEmpty) {
       try {
-        imageUrls.addAll(await CloudinaryService.uploadImages(imageFiles, folder: 'watches'));
+        imageUrls.addAll(await CloudinaryService.uploadImages(imageFiles,
+            folder: 'watches'));
       } catch (e) {
         print('Error uploading images: $e');
-        // Continue with watch creation even if image upload fails
-        // Images will be empty array
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
-      }
-    } else if (imageFiles != null) {
-      // Mobile platform: use files
-      for (var i = 0; i < imageFiles.length; i++) {
-        final ref = _storage
-            .ref()
-            .child('watches/${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
-        final uploadTask = await ref.putFile(imageFiles[i]);
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
       }
     }
 
@@ -497,14 +585,13 @@ class AdminService {
 
     final doc = await docRef.get();
     if (!doc.exists) {
-      throw Exception('Failed to create watch - document not found after creation');
+      throw Exception(
+          'Failed to create watch - document not found after creation');
     }
     return Watch.fromFirestore(doc);
   }
 
   /// Updates an existing watch product.
-  ///
-  /// Supports both mobile (using [imageFiles]) and web (using [imageBytes]) platforms.
   Future<Watch> updateWatch({
     required String id,
     String? brandId,
@@ -516,14 +603,9 @@ class AdminService {
     String? category,
     Map<String, dynamic>? specifications,
     int? discountPercentage,
-<<<<<<< HEAD
-    List<File>? imageFiles,
-    List<Uint8List>? imageBytes,
-=======
     List<dynamic>? imageFiles, // XFile for web, File for mobile
     bool? hasBeltOption,
     bool? hasChainOption,
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
   }) async {
     final updates = <String, dynamic>{};
     if (brandId != null) updates['brandId'] = brandId;
@@ -534,13 +616,13 @@ class AdminService {
     if (stock != null) updates['stock'] = stock;
     if (category != null) updates['category'] = category;
     if (specifications != null) updates['specifications'] = specifications;
-<<<<<<< HEAD
     if (discountPercentage != null)
       updates['discountPercentage'] = discountPercentage;
+    if (hasBeltOption != null) updates['hasBeltOption'] = hasBeltOption;
+    if (hasChainOption != null) updates['hasChainOption'] = hasChainOption;
 
     // Recalculate salePrice if price or discountPercentage is updated
     if (price != null || discountPercentage != null) {
-      // Fetch current values if needed
       final currentDoc = await _firestore.collection('watches').doc(id).get();
       final currentData = currentDoc.data();
       final effectivePrice =
@@ -555,35 +637,9 @@ class AdminService {
       }
     }
 
-    // Handle image uploads (cross-platform)
-    if (kIsWeb && imageBytes != null && imageBytes.isNotEmpty) {
-      final imageUrls = <String>[];
-      for (var i = 0; i < imageBytes.length; i++) {
-        final ref = _storage.ref().child(
-            'watches/${id}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
-        final uploadTask = await ref.putData(
-          imageBytes[i],
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
-      }
-      updates['images'] = FieldValue.arrayUnion(imageUrls);
-    } else if (imageFiles != null && imageFiles.isNotEmpty) {
-      final imageUrls = <String>[];
-      for (var i = 0; i < imageFiles.length; i++) {
-        final ref = _storage.ref().child(
-            'watches/${id}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
-        final uploadTask = await ref.putFile(imageFiles[i]);
-        imageUrls.add(await uploadTask.ref.getDownloadURL());
-      }
-=======
-    if (discountPercentage != null) updates['discountPercentage'] = discountPercentage;
-    if (hasBeltOption != null) updates['hasBeltOption'] = hasBeltOption;
-    if (hasChainOption != null) updates['hasChainOption'] = hasChainOption;
-
     if (imageFiles != null && imageFiles.isNotEmpty) {
-      final imageUrls = await CloudinaryService.uploadImages(imageFiles, folder: 'watches');
->>>>>>> 901f25d8b804aa5f2b3d8401be6831ddb03f5199
+      final imageUrls =
+          await CloudinaryService.uploadImages(imageFiles, folder: 'watches');
       updates['images'] = FieldValue.arrayUnion(imageUrls);
     }
 
@@ -699,7 +755,6 @@ class AdminService {
       throw Exception('You cannot change your own role.');
     }
 
-    // If trying to demote an admin, check if there are others
     final targetDoc = await _firestore.collection('users').doc(id).get();
     final currentRole = targetDoc.data()?['role']?.toString().toUpperCase();
 
@@ -813,9 +868,14 @@ class AdminService {
     Query query = _firestore
         .collection('support_tickets')
         .orderBy('createdAt', descending: true);
-    if (status != null) query = query.where('status', isEqualTo: status);
+    if (status != null && status.isNotEmpty) {
+      query = query.where('status', isEqualTo: status);
+    }
 
-    final snapshot = await query.get();
+    final aggregateQuery = await query.count().get();
+    final totalCount = aggregateQuery.count ?? 0;
+
+    final snapshot = await query.limit(page * limit).get();
     final tickets =
         snapshot.docs.map((doc) => SupportTicket.fromFirestore(doc)).toList();
 
@@ -830,8 +890,8 @@ class AdminService {
       'pagination': {
         'page': page,
         'limit': limit,
-        'total': tickets.length,
-        'totalPages': (tickets.length / limit).ceil()
+        'total': totalCount,
+        'totalPages': (totalCount / limit).ceil()
       }
     };
   }

@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/order_tracker.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -93,6 +95,39 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      // Buy Again Button
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final cartProvider =
+                              Provider.of<CartProvider>(context, listen: false);
+                          if (order.orderItems != null) {
+                            final success =
+                                await cartProvider.reorder(order.orderItems!);
+                            if (success && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Items added to cart successfully!'),
+                                  backgroundColor: AppTheme.successColor,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Buy Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          textStyle: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -109,7 +144,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
-                      _buildTimeline(order.status),
+                      OrderTracker(
+                        currentStatus: order.status,
+                        isHorizontal: false,
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -327,119 +365,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildTimeline(String currentStatus) {
-    if (currentStatus == 'CANCELLED') {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.cancel, color: Colors.red),
-            SizedBox(width: 12),
-            Text(
-              'This order has been cancelled.',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final List<Map<String, dynamic>> steps = [
-      {
-        'status': 'PENDING',
-        'title': 'Order Placed',
-        'icon': Icons.assignment_turned_in
-      },
-      {
-        'status': 'PROCESSING',
-        'title': 'Processing',
-        'icon': Icons.hourglass_full
-      },
-      {'status': 'SHIPPED', 'title': 'Shipped', 'icon': Icons.local_shipping},
-      {'status': 'DELIVERED', 'title': 'Delivered', 'icon': Icons.check_circle},
-    ];
-
-    int currentIndex = steps.indexWhere((s) => s['status'] == currentStatus);
-    if (currentIndex == -1) currentIndex = 0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        children: List.generate(steps.length, (index) {
-          final isCompleted = index <= currentIndex;
-          final isActive = index == currentIndex;
-          final isLast = index == steps.length - 1;
-
-          return _buildTimelineStep(
-            title: steps[index]['title'],
-            isActive: isActive,
-            isCompleted: isCompleted,
-            isLast: isLast,
-            icon: steps[index]['icon'],
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildTimelineStep({
-    required String title,
-    required bool isActive,
-    required bool isCompleted,
-    required bool isLast,
-    required IconData icon,
-  }) {
-    final color = isCompleted ? AppTheme.primaryColor : Colors.grey.shade300;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: isCompleted ? color : Colors.white,
-                border: Border.all(color: color, width: 2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isCompleted ? Icons.check : icon,
-                color: isCompleted ? Colors.white : color,
-                size: 14,
-              ),
-            ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 30,
-                color: color,
-              ),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive
-                  ? FontWeight.bold
-                  : (isCompleted ? FontWeight.w600 : FontWeight.normal),
-              color: isCompleted ? AppTheme.textPrimaryColor : Colors.grey,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _summaryRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -460,6 +385,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         return Colors.blue;
       case 'SHIPPED':
         return Colors.purple;
+      case 'OUT_FOR_DELIVERY':
+        return Colors.teal;
       case 'DELIVERED':
         return AppTheme.successColor;
       case 'CANCELLED':
@@ -477,6 +404,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         return Icons.hourglass_empty;
       case 'SHIPPED':
         return Icons.local_shipping;
+      case 'OUT_FOR_DELIVERY':
+        return Icons.delivery_dining;
       case 'DELIVERED':
         return Icons.check_circle;
       case 'CANCELLED':

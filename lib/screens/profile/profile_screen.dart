@@ -66,10 +66,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        // Only show back button if we actually have a route to pop
+        automaticallyImplyLeading: Navigator.canPop(context),
       ),
       body: Consumer2<UserProvider, AuthProvider>(
         builder: (context, userProvider, authProvider, child) {
           final user = userProvider.user ?? authProvider.user;
+
+          if (user == null && userProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (user == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Could not load profile'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => userProvider.fetchProfile(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
 
           return ListView(
             children: [
@@ -84,15 +106,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.white,
-                          backgroundImage: user?.profileImage != null
+                          backgroundImage: user.profileImage != null
                               ? CachedNetworkImageProvider(
-                                  user!.profileImage!,
+                                  user.profileImage!,
                                 )
                               : null,
-                          child: user?.profileImage == null
+                          child: user.profileImage == null
                               ? Text(
-                                  user?.name.substring(0, 1).toUpperCase() ??
-                                      'U',
+                                  user.name.substring(0, 1).toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 36,
                                     fontWeight: FontWeight.bold,
@@ -137,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      user?.name ?? 'User',
+                      user.name,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -148,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      user?.email ?? '',
+                      user.email,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white70,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
+import '../../utils/validators.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -37,10 +38,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final success = await userProvider.updateProfile(
-      name: _nameController.text.trim(),
+      name: InputSanitizer.sanitize(_nameController.text),
       phone: _phoneController.text.trim().isEmpty
           ? null
-          : _phoneController.text.trim(),
+          : InputSanitizer.sanitizePhone(_phoneController.text),
     );
 
     if (!mounted) return;
@@ -83,15 +84,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: 'Full Name',
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
-                    return 'Name can only contain alphabets';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'Full Name'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -101,17 +94,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: 'Phone (Optional)',
                   prefixIcon: Icon(Icons.phone),
                 ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (value.length < 10 || value.length > 15) {
-                      return 'Phone number must be 10-15 digits';
-                    }
-                    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                      return 'Phone number must contain only digits';
-                    }
-                  }
-                  return null;
-                },
+                validator: Validators.phone,
               ),
               const SizedBox(height: 24),
               Consumer<UserProvider>(

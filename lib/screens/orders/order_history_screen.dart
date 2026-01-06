@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/order_tracker.dart';
 import 'order_detail_screen.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -44,21 +47,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             }
 
             if (orderProvider.orders.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: 80, color: Colors.grey.shade300),
-                    const SizedBox(height: 24),
-                    const Text('No orders yet',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    Text('Your order history will appear here',
-                        style: TextStyle(color: Colors.grey.shade600)),
-                  ],
-                ),
+              return EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'No orders yet',
+                message:
+                    'When you place an order, it will appear here. Start exploring our luxury collection!',
+                actionLabel: 'Start Shopping',
+                onActionPressed: () {
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/home', (route) => false);
+                },
               );
             }
 
@@ -133,6 +131,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                               ),
                             ],
                           ),
+                          const SizedBox(height: 16),
+                          OrderTracker(currentStatus: order.status),
                           const Divider(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -140,17 +140,70 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                               Text(
                                 '${order.orderItems?.length ?? 0} item(s)',
                                 style: TextStyle(
-                                    color: Colors.grey.shade600, fontSize: 14),
+                                    color: Colors.grey.shade600, fontSize: 13),
                               ),
                               Text(
                                 settings.formatPrice(order.totalAmount),
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryColor,
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final cartProvider = Provider.of<CartProvider>(
+                                    context,
+                                    listen: false);
+                                final orderProvider =
+                                    Provider.of<OrderProvider>(context,
+                                        listen: false);
+
+                                // Show loading
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Adding items to cart...'),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+
+                                // Fetch full order if items are missing
+                                if (order.orderItems == null) {
+                                  await orderProvider.fetchOrderById(order.id);
+                                }
+
+                                final fullOrder = orderProvider.selectedOrder;
+                                if (fullOrder != null &&
+                                    fullOrder.orderItems != null) {
+                                  final success = await cartProvider
+                                      .reorder(fullOrder.orderItems!);
+                                  if (success && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Items added to cart successfully!'),
+                                        backgroundColor: AppTheme.successColor,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.reorder, size: 18),
+                              label: const Text('Buy Again'),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: AppTheme.primaryColor),
+                                foregroundColor: AppTheme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

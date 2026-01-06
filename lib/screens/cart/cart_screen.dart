@@ -7,6 +7,7 @@ import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../../utils/image_utils.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
 import '../checkout/address_selection_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -72,48 +73,50 @@ class _CartScreenState extends State<CartScreen> {
                         }
                       },
                       tooltip: 'Delete Selected',
-                    ),
-                  TextButton(
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Clear Cart'),
-                          content: const Text(
-                              'Are you sure you want to clear your cart?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Clear'),
-                            ),
-                          ],
-                        ),
-                      );
+                    )
+                  else
+                    TextButton(
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Clear Cart'),
+                            content: const Text(
+                                'Are you sure you want to clear your cart?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Clear'),
+                              ),
+                            ],
+                          ),
+                        );
 
-                      if (confirm == true && mounted) {
-                        final success = await Provider.of<CartProvider>(context,
-                                listen: false)
-                            .clearCart();
-                        if (success && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Cart cleared'),
-                              backgroundColor: AppTheme.successColor,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                        if (confirm == true && mounted) {
+                          final success = await Provider.of<CartProvider>(
+                                  context,
+                                  listen: false)
+                              .clearCart();
+                          if (success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Cart cleared'),
+                                backgroundColor: AppTheme.successColor,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
-                      }
-                    },
-                    child: const Text(
-                      'Clear All',
-                      style: TextStyle(color: Colors.white),
+                      },
+                      child: const Text(
+                        'Clear All',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
-                  ),
                 ],
               );
             },
@@ -127,39 +130,16 @@ class _CartScreenState extends State<CartScreen> {
           }
 
           if (cartProvider.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shopping_cart_outlined,
-                      size: 100, color: Colors.grey.shade300),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Your cart is empty',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Looks like you haven\'t added any items to your cart yet.',
-                    style: TextStyle(color: Colors.grey.shade600),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil('/home', (route) => false);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Start Shopping'),
-                  ),
-                ],
-              ),
+            return EmptyState(
+              icon: Icons.shopping_bag_outlined,
+              title: 'Your cart is empty',
+              message:
+                  'Looks like you haven\'t added any luxury timepieces to your cart yet. Discover our collection today.',
+              actionLabel: 'Start Shopping',
+              onActionPressed: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/home', (route) => false);
+              },
             );
           }
 

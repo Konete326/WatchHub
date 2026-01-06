@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/watch_service.dart';
 import '../models/watch.dart';
@@ -26,6 +27,7 @@ class WatchProvider with ChangeNotifier {
   int _currentPage = 1;
   int _totalPages = 1;
   Map<String, dynamic> _filters = {};
+  Timer? _debounceTimer;
 
   List<Watch> get watches => _watches;
   List<Watch> get featuredWatches => _featuredWatches;
@@ -114,6 +116,62 @@ class WatchProvider with ChangeNotifier {
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
   }) async {
+    // Prevent multiple calls if already loading
+    if (refresh) {
+      if (_isLoading) return;
+    } else {
+      if (_isLoadingMore || !hasMorePages || _isLoading) return;
+    }
+
+    // Cancel existing debounce timer if any
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+
+    // Use a small debounce for non-refresh calls (pagination/scroll)
+    // to prevent accidental multiple triggers from fast scrolling
+    if (!refresh) {
+      final completer = Completer<void>();
+      _debounceTimer = Timer(const Duration(milliseconds: 200), () async {
+        try {
+          await _executeFetchWatches(
+            refresh: refresh,
+            search: search,
+            brandId: brandId,
+            category: category,
+            minPrice: minPrice,
+            maxPrice: maxPrice,
+            sortBy: sortBy,
+            sortOrder: sortOrder,
+          );
+        } finally {
+          completer.complete();
+        }
+      });
+      return completer.future;
+    }
+
+    // Direct execution for refresh
+    return _executeFetchWatches(
+      refresh: refresh,
+      search: search,
+      brandId: brandId,
+      category: category,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+    );
+  }
+
+  Future<void> _executeFetchWatches({
+    bool refresh = false,
+    String? search,
+    String? brandId,
+    String? category,
+    double? minPrice,
+    double? maxPrice,
+    String sortBy = 'createdAt',
+    String sortOrder = 'desc',
+  }) async {
     if (refresh) {
       _currentPage = 1;
       _watches = [];
@@ -147,10 +205,12 @@ class WatchProvider with ChangeNotifier {
         sortOrder: sortOrder,
       );
 
+      final List<Watch> fetchedWatches = result['watches'];
+
       if (refresh) {
-        _watches = result['watches'];
+        _watches = fetchedWatches;
       } else {
-        _watches.addAll(result['watches']);
+        _watches.addAll(fetchedWatches);
       }
 
       _totalPages = result['pagination']['totalPages'];
@@ -198,5 +258,11 @@ class WatchProvider with ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 }

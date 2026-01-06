@@ -5,6 +5,7 @@ import '../../widgets/watch_card.dart';
 import '../product/product_detail_screen.dart';
 import '../../utils/theme.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -338,17 +339,29 @@ class _SearchScreenState extends State<SearchScreen> {
           }
 
           if (watchProvider.watches.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.search, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(_searchController.text.isEmpty && !_isFilterApplied
-                      ? 'Search for watches'
-                      : 'No results found'),
-                ],
-              ),
+            final isInitial =
+                _searchController.text.isEmpty && !_isFilterApplied;
+            return EmptyState(
+              icon: isInitial
+                  ? Icons.manage_search_rounded
+                  : Icons.search_off_rounded,
+              title: isInitial ? 'Search Luxury Watches' : 'No results found',
+              message: isInitial
+                  ? 'Find your perfect timepiece by searching for brands, styles, or collections.'
+                  : 'We couldn\'t find any watches matching your criteria. Try different keywords or reset filters.',
+              actionLabel: isInitial ? null : 'Reset Filters',
+              onActionPressed: isInitial
+                  ? null
+                  : () {
+                      setState(() {
+                        _searchController.clear();
+                        _selectedBrandId = null;
+                        _selectedCategory = null;
+                        _priceRange = const RangeValues(0, 5000);
+                        _isFilterApplied = false;
+                      });
+                      _performSearch('');
+                    },
             );
           }
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/address.dart';
 import '../../utils/theme.dart';
+import '../../utils/validators.dart';
 
 class AddAddressScreen extends StatefulWidget {
   final Address? address;
@@ -53,14 +54,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     final address = Address(
       id: widget.address?.id ?? '',
       userId: widget.address?.userId ?? '',
-      addressLine: _addressLineController.text.trim(),
-      city: _cityController.text.trim(),
-      state: _stateController.text.trim(),
-      zip: _zipController.text.trim(),
-      country: _countryController.text.trim(),
+      addressLine: InputSanitizer.sanitize(_addressLineController.text),
+      city: InputSanitizer.sanitize(_cityController.text),
+      state: InputSanitizer.sanitize(_stateController.text),
+      zip: InputSanitizer.sanitize(_zipController.text),
+      country: InputSanitizer.sanitize(_countryController.text),
       phone: _phoneController.text.trim().isEmpty
           ? null
-          : _phoneController.text.trim(),
+          : InputSanitizer.sanitizePhone(_phoneController.text),
       isDefault: _isDefault,
       createdAt: widget.address?.createdAt ?? DateTime.now(),
     );
@@ -115,12 +116,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   prefixIcon: Icon(Icons.home),
                 ),
                 maxLines: 2,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter address';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'Address'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -129,15 +125,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   labelText: 'City',
                   prefixIcon: Icon(Icons.location_city),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter city';
-                  }
-                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
-                    return 'City can only contain alphabets';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'City'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -146,15 +134,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   labelText: 'State',
                   prefixIcon: Icon(Icons.map),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter state';
-                  }
-                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
-                    return 'State can only contain alphabets';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'State'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -164,15 +144,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   prefixIcon: Icon(Icons.pin_drop),
                 ),
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter ZIP code';
-                  }
-                  if (!RegExp(r'^[0-9]{5,10}$').hasMatch(value)) {
-                    return 'Enter a valid numeric ZIP code (5-10 digits)';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'ZIP Code'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -182,18 +154,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter phone number';
-                  }
-                  if (value.length < 10 || value.length > 15) {
-                    return 'Phone number must be 10-15 digits';
-                  }
-                  if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return 'Phone number must contain only digits';
-                  }
-                  return null;
-                },
+                validator: Validators.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -202,15 +163,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   labelText: 'Country',
                   prefixIcon: Icon(Icons.flag),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter country';
-                  }
-                  if (!RegExp(r'^[a-zA-Z\s\.]+$').hasMatch(value)) {
-                    return 'Country can only contain alphabets';
-                  }
-                  return null;
-                },
+                validator: (value) => Validators.required(value, 'Country'),
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

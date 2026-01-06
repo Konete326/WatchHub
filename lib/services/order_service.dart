@@ -80,6 +80,21 @@ class OrderService {
     }
   }
 
+  Future<List<Coupon>> getAvailableCoupons() async {
+    try {
+      final snapshot = await _firestore
+          .collection('coupons')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      return snapshot.docs.map((doc) => Coupon.fromFirestore(doc)).toList();
+    } catch (e) {
+      // Log the error or handle it appropriately
+      print('Error fetching available coupons: $e');
+      return []; // Return an empty list on error
+    }
+  }
+
   Future<Order> createOrder({
     required String addressId,
     String? paymentIntentId,
@@ -87,7 +102,8 @@ class OrderService {
     List<String>? cartItemIds,
     String paymentMethod = 'card',
     String? couponId,
-    Map<String, Map<String, String?>>? strapSelections, // cartItemId -> {strapType, strapColor}
+    Map<String, Map<String, String?>>?
+        strapSelections, // cartItemId -> {strapType, strapColor}
   }) async {
     if (uid == null) throw Exception('User not logged in');
 
@@ -121,10 +137,10 @@ class OrderService {
           throw Exception('Not enough stock for ${watchData['name']}');
 
         totalAmount += price * quantity;
-        
+
         // Get strap selections for this cart item
         final strapSelection = strapSelections?[doc.id];
-        
+
         orderItemsData.add({
           'watchId': data['watchId'],
           'quantity': quantity,

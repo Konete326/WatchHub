@@ -4,6 +4,7 @@ import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
 import '../profile/add_address_screen.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../widgets/checkout_progress_bar.dart';
 import 'payment_screen.dart';
 
 class AddressSelectionScreen extends StatefulWidget {
@@ -67,6 +68,7 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
 
           return Column(
             children: [
+              const CheckoutProgressBar(currentStep: 0),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),

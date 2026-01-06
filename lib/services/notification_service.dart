@@ -45,25 +45,44 @@ class NotificationService {
     _messaging.onTokenRefresh.listen(saveTokenToFirestore);
 
     // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
 
-      if (notification != null && android != null) {
-        _localNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'watchhub_channel',
-              'WatchHub Notifications',
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
+      if (notification != null) {
+        // Save to Firestore for Notification History
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('notifications')
+              .add({
+            'title': notification.title,
+            'body': notification.body,
+            'type': message.data['type'] ?? 'general',
+            'data': message.data,
+            'timestamp': FieldValue.serverTimestamp(),
+            'isRead': false,
+          });
+        }
+
+        if (android != null) {
+          _localNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'watchhub_channel',
+                'WatchHub Notifications',
+                importance: Importance.max,
+                priority: Priority.high,
+                icon: '@mipmap/ic_launcher',
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     });
   }

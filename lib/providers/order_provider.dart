@@ -8,6 +8,7 @@ class OrderProvider with ChangeNotifier {
   final OrderService _orderService = OrderService();
 
   List<Order> _orders = [];
+  List<Coupon> _availableCoupons = [];
   Order? _selectedOrder;
   bool _isLoading = false;
   String? _errorMessage;
@@ -15,10 +16,25 @@ class OrderProvider with ChangeNotifier {
   int _currentPage = 1;
 
   List<Order> get orders => _orders;
+  List<Coupon> get availableCoupons => _availableCoupons;
   Order? get selectedOrder => _selectedOrder;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasMorePages => _currentPage <= _totalPages;
+
+  Future<void> fetchAvailableCoupons() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _availableCoupons = await _orderService.getAvailableCoupons();
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<Map<String, dynamic>?> createPaymentIntent(double amount) async {
     try {
@@ -86,11 +102,13 @@ class OrderProvider with ChangeNotifier {
 
   Future<void> fetchOrders({bool refresh = false}) async {
     if (refresh) {
+      if (_isLoading) return;
       _currentPage = 1;
       _orders = [];
       _isLoading = true;
-    } else if (!hasMorePages) {
-      return;
+    } else {
+      if (_isLoading || !hasMorePages) return;
+      _isLoading = true;
     }
 
     _errorMessage = null;

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
 import '../services/watch_service.dart';
 import '../models/cart_item.dart';
+import '../models/order_item.dart';
+import '../models/watch.dart';
 import '../models/app_settings.dart';
 import '../utils/error_handler.dart';
 
@@ -64,6 +66,14 @@ class CartProvider with ChangeNotifier {
   bool get isAllSelected =>
       _cartItems.isNotEmpty && _selectedItemIds.length == _cartItems.length;
 
+  int getQuantityInCart(String watchId) {
+    try {
+      return _cartItems.firstWhere((item) => item.watchId == watchId).quantity;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> fetchCart() async {
     _isLoading = true;
     _errorMessage = null;
@@ -89,9 +99,17 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> addToCart(String watchId, {int quantity = 1}) async {
+  Future<bool> addToCart(Watch watch, {int quantity = 1}) async {
+    // Frontend stock check
+    final currentQty = getQuantityInCart(watch.id);
+    if (currentQty + quantity > watch.stock) {
+      _errorMessage = 'Only ${watch.stock} items available in stock';
+      notifyListeners();
+      return false;
+    }
+
     try {
-      await _cartService.addToCart(watchId, quantity: quantity);
+      await _cartService.addToCart(watch.id, quantity: quantity);
       _addedToCart = true;
       await fetchCart(); // Refresh cart
       return true;
@@ -104,6 +122,14 @@ class CartProvider with ChangeNotifier {
 
   Future<bool> updateQuantity(String id, int quantity) async {
     try {
+      final item = _cartItems.firstWhere((item) => item.id == id);
+      if (quantity > (item.watch?.stock ?? 0)) {
+        _errorMessage =
+            'Only ${item.watch?.stock ?? 0} items available in stock';
+        notifyListeners();
+        return false;
+      }
+
       await _cartService.updateCartItem(id, quantity);
       await fetchCart(); // Refresh cart
       return true;
@@ -111,6 +137,27 @@ class CartProvider with ChangeNotifier {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> reorder(List<OrderItem> items) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      for (var item in items) {
+        await _cartService.addToCart(item.watchId, quantity: item.quantity);
+      }
+      _addedToCart = true;
+      await fetchCart();
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
