@@ -344,28 +344,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeroSection(List<dynamic> banners) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 32), // Increased spacing
       child: CarouselSlider(
         options: CarouselOptions(
-          height: 220,
-          viewportFraction: 0.92,
+          height: 340, // Increased height for better visual impact
+          viewportFraction: 0.95, // Wider cards
           enlargeCenterPage: true,
+          enlargeStrategy: CenterPageEnlargeStrategy.zoom, // Smooth zoom effect
           autoPlay: true,
           autoPlayInterval: const Duration(seconds: 6),
           enableInfiniteScroll: true,
+          autoPlayAnimationDuration: const Duration(milliseconds: 800),
+          autoPlayCurve: Curves.fastOutSlowIn,
         ),
         items: banners.map((banner) {
           return Builder(
             builder: (BuildContext context) {
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
+                width: MediaQuery.of(context).size.width,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius:
+                      BorderRadius.circular(28), // Modern rounded corners
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black
+                          .withOpacity(0.2), // Softer, deeper shadow
                       blurRadius: 15,
-                      offset: const Offset(0, 8),
+                      offset: const Offset(0, 10),
+                      spreadRadius: 1,
                     ),
                   ],
                   image: DecorationImage(
@@ -375,17 +382,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(28),
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withOpacity(0.95), // Thicker dark base
+                        Colors.black.withOpacity(0.5),
                         Colors.transparent,
                       ],
+                      stops: const [0.0, 0.4, 1.0],
                     ),
                   ),
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,28 +402,36 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (banner.title != null)
                         Text(
                           banner.title!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 28, // Larger font
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
                             shadows: [
                               Shadow(
-                                color: Colors.black45,
+                                color: Colors.black54,
                                 offset: Offset(0, 2),
                                 blurRadius: 4,
                               ),
                             ],
                           ),
                         ),
+                      const SizedBox(height: 8),
                       if (banner.subtitle != null)
                         Text(
                           banner.subtitle!,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
                             fontWeight: FontWeight.w500,
+                            height: 1.3,
                           ),
                         ),
+                      const SizedBox(height: 12), // Space from bottom
                     ],
                   ),
                 ),
@@ -512,143 +529,107 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLimitedEditionSection(dynamic promotion) {
+    // If it's an image type promotion, we treat it as a banner ad
     final bool isImage = promotion.type == 'image';
     if (!isImage && promotion.title == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Limited Edition',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      color: const Color(0xFF1A1A1A),
-                    ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: GestureDetector(
+        onTap: () {
+          if (promotion.link != null && promotion.link!.isNotEmpty) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    ProductDetailScreen(watchId: promotion.link!),
               ),
-              const Spacer(),
-              // Maybe a 'See All' button if relevant
+            );
+          }
+        },
+        child: Container(
+          height: 220, // Standard banner height
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: isImage
+                ? Colors.transparent
+                : Color(int.parse(promotion.backgroundColor ?? '0xFF1A1A1A')),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
             ],
+            image: isImage && promotion.imageUrl != null
+                ? DecorationImage(
+                    image: CachedNetworkImageProvider(promotion.imageUrl!),
+                    fit: BoxFit.cover, // Ensures the ad fills the space
+                  )
+                : null,
           ),
-          const SizedBox(height: 16),
-          Container(
-            height: 400, // Large height for impact
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: isImage
-                  ? Colors.black
-                  : Color(int.parse(promotion.backgroundColor ?? '0xFF1A1A1A')),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              image: isImage && promotion.imageUrl != null
-                  ? DecorationImage(
-                      image: CachedNetworkImageProvider(promotion.imageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: Stack(
-              children: [
-                // Gradient Overlay
+          child: Stack(
+            children: [
+              // Only show gradient and text if it's NOT just a pure image ad
+              // OR if we have explicit text content to overlay
+              if (!isImage ||
+                  (promotion.title != null && promotion.title!.isNotEmpty)) ...[
+                // Subtle Gradient for text readability
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                       colors: [
+                        Colors.black.withOpacity(0.7),
                         Colors.transparent,
-                        Colors.black.withOpacity(0.6),
-                        Colors.black.withOpacity(0.9),
                       ],
-                      stops: const [0.5, 0.8, 1.0],
                     ),
                   ),
                 ),
-                // Content
+                // Text Content
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      if (promotion.title != null)
+                        Text(
+                          promotion.title!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
+                          ),
+                        ),
+                      if (promotion.subtitle != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          promotion.subtitle!,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                            horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         child: const Text(
-                          'EXCLUSIVE',
+                          'Shop Now',
                           style: TextStyle(
                             color: Colors.black,
-                            fontSize: 10,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        promotion.title ?? 'Timeless Elegance',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        promotion.subtitle ??
-                            'Discover the pinnacle of craftsmanship.',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (promotion.link != null &&
-                                promotion.link!.isNotEmpty) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => ProductDetailScreen(
-                                      watchId: promotion.link!),
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Shop Now',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ),
                       ),
@@ -656,9 +637,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
