@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -32,10 +33,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       CarouselSliderController();
   final ScrollController _scrollController = ScrollController();
   bool _isSpecificationsExpanded = false;
+  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
     Future.microtask(() {
       Provider.of<WatchProvider>(context, listen: false)
           .fetchWatchById(widget.watchId);
@@ -50,55 +57,89 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate AppBar opacity based on scroll
+    final appBarOpacity = (_scrollOffset / 200).clamp(0.0, 1.0);
+
     return Scaffold(
       backgroundColor: Colors.white,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text(''), // Transparent to show image
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        actions: [
-          Consumer<WishlistProvider>(
-            builder: (context, wishlistProvider, child) {
-              final watch = Provider.of<WatchProvider>(context).selectedWatch;
-              if (watch == null) return const SizedBox();
-
-              final isInWishlist = wishlistProvider.isInWishlist(watch.id);
-              return Container(
-                margin: const EdgeInsets.only(right: 8),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 10 * appBarOpacity,
+              sigmaY: 10 * appBarOpacity,
+            ),
+            child: AppBar(
+              title: const Text(''),
+              backgroundColor: Colors.white.withOpacity(0.7 * appBarOpacity),
+              elevation: 0,
+              leading: Container(
+                margin: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withOpacity(0.95),
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: IconButton(
-                  icon: Icon(
-                    isInWishlist ? Icons.favorite : Icons.favorite_border,
-                    color: isInWishlist ? AppTheme.errorColor : Colors.black,
-                  ),
-                  onPressed: () async {
-                    HapticFeedback.mediumImpact();
-                    final wishlistItem = wishlistProvider.wishlistItems
-                        .where((item) => item.watchId == watch.id)
-                        .firstOrNull;
-                    await wishlistProvider.toggleWishlist(
-                        watch.id, wishlistItem?.id);
+                  icon: const Icon(Icons.arrow_back_ios_new,
+                      color: Colors.black, size: 20),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              actions: [
+                Consumer<WishlistProvider>(
+                  builder: (context, wishlistProvider, child) {
+                    final watch =
+                        Provider.of<WatchProvider>(context).selectedWatch;
+                    if (watch == null) return const SizedBox();
+
+                    final isInWishlist =
+                        wishlistProvider.isInWishlist(watch.id);
+                    return Container(
+                      margin:
+                          const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          isInWishlist ? Icons.favorite : Icons.favorite_border,
+                          color:
+                              isInWishlist ? AppTheme.errorColor : Colors.black,
+                          size: 22,
+                        ),
+                        onPressed: () async {
+                          HapticFeedback.mediumImpact();
+                          final wishlistItem = wishlistProvider.wishlistItems
+                              .where((item) => item.watchId == watch.id)
+                              .firstOrNull;
+                          await wishlistProvider.toggleWishlist(
+                              watch.id, wishlistItem?.id);
+                        },
+                      ),
+                    );
                   },
                 ),
-              );
-            },
+              ],
+            ),
           ),
-        ],
+        ),
       ),
       body: Consumer<WatchProvider>(
         builder: (context, watchProvider, child) {
@@ -128,9 +169,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       alignment: Alignment.bottomCenter,
                       children: [
                         Container(
-                          height: 450, // Taller image area
-                          color: const Color(0xFFF7F8FA),
-                          padding: const EdgeInsets.only(top: 80, bottom: 20),
+                          height: 480,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                const Color(0xFFF7F8FA),
+                                Colors.white.withOpacity(0.5),
+                              ],
+                            ),
+                          ),
+                          padding: const EdgeInsets.only(top: 100, bottom: 40),
                           child: watch.images.isNotEmpty
                               ? CarouselSlider(
                                   carouselController: _carouselController,
@@ -175,30 +225,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       size: 100, color: Colors.grey),
                                 ),
                         ),
-                        // Dots Indicator
+                        // Modern Dots Indicator
                         if (watch.images.length > 1)
                           Positioned(
-                            bottom: 24,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children:
-                                  watch.images.asMap().entries.map((entry) {
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: _currentImageIndex == entry.key
-                                      ? 20.0
-                                      : 8.0,
-                                  height: 8.0,
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 4.0),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4.0),
-                                    color: _currentImageIndex == entry.key
-                                        ? AppTheme.primaryColor
-                                        : Colors.grey.withOpacity(0.4),
-                                  ),
-                                );
-                              }).toList(),
+                            bottom: 28,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children:
+                                    watch.images.asMap().entries.map((entry) {
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    width: _currentImageIndex == entry.key
+                                        ? 24.0
+                                        : 8.0,
+                                    height: 8.0,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(4.0),
+                                      color: _currentImageIndex == entry.key
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.4),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                             ),
                           ),
                       ],
@@ -209,11 +267,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(30)),
+                            BorderRadius.vertical(top: Radius.circular(32)),
                       ),
-                      // Shift up slightly to overlap image bg
-                      transform: Matrix4.translationValues(0, -20, 0),
-                      padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
+                      transform: Matrix4.translationValues(0, -30, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -221,22 +278,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                watch.brand?.name ?? '',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor.withOpacity(0.7),
-                                  letterSpacing: 1.0,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  watch.brand?.name.toUpperCase() ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ),
                               if (watch.averageRating != null &&
                                   watch.averageRating! > 0)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
+                                      horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.1),
+                                    color: Colors.amber.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
@@ -263,16 +328,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
 
                           // Product Name
                           Text(
                             watch.name,
                             style: const TextStyle(
-                              fontSize: 26,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
                               height: 1.2,
                               color: Color(0xFF1A1A1A),
+                              letterSpacing: -0.5,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -281,33 +347,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           Text(
                             watch.description,
                             style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
+                              fontSize: 15,
+                              color: Colors.grey[700],
                               height: 1.6,
                             ),
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 24),
-                          const Divider(height: 1),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 28),
 
-                          // Variant Selector (Circular)
+                          // Variant Selector (Enhanced Circular)
                           if (watch.variants != null &&
                               watch.variants!.isNotEmpty) ...[
-                            const Text(
-                              'Color',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 12),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Color',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                if (_selectedVariant != null)
+                                  Text(
+                                    _selectedVariant!.colorName,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
                               children: watch.variants!.map((variant) {
                                 final isSelected =
                                     _selectedVariant?.colorName ==
                                         variant.colorName;
                                 return GestureDetector(
                                   onTap: () {
+                                    HapticFeedback.selectionClick();
                                     setState(() {
                                       _selectedVariant = variant;
                                       if (variant.image != null) {
@@ -320,22 +400,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       }
                                     });
                                   },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 12),
-                                    padding:
-                                        const EdgeInsets.all(3), // Border width
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.all(3),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: isSelected
                                             ? AppTheme.primaryColor
-                                            : Colors.transparent,
-                                        width: 2,
+                                            : Colors.grey.shade300,
+                                        width: isSelected ? 3 : 2,
                                       ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: AppTheme.primaryColor
+                                                    .withOpacity(0.3),
+                                                blurRadius: 8,
+                                                spreadRadius: 2,
+                                              ),
+                                            ]
+                                          : [],
                                     ),
                                     child: Container(
-                                      width: 32,
-                                      height: 32,
+                                      width: 40,
+                                      height: 40,
                                       decoration: BoxDecoration(
                                         color: Color(int.parse(variant.colorHex
                                             .replaceAll('#', '0xFF'))),
@@ -343,103 +432,155 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         boxShadow: [
                                           BoxShadow(
                                             color:
-                                                Colors.black.withOpacity(0.1),
+                                                Colors.black.withOpacity(0.15),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
+                                      child: isSelected
+                                          ? const Icon(
+                                              Icons.check,
+                                              color: Colors.white,
+                                              size: 20,
+                                            )
+                                          : null,
                                     ),
                                   ),
                                 );
                               }).toList(),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 28),
                           ],
 
-                          // Experience / Specifications Expandable Tile
-                          Theme(
-                            data: Theme.of(context)
-                                .copyWith(dividerColor: Colors.transparent),
-                            child: ExpansionTile(
-                              title: const Text(
-                                'Experience & Specifications',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
+                          // Experience Section with Icon
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                    color: Colors.grey.shade200, width: 1),
+                                bottom: BorderSide(
+                                    color: Colors.grey.shade200, width: 1),
                               ),
-                              tilePadding: EdgeInsets.zero,
-                              childrenPadding:
-                                  const EdgeInsets.only(bottom: 16),
-                              onExpansionChanged: (expanded) {
-                                setState(() {
-                                  _isSpecificationsExpanded = expanded;
-                                });
-                              },
-                              children: [
-                                if (watch.specifications != null)
-                                  ...watch.specifications!.entries.map((entry) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              entry.key,
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontSize: 14,
+                            ),
+                            child: Theme(
+                              data: Theme.of(context)
+                                  .copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.auto_awesome_outlined,
+                                    color: AppTheme.primaryColor,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: const Text(
+                                  'Experience & Specifications',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                tilePadding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                childrenPadding:
+                                    const EdgeInsets.only(bottom: 16, top: 8),
+                                onExpansionChanged: (expanded) {
+                                  setState(() {
+                                    _isSpecificationsExpanded = expanded;
+                                  });
+                                },
+                                children: [
+                                  if (watch.specifications != null)
+                                    ...watch.specifications!.entries
+                                        .map((entry) {
+                                      return Container(
+                                        margin:
+                                            const EdgeInsets.only(bottom: 12),
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                entry.key,
+                                                style: TextStyle(
+                                                  color: Colors.grey[700],
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(
-                                              entry.value.toString(),
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: Color(0xFF1A1A1A),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                entry.value.toString(),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  color: Color(0xFF1A1A1A),
+                                                ),
+                                                textAlign: TextAlign.right,
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                              ],
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                ],
+                              ),
                             ),
                           ),
-                          const Divider(height: 1),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
 
-                          // Similar Watches
+                          // Similar Watches with Enhanced Header
                           if (watchProvider.relatedWatches.isNotEmpty) ...[
-                            const Text(
-                              'Similar Watches',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Similar Watches',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             SizedBox(
-                              height: 260,
+                              height: 280,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: watchProvider.relatedWatches.length,
+                                padding: const EdgeInsets.only(bottom: 8),
                                 itemBuilder: (context, index) {
                                   final relatedWatch =
                                       watchProvider.relatedWatches[index];
                                   return Container(
-                                    width:
-                                        170, // Slightly narrower for horizontal list
+                                    width: 170,
                                     margin: const EdgeInsets.only(right: 16),
                                     child: WatchCard(
                                       watch: relatedWatch,
@@ -458,13 +599,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 32),
                           ],
 
                           // Reviews
                           ReviewsSection(watchId: watch.id),
-                          const SizedBox(
-                              height: 100), // Space for floating bottom bar
+                          const SizedBox(height: 120),
                         ],
                       ),
                     ),
@@ -472,127 +612,193 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
 
-              // Floating Bottom Action Bar
+              // Enhanced Floating Bottom Action Bar with Gradient
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
                 child: Container(
                   padding: EdgeInsets.fromLTRB(
-                      20, 20, 20, MediaQuery.of(context).padding.bottom + 16),
+                      24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, -5),
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 30,
+                        offset: const Offset(0, -10),
                       ),
                     ],
                     borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
+                        const BorderRadius.vertical(top: Radius.circular(28)),
                   ),
-                  child: Row(
-                    children: [
-                      // Price
-                      Expanded(
-                        flex: 4,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Total Price',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        // Price
+                        Expanded(
+                          flex: 4,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total Price',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            Consumer<SettingsProvider>(
-                              builder: (context, settings, _) {
-                                return Text(
-                                  settings.formatPrice(watch.currentPrice),
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      // Add to Cart Button
-                      Expanded(
-                        flex: 6,
-                        child: Consumer<CartProvider>(
-                          builder: (context, cartProvider, _) {
-                            final currentQty =
-                                cartProvider.getQuantityInCart(watch.id);
-                            final isStockLimitReached =
-                                currentQty >= watch.stock;
-                            return ElevatedButton(
-                              onPressed: (watch.isInStock &&
-                                      !isStockLimitReached)
-                                  ? () async {
-                                      HapticFeedback.lightImpact();
-                                      final success =
-                                          await cartProvider.addToCart(
-                                        watch,
-                                        productColor:
-                                            _selectedVariant?.colorName,
-                                      );
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(success
-                                                ? 'Added to cart'
-                                                : 'Failed to add'),
-                                            backgroundColor: success
-                                                ? AppTheme.successColor
-                                                : AppTheme.errorColor,
-                                            behavior: SnackBarBehavior.floating,
-                                            margin: const EdgeInsets.only(
-                                                bottom: 100,
-                                                left: 16,
-                                                right: 16),
+                              const SizedBox(height: 4),
+                              Consumer<SettingsProvider>(
+                                builder: (context, settings, _) {
+                                  return Flexible(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            settings.formatPrice(
+                                                watch.currentPrice),
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.primaryColor,
+                                              letterSpacing: -0.5,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        );
-                                      }
-                                    }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primaryColor,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
+                                        ),
+                                        if (watch.isOnSale) ...[
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              settings.formatPrice(watch.price),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[400],
+                                                decoration:
+                                                    TextDecoration.lineThrough,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        // Add to Cart Button - Solid Blue
+                        Expanded(
+                          flex: 6,
+                          child: Consumer<CartProvider>(
+                            builder: (context, cartProvider, _) {
+                              final currentQty =
+                                  cartProvider.getQuantityInCart(watch.id);
+                              final isStockLimitReached =
+                                  currentQty >= watch.stock;
+                              return Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color:
+                                      (watch.isInStock && !isStockLimitReached)
+                                          ? AppTheme.primaryColor
+                                          : Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                              ),
-                              child: Text(
-                                !watch.isInStock
-                                    ? 'Out of Stock'
-                                    : (isStockLimitReached
-                                        ? 'Limit Reached'
-                                        : 'Add to Cart'),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: (watch.isInStock &&
+                                            !isStockLimitReached)
+                                        ? () async {
+                                            HapticFeedback.lightImpact();
+                                            final success =
+                                                await cartProvider.addToCart(
+                                              watch,
+                                              productColor:
+                                                  _selectedVariant?.colorName,
+                                            );
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(success
+                                                      ? 'Added to cart'
+                                                      : 'Failed to add'),
+                                                  backgroundColor: success
+                                                      ? AppTheme.successColor
+                                                      : AppTheme.errorColor,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 100,
+                                                      left: 16,
+                                                      right: 16),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        : null,
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            !watch.isInStock
+                                                ? Icons.error_outline
+                                                : (isStockLimitReached
+                                                    ? Icons.info_outline
+                                                    : Icons
+                                                        .shopping_cart_outlined),
+                                            color: (watch.isInStock &&
+                                                    !isStockLimitReached)
+                                                ? Colors.white
+                                                : Colors.grey[600],
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            !watch.isInStock
+                                                ? 'Out of Stock'
+                                                : (isStockLimitReached
+                                                    ? 'Limit Reached'
+                                                    : 'Add to Cart'),
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: (watch.isInStock &&
+                                                      !isStockLimitReached)
+                                                  ? Colors.white
+                                                  : Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -8,15 +8,18 @@ import '../../widgets/empty_state.dart';
 import '../../providers/wishlist_provider.dart';
 import '../wishlist/wishlist_screen.dart';
 import '../../utils/theme.dart';
+import '../../widgets/glass_app_bar.dart';
 
 class BrowseScreen extends StatefulWidget {
   final String? initialCategory;
   final String? initialBrandId;
+  final bool showBackButton;
 
   const BrowseScreen({
     super.key,
     this.initialCategory,
     this.initialBrandId,
+    this.showBackButton = true,
   });
 
   @override
@@ -74,8 +77,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Browse Watches'),
+      appBar: GlassAppBar(
+        title: 'Browse Watches',
+        showBackButton: widget.showBackButton,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),

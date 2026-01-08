@@ -22,8 +22,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const BrowseScreen(),
-    const CartScreen(),
+    const BrowseScreen(showBackButton: false),
+    const CartScreen(showBackButton: false),
     const ProfileScreen(),
   ];
 
@@ -67,18 +67,6 @@ class _MainNavigationState extends State<MainNavigation> {
             decoration: BoxDecoration(
               color: AppTheme.primaryColor,
               borderRadius: BorderRadius.circular(35),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF283593), // Light highlight
-                  offset: Offset(-4, -4),
-                  blurRadius: 8,
-                ),
-                BoxShadow(
-                  color: Color(0xFF000051), // Dark shadow
-                  offset: Offset(4, 4),
-                  blurRadius: 8,
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -109,21 +97,9 @@ class _MainNavigationState extends State<MainNavigation> {
         width: 50,
         height: 50,
         decoration: isSelected
-            ? BoxDecoration(
+            ? const BoxDecoration(
                 color: AppTheme.primaryColor,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF283593), // Light highlight
-                    offset: const Offset(-4, -4),
-                    blurRadius: 8,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF000051), // Dark shadow
-                    offset: const Offset(4, 4),
-                    blurRadius: 8,
-                  ),
-                ],
               )
             : null,
         child: Column(
@@ -155,35 +131,38 @@ class _MainNavigationState extends State<MainNavigation> {
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 50,
         height: 50,
         decoration: isSelected
-            ? BoxDecoration(
+            ? const BoxDecoration(
                 color: AppTheme.primaryColor,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF283593), // Light highlight
-                    offset: const Offset(-4, -4),
-                    blurRadius: 8,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF000051), // Dark shadow
-                    offset: const Offset(4, 4),
-                    blurRadius: 8,
-                  ),
-                ],
               )
             : null,
-        child: Center(
-          child: IconTheme(
-            data: IconThemeData(
-              color: isSelected ? Colors.white : Colors.white60,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconTheme(
+              data: IconThemeData(
+                color: isSelected ? Colors.white : Colors.white60,
+              ),
+              child: const AnimatedCartIcon(),
             ),
-            child: const AnimatedCartIcon(),
-          ),
+            if (!isSelected) ...[
+              const SizedBox(height: 4),
+              const Text(
+                'Cart',
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 10,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
