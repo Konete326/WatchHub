@@ -458,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => BrowseScreen(
-                          initialBrand: brand.name,
+                          initialBrandId: brand.id,
                         ),
                       ),
                     );
@@ -480,9 +480,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: brand.imageUrl != null
+                        child: brand.logoUrl != null
                             ? CachedNetworkImage(
-                                imageUrl: brand.imageUrl!,
+                                imageUrl: brand.logoUrl!,
                                 fit: BoxFit.contain,
                                 placeholder: (context, url) => Container(
                                   color: Colors.grey[100],
