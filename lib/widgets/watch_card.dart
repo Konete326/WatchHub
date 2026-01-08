@@ -58,16 +58,13 @@ class WatchCard extends StatelessWidget {
                     // Product Image Background
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(
+                          12), // Reduced padding for larger images
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFF7F8FA),
-                            Color(0xFFEFF1F5),
-                          ],
-                        ),
+                        color: Colors
+                            .white, // Pure white background for better blending
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       child: watch.images.isNotEmpty
                           ? Hero(
