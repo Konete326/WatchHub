@@ -68,7 +68,8 @@ class WatchCard extends StatelessWidget {
                       ),
                       child: watch.images.isNotEmpty
                           ? Hero(
-                              tag: 'watch_${watch.id}',
+                              tag:
+                                  'watch_${watch.id}_${hashCode}', // Make unique with widget hashCode
                               child: CachedNetworkImage(
                                 imageUrl: watch.images.first,
                                 fit: BoxFit.contain,

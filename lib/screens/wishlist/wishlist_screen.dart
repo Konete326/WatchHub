@@ -9,6 +9,7 @@ import '../../widgets/shimmer_loading.dart';
 import '../../widgets/empty_state.dart';
 import '../../utils/theme.dart';
 import '../product/product_detail_screen.dart';
+import '../../widgets/glass_app_bar.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -29,8 +30,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Wishlist'),
+      appBar: const GlassAppBar(
+        title: 'My Wishlist',
       ),
       body: RefreshIndicator(
         onRefresh: () async {
