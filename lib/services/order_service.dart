@@ -8,6 +8,7 @@ import '../models/coupon.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/constants.dart';
+import 'notification_service.dart';
 
 class OrderService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -145,8 +146,9 @@ class OrderService {
           'watchId': data['watchId'],
           'quantity': quantity,
           'priceAtPurchase': price,
-          'strapType': strapSelection?['strapType'],
-          'strapColor': strapSelection?['strapColor'],
+          'productColor': data['productColor'],
+          'strapType': strapSelection?['strapType'] ?? data['strapType'],
+          'strapColor': strapSelection?['strapColor'] ?? data['strapColor'],
         });
 
         watchesToUpdate[watchRef] = stock - quantity;
@@ -200,6 +202,16 @@ class OrderService {
         if (cartItemIds != null && !cartItemIds.contains(doc.id)) continue;
         transaction.delete(doc.reference);
       }
+
+      // 8. Send Notification
+      NotificationService.sendNotification(
+        userId: uid!,
+        title: 'Order Placed! 🎊',
+        body:
+            'Your order #${orderRef.id} has been placed successfully. Thank you for shopping with us!',
+        type: 'order_placed',
+        data: {'orderId': orderRef.id},
+      );
 
       return Order(
         id: orderRef.id,

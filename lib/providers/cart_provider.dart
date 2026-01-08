@@ -99,7 +99,8 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> addToCart(Watch watch, {int quantity = 1}) async {
+  Future<bool> addToCart(Watch watch,
+      {int quantity = 1, String? productColor}) async {
     // Frontend stock check
     final currentQty = getQuantityInCart(watch.id);
     if (currentQty + quantity > watch.stock) {
@@ -109,7 +110,8 @@ class CartProvider with ChangeNotifier {
     }
 
     try {
-      await _cartService.addToCart(watch.id, quantity: quantity);
+      await _cartService.addToCart(watch.id,
+          quantity: quantity, productColor: productColor);
       _addedToCart = true;
       await fetchCart(); // Refresh cart
       return true;
@@ -146,7 +148,8 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
     try {
       for (var item in items) {
-        await _cartService.addToCart(item.watchId, quantity: item.quantity);
+        await _cartService.addToCart(item.watchId,
+            quantity: item.quantity, productColor: item.productColor);
       }
       _addedToCart = true;
       await fetchCart();

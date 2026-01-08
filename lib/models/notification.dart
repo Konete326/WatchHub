@@ -67,8 +67,15 @@ class NotificationModel {
   }
 
   static NotificationType _typeFromString(String? type) {
-    switch (type?.toLowerCase()) {
+    if (type == null) return NotificationType.general;
+
+    final normalized = type.toLowerCase().replaceAll('_', '');
+
+    switch (normalized) {
       case 'orderupdate':
+      case 'orderstatus':
+      case 'orderplaced':
+      case 'orderdelivered':
         return NotificationType.orderUpdate;
       case 'promotion':
         return NotificationType.promotion;

@@ -21,56 +21,68 @@ class WatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor,
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF283593), // Light highlight
+            offset: Offset(-4, -4),
+            blurRadius: 10,
+          ),
+          BoxShadow(
+            color: Color(0xFF000051), // Dark shadow
+            offset: Offset(4, 4),
+            blurRadius: 10,
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: Clip.hardEdge,
       child: InkWell(
         onTap: onTap,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Watch Image with Wishlist Button
+            // Image Section with Badges & Actions
             Stack(
               children: [
+                // Product Image
                 AspectRatio(
-                  aspectRatio: 1,
-                  child: watch.images.isNotEmpty
-                      ? Container(
-                          color: Colors.white,
-                          child: CachedNetworkImage(
-                            imageUrl: watch.images.first,
-                            fit: BoxFit.contain,
-                            placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.grey[200]!,
-                              highlightColor: Colors.grey[50]!,
-                              child: Container(
-                                color: Colors.white,
+                  aspectRatio: 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    child: watch.images.isNotEmpty
+                        ? Hero(
+                            tag: 'watch_${watch.id}',
+                            child: CachedNetworkImage(
+                              imageUrl: watch.images.first,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey[200]!,
+                                highlightColor: Colors.grey[50]!,
+                                child: Container(color: Colors.white),
                               ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[50],
-                              child: const Icon(
+                              errorWidget: (context, url, error) => const Icon(
                                 Icons.image_not_supported_outlined,
-                                size: 40,
                                 color: Colors.grey,
                               ),
                             ),
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey[50],
-                          child: const Icon(
+                          )
+                        : const Icon(
                             Icons.watch,
-                            size: 64,
-                            color: AppTheme.textSecondaryColor,
+                            size: 48,
+                            color: Colors.grey,
                           ),
-                        ),
+                  ),
                 ),
+
+                // Wishlist Button
                 Positioned(
                   top: 8,
                   right: 8,
@@ -78,100 +90,63 @@ class WatchCard extends StatelessWidget {
                     builder: (context, wishlistProvider, child) {
                       final isInWishlist =
                           wishlistProvider.isInWishlist(watch.id);
-                      return CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.white.withOpacity(0.9),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          iconSize: 20,
-                          icon: Icon(
-                            isInWishlist
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isInWishlist
-                                ? AppTheme.errorColor
-                                : AppTheme.textSecondaryColor,
-                          ),
-                          onPressed: () async {
-                            HapticFeedback.mediumImpact();
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(50),
+                          onTap: () async {
+                            HapticFeedback.selectionClick();
                             final wishlistItem = wishlistProvider.wishlistItems
                                 .where((item) => item.watchId == watch.id)
                                 .firstOrNull;
-                            final success = await wishlistProvider
-                                .toggleWishlist(watch.id, wishlistItem?.id);
-
-                            if (context.mounted) {
-                              if (success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(isInWishlist
-                                        ? 'Removed from wishlist'
-                                        : 'Added to wishlist'),
-                                    backgroundColor: AppTheme.successColor,
-                                    behavior: SnackBarBehavior.floating,
-                                    duration: const Duration(seconds: 1),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        wishlistProvider.errorMessage ??
-                                            'Something went wrong'),
-                                    backgroundColor: AppTheme.errorColor,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
+                            await wishlistProvider.toggleWishlist(
+                                watch.id, wishlistItem?.id);
                           },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.primaryColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF000051), // Dark shadow
+                                  offset: Offset(2, 2),
+                                  blurRadius: 4,
+                                ),
+                                BoxShadow(
+                                  color: Color(0xFF283593), // Light highlight
+                                  offset: Offset(-2, -2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              isInWishlist
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 18,
+                              color: isInWishlist
+                                  ? AppTheme.errorColor
+                                  : Colors.white70,
+                            ),
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-                if (!watch.isInStock)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black45,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'OUT OF STOCK',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+
+                // Badges
                 if (watch.isOnSale)
                   Positioned(
-                    top: 8,
-                    left: 8,
+                    top: 10,
+                    left: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppTheme.errorColor,
                         borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
                       ),
                       child: Text(
                         '${watch.discountPercentage}% OFF',
@@ -183,139 +158,177 @@ class WatchCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                // Out of Stock Overlay
+                if (!watch.isInStock)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'SOLD OUT',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
 
-            // Watch Details
+            // Product Details
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Brand Name
                         if (watch.brand != null)
                           Text(
-                            watch.brand!.name,
+                            watch.brand!.name.toUpperCase(),
                             style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textSecondaryColor,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white60,
+                              letterSpacing: 0.5,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        if (watch.averageRating != null &&
-                            watch.averageRating! > 0)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star,
-                                  size: 10, color: Colors.amber),
-                              const SizedBox(width: 2),
-                              Text(
-                                watch.averageRating!.toStringAsFixed(1),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 4),
+                        // Product Name
+                        Text(
+                          watch.name,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            height: 1.2,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      watch.name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
+
+                    const SizedBox(height: 8),
+
+                    // Price and Add to Cart Row
                     Consumer2<SettingsProvider, CartProvider>(
-                        builder: (context, settings, cartProvider, child) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (watch.isOnSale)
-                                    Text(
-                                      settings.formatPrice(watch.price),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade500,
-                                        decoration: TextDecoration.lineThrough,
-                                        decorationColor: Colors.grey.shade500,
-                                      ),
-                                    ),
+                      builder: (context, settings, cartProvider, child) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Price Section
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (watch.isOnSale)
                                   Text(
-                                    settings.formatPrice(watch.currentPrice),
+                                    settings.formatPrice(watch.price),
                                     style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: watch.isOnSale
-                                          ? AppTheme.errorColor
-                                          : AppTheme.primaryColor,
+                                      decoration: TextDecoration.lineThrough,
+                                      fontSize: 11,
+                                      color: Colors.grey[400],
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (watch.isInStock)
-                            Material(
-                              color: AppTheme.primaryColor,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                bottomRight: Radius.circular(0),
-                              ),
-                              child: InkWell(
-                                onTap: () async {
-                                  HapticFeedback.lightImpact();
-                                  final success =
-                                      await cartProvider.addToCart(watch);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'Added to cart'
-                                            : 'Failed to add'),
-                                        backgroundColor: success
-                                            ? AppTheme.successColor
-                                            : AppTheme.errorColor,
-                                        duration: const Duration(seconds: 1),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                },
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
+                                Text(
+                                  settings.formatPrice(watch.currentPrice),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: watch.isOnSale
+                                        ? AppTheme.errorColor
+                                        : AppTheme.secondaryColor,
+                                  ),
                                 ),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Icon(
-                                    Icons.add_shopping_cart_rounded,
-                                    color: Colors.white,
-                                    size: 18,
+                              ],
+                            ),
+
+                            // Add to Cart Button
+                            if (watch.isInStock)
+                              Material(
+                                color: Colors
+                                    .transparent, // Use container decoration
+                                child: InkWell(
+                                  onTap: () async {
+                                    HapticFeedback.lightImpact();
+                                    final success =
+                                        await cartProvider.addToCart(watch);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(success
+                                              ? 'Added to cart'
+                                              : 'Failed to add'),
+                                          backgroundColor: success
+                                              ? AppTheme.successColor
+                                              : AppTheme.errorColor,
+                                          duration: const Duration(seconds: 1),
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: const EdgeInsets.all(16),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(
+                                              0xFF283593), // Light highlight
+                                          offset: Offset(-2, -2),
+                                          blurRadius: 4,
+                                        ),
+                                        BoxShadow(
+                                          color:
+                                              Color(0xFF000051), // Dark shadow
+                                          offset: Offset(2, 2),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
-                      );
-                    }),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

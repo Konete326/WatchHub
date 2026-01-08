@@ -12,6 +12,7 @@ import '../search/search_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../browse/browse_screen.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../wishlist/wishlist_screen.dart';
 import '../../widgets/countdown_timer.dart';
@@ -97,8 +98,10 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          Consumer<NotificationProvider>(
-            builder: (context, provider, child) {
+          Consumer2<NotificationProvider, UserProvider>(
+            builder: (context, provider, userProvider, child) {
+              final notificationsEnabled =
+                  userProvider.user?.notificationsEnabled ?? true;
               return Stack(
                 alignment: Alignment.center,
                 children: [
@@ -111,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                  if (provider.unreadCount > 0)
+                  if (notificationsEnabled && provider.unreadCount > 0)
                     Positioned(
                       top: 8,
                       right: 8,
@@ -366,20 +369,46 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   else
                     LayoutBuilder(builder: (context, constraints) {
-                      // Calculate aspect ratio based on screen width
-                      // For smaller screens (like iPhone SE - ~320px width), use a taller aspect ratio
-                      // For larger screens, use the standard 0.7
                       final double screenWidth =
                           MediaQuery.of(context).size.width;
-                      final double childAspectRatio =
-                          screenWidth < 360 ? 0.6 : 0.7;
+
+                      // Responsive Grid Count
+                      int crossAxisCount = 2;
+                      if (screenWidth > 1200) {
+                        crossAxisCount = 5;
+                      } else if (screenWidth > 900) {
+                        crossAxisCount = 4;
+                      } else if (screenWidth > 600) {
+                        crossAxisCount = 3;
+                      }
+
+                      // Calculate Aspect Ratio dynamically
+                      // Width available for each item
+                      // padding: 16 (left) + 16 (right) + (n-1)*16 (spacing)
+                      final totalHorizontalPadding =
+                          32.0 + (crossAxisCount - 1) * 16.0;
+                      final itemWidth = (screenWidth - totalHorizontalPadding) /
+                          crossAxisCount;
+
+                      // We need enough height for image (width) + approx 130px details
+                      // ratio = width / height => height = width / ratio
+                      // we want height = width + 135 (details height with padding)
+                      // width / ratio = width + 135
+                      // ratio = width / (width + 135)
+
+                      final double textContentHeight = 135.0;
+                      double childAspectRatio =
+                          itemWidth / (itemWidth + textContentHeight);
+
+                      // Clamp to safe limits
+                      childAspectRatio = childAspectRatio.clamp(0.5, 0.85);
 
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                          crossAxisCount: crossAxisCount,
                           childAspectRatio: childAspectRatio,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
@@ -402,7 +431,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(
+                      height: 100), // Adjusted for floating bottom bar
                 ],
               ),
             );

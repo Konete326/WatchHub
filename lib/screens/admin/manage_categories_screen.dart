@@ -8,6 +8,8 @@ import '../../models/category.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
 
+import '../../widgets/admin/admin_drawer.dart';
+
 class ManageCategoriesScreen extends StatefulWidget {
   const ManageCategoriesScreen({super.key});
 
@@ -248,6 +250,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Categories')),
+      drawer: const AdminDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(),
         child: const Icon(Icons.add),

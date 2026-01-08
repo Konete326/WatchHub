@@ -303,4 +303,49 @@ class ReviewService {
       'helpfulCount': FieldValue.increment(1),
     });
   }
+
+  Future<bool> checkCanReview(String watchId) async {
+    if (uid == null) return false;
+
+    try {
+      // 1. Check if user already reviewed
+      final existingReview = await _firestore
+          .collection('reviews')
+          .where('watchId', isEqualTo: watchId)
+          .where('userId', isEqualTo: uid)
+          .limit(1)
+          .get();
+
+      if (existingReview.docs.isNotEmpty) {
+        // Already reviewed, so they "can't" review again (or it would be an update)
+        // But the requirement is to restrict to buyers.
+        // Let's assume they can only leave one review.
+        return false;
+      }
+
+      // 2. Check for delivered orders containing this watch
+      final deliveredOrders = await _firestore
+          .collection('orders')
+          .where('userId', isEqualTo: uid)
+          .where('status', isEqualTo: 'DELIVERED')
+          .get();
+
+      for (var orderDoc in deliveredOrders.docs) {
+        final items = await orderDoc.reference
+            .collection('orderItems')
+            .where('watchId', isEqualTo: watchId)
+            .limit(1)
+            .get();
+
+        if (items.docs.isNotEmpty) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      print('Error checking if user can review: $e');
+      return false;
+    }
+  }
 }

@@ -29,6 +29,16 @@ class UserService {
     return User.fromFirestore(doc);
   }
 
+  Future<User> updateNotificationSettings(bool enabled) async {
+    if (uid == null) throw Exception('User not logged in');
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .update({'notificationsEnabled': enabled});
+    final doc = await _firestore.collection('users').doc(uid).get();
+    return User.fromFirestore(doc);
+  }
+
   Future<User> updateProfileImage(XFile file) async {
     if (uid == null) throw Exception('User not logged in');
 

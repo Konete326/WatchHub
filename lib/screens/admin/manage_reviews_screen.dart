@@ -8,6 +8,8 @@ import '../../utils/theme.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../product/product_detail_screen.dart';
 
+import '../../widgets/admin/admin_drawer.dart';
+
 class ManageReviewsScreen extends StatefulWidget {
   const ManageReviewsScreen({super.key});
 
@@ -174,6 +176,7 @@ class _ManageReviewsScreenState extends State<ManageReviewsScreen> {
       appBar: AppBar(
         title: const Text('Manage Reviews'),
       ),
+      drawer: const AdminDrawer(),
       body: Column(
         children: [
           // Filters

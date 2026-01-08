@@ -75,6 +75,23 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> toggleNotifications(bool enabled) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _user = await _userService.updateNotificationSettings(enabled);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> fetchAddresses() async {
     _isLoading = true;
     _errorMessage = null;

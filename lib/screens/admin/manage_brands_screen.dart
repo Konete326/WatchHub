@@ -8,6 +8,8 @@ import '../../models/brand.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
 
+import '../../widgets/admin/admin_drawer.dart';
+
 class ManageBrandsScreen extends StatefulWidget {
   const ManageBrandsScreen({super.key});
 
@@ -267,6 +269,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Brands')),
+      drawer: const AdminDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(),
         child: const Icon(Icons.add),

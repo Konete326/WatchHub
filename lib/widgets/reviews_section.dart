@@ -92,24 +92,38 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     ),
                   ),
                   if (currentUserId != null)
-                    TextButton.icon(
-                      onPressed: () async {
-                        final result = await showDialog(
-                          context: context,
-                          builder: (context) => ReviewDialog(
-                            watchId: widget.watchId,
-                          ),
-                        );
-                        if (result == true) {
-                          _refreshReviews();
-                          if (mounted) {
-                            Provider.of<WatchProvider>(context, listen: false)
-                                .fetchWatchById(widget.watchId);
-                          }
+                    FutureBuilder<bool>(
+                      future:
+                          Provider.of<ReviewProvider>(context, listen: false)
+                              .canUserReview(widget.watchId),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.data == true) {
+                          return TextButton.icon(
+                            onPressed: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (context) => ReviewDialog(
+                                  watchId: widget.watchId,
+                                ),
+                              );
+                              if (result == true) {
+                                _refreshReviews();
+                                if (mounted) {
+                                  Provider.of<WatchProvider>(context,
+                                          listen: false)
+                                      .fetchWatchById(widget.watchId);
+                                }
+                                // Trigger a rebuild to hide the button after review
+                                setState(() {});
+                              }
+                            },
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('Write Review'),
+                          );
                         }
+                        return const SizedBox.shrink();
                       },
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Write Review'),
                     ),
                 ],
               ),
@@ -200,7 +214,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      Icon(Icons.error_outline,
+                          size: 48, color: Colors.red[300]),
                       const SizedBox(height: 8),
                       Text(
                         reviewProvider.errorMessage!,

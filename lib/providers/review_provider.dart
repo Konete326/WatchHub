@@ -182,4 +182,8 @@ class ReviewProvider with ChangeNotifier {
   bool hasUserReviewed(String watchId, String userId) {
     return getUserReview(watchId, userId) != null;
   }
+
+  Future<bool> canUserReview(String watchId) async {
+    return await _reviewService.checkCanReview(watchId);
+  }
 }

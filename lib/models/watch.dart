@@ -1,6 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'brand.dart';
 
+class WatchVariant {
+  final String colorName;
+  final String colorHex;
+  final String? image; // Optional specific image for this color
+
+  WatchVariant({
+    required this.colorName,
+    required this.colorHex,
+    this.image,
+  });
+
+  factory WatchVariant.fromJson(Map<String, dynamic> json) {
+    return WatchVariant(
+      colorName: json['colorName'] as String? ?? '',
+      colorHex: json['colorHex'] as String? ?? '#000000',
+      image: json['image'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'colorName': colorName,
+      'colorHex': colorHex,
+      'image': image,
+    };
+  }
+}
+
 class Watch {
   final String id;
   final String brandId;
@@ -23,6 +51,8 @@ class Watch {
   final bool hasChainOption; // Whether chain option is available
   final String? strapType; // 'belt' or 'chain' (selected by user)
   final String? strapColor; // Color in hex format (selected by user)
+  final List<WatchVariant>? variants; // Main color variants
+  final String? selectedProductColor; // Selected main color (name)
 
   Watch({
     required this.id,
@@ -46,6 +76,8 @@ class Watch {
     this.hasChainOption = false,
     this.strapType,
     this.strapColor,
+    this.variants,
+    this.selectedProductColor,
   });
 
   factory Watch.fromJson(Map<String, dynamic> json) {
@@ -74,6 +106,12 @@ class Watch {
       hasChainOption: json['hasChainOption'] as bool? ?? false,
       strapType: json['strapType'] as String?,
       strapColor: json['strapColor'] as String?,
+      variants: json['variants'] != null
+          ? (json['variants'] as List)
+              .map((v) => WatchVariant.fromJson(v))
+              .toList()
+          : null,
+      selectedProductColor: json['selectedProductColor'] as String?,
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
@@ -111,6 +149,12 @@ class Watch {
       hasChainOption: data['hasChainOption'] as bool? ?? false,
       strapType: data['strapType'] as String?,
       strapColor: data['strapColor'] as String?,
+      variants: data['variants'] != null
+          ? (data['variants'] as List)
+              .map((v) => WatchVariant.fromJson(v))
+              .toList()
+          : null,
+      selectedProductColor: data['selectedProductColor'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -135,6 +179,8 @@ class Watch {
       'hasChainOption': hasChainOption,
       'strapType': strapType,
       'strapColor': strapColor,
+      'variants': variants?.map((v) => v.toJson()).toList(),
+      'selectedProductColor': selectedProductColor,
       'createdAt': createdAt,
     };
   }
@@ -148,29 +194,55 @@ class Watch {
   // Helper to check if any strap options are available
   bool get hasAnyStrapOption => hasBeltOption || hasChainOption;
 
-  Watch copyWith({required int stock}) {
+  Watch copyWith({
+    String? id,
+    String? brandId,
+    String? name,
+    String? description,
+    double? price,
+    int? stock,
+    List<String>? images,
+    Map<String, dynamic>? specifications,
+    String? category,
+    int? popularity,
+    double? salePrice,
+    int? discountPercentage,
+    double? averageRating,
+    int? reviewCount,
+    String? sku,
+    DateTime? createdAt,
+    Brand? brand,
+    bool? hasBeltOption,
+    bool? hasChainOption,
+    String? strapType,
+    String? strapColor,
+    List<WatchVariant>? variants,
+    String? selectedProductColor,
+  }) {
     return Watch(
-      id: id,
-      brandId: brandId,
-      name: name,
-      description: description,
-      price: price,
-      stock: stock,
-      images: images,
-      specifications: specifications,
-      category: category,
-      popularity: popularity,
-      salePrice: salePrice,
-      discountPercentage: discountPercentage,
-      averageRating: averageRating,
-      reviewCount: reviewCount,
-      sku: sku,
-      createdAt: createdAt,
-      brand: brand,
-      hasBeltOption: hasBeltOption,
-      hasChainOption: hasChainOption,
-      strapType: strapType,
-      strapColor: strapColor,
+      id: id ?? this.id,
+      brandId: brandId ?? this.brandId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      stock: stock ?? this.stock,
+      images: images ?? this.images,
+      specifications: specifications ?? this.specifications,
+      category: category ?? this.category,
+      popularity: popularity ?? this.popularity,
+      salePrice: salePrice ?? this.salePrice,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      averageRating: averageRating ?? this.averageRating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      sku: sku ?? this.sku,
+      createdAt: createdAt ?? this.createdAt,
+      brand: brand ?? this.brand,
+      hasBeltOption: hasBeltOption ?? this.hasBeltOption,
+      hasChainOption: hasChainOption ?? this.hasChainOption,
+      strapType: strapType ?? this.strapType,
+      strapColor: strapColor ?? this.strapColor,
+      variants: variants ?? this.variants,
+      selectedProductColor: selectedProductColor ?? this.selectedProductColor,
     );
   }
 }

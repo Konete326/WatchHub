@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/admin_provider.dart';
 import '../../utils/theme.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class ManagePromotionScreen extends StatefulWidget {
   const ManagePromotionScreen({super.key});
@@ -111,6 +112,7 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Sale Highlight')),
+      drawer: const AdminDrawer(),
       body: Consumer<AdminProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.promotionHighlight == null) {
@@ -334,16 +336,6 @@ class _ManagePromotionScreenState extends State<ManagePromotionScreen> {
                     ),
                   ],
 
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _linkController,
-                    decoration: const InputDecoration(
-                      labelText: 'Link / Product ID (Optional)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.link),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(

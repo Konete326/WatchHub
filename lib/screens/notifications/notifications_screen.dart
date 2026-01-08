@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification.dart';
 import '../../utils/theme.dart';
 import '../../widgets/empty_state.dart';
+import '../product/product_detail_screen.dart';
+import '../orders/order_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -18,8 +21,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      Provider.of<NotificationProvider>(context, listen: false)
-          .fetchNotifications();
+      final provider =
+          Provider.of<NotificationProvider>(context, listen: false);
+      provider.fetchNotifications();
+      // Optionally mark all as read when screen is opened to clear the badge
+      provider.markAllAsRead();
     });
   }
 
@@ -29,22 +35,82 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
+          Consumer<UserProvider>(
+            builder: (context, userProvider, child) {
+              final user = userProvider.user;
+              if (user == null) return const SizedBox.shrink();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user.notificationsEnabled ? 'ON' : 'OFF',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      // Ensure text is visible depending on AppBar color, usually white for app bars
+                      color: Colors.black,
+                    ),
+                  ),
+                  Switch(
+                    value: user.notificationsEnabled,
+                    onChanged: userProvider.isLoading
+                        ? null
+                        : (value) async {
+                            final success =
+                                await userProvider.toggleNotifications(value);
+                            if (success && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(value
+                                      ? 'Notifications Enabled'
+                                      : 'Notifications Disabled'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          },
+                    activeColor: Colors.white,
+                    activeTrackColor: Colors.green,
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: Colors.red,
+                  ),
+                ],
+              );
+            },
+          ),
+          // Keep the 'Mark all' button if needed, or remove if space is tight.
+          // User asked for "yaha pr" (here) toggle.
           Consumer<NotificationProvider>(
             builder: (context, provider, child) {
               if (provider.notifications.isEmpty)
                 return const SizedBox.shrink();
               return TextButton(
                 onPressed: () => provider.markAllAsRead(),
-                child: const Text('Mark all as read'),
+                child: const Text(
+                  'Mark all',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
               );
             },
           ),
         ],
       ),
-      body: Consumer<NotificationProvider>(
-        builder: (context, provider, child) {
+      body: Consumer2<NotificationProvider, UserProvider>(
+        builder: (context, provider, userProvider, child) {
           if (provider.isLoading && provider.notifications.isEmpty) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (userProvider.user?.notificationsEnabled == false &&
+              provider.notifications.isEmpty) {
+            return EmptyState(
+              icon: Icons.notifications_off_outlined,
+              title: 'Notifications Disabled',
+              message:
+                  'Turn on notifications to stay updated with your orders and exciting offers.',
+              actionLabel: 'Enable Notifications',
+              onActionPressed: () => userProvider.toggleNotifications(true),
+            );
           }
 
           if (provider.notifications.isEmpty) {
@@ -135,6 +201,7 @@ class _NotificationItem extends StatelessWidget {
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 4),
             Text(
@@ -143,6 +210,8 @@ class _NotificationItem extends StatelessWidget {
                 color: isRead ? Colors.grey : Colors.black87,
                 fontSize: 13,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
             Text(
@@ -154,6 +223,32 @@ class _NotificationItem extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Delete Notification'),
+                content: const Text(
+                    'Are you sure you want to delete this notification?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              provider.deleteNotification(notification.id);
+            }
+          },
         ),
         onTap: () {
           if (!isRead) provider.markAsRead(notification.id);
@@ -191,10 +286,147 @@ class _NotificationItem extends StatelessWidget {
 
   void _handleNotificationTap(
       BuildContext context, NotificationModel notification) {
-    if (notification.type == NotificationType.orderUpdate &&
-        notification.data?['orderId'] != null) {
-      // Navigate to Order Details
-      // Navigator.pushNamed(context, '/order-details', arguments: notification.data!['orderId']);
-    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.4,
+        minChildSize: 0.2,
+        maxChildSize: 0.75,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: ListView(
+            controller: controller,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _getIconColor(notification.type).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getIcon(notification.type),
+                      color: _getIconColor(notification.type),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          notification.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('MMM dd, yyyy • hh:mm a')
+                              .format(notification.timestamp),
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 32),
+              Text(
+                notification.body,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.5,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (notification.data?['watchId'] != null)
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductDetailScreen(
+                          watchId: notification.data!['watchId'],
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('View Product'),
+                ),
+              if (notification.type == NotificationType.orderUpdate &&
+                  notification.data?['orderId'] != null)
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OrderDetailScreen(
+                          orderId: notification.data!['orderId'],
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('View Order Details'),
+                ),
+              if (notification.type == NotificationType.promotion ||
+                  notification.type == NotificationType.discount)
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // Could navigate to search or special offer page
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('Shop Now'),
+                ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

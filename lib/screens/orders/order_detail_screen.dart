@@ -213,6 +213,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                        if (item.productColor != null)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 2),
+                                            child: Text(
+                                              'Color: ${item.productColor}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
                                         const SizedBox(height: 4),
                                         Row(
                                           mainAxisAlignment:

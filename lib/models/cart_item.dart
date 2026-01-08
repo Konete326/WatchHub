@@ -10,6 +10,7 @@ class CartItem {
   final Watch? watch;
   final String? strapType; // 'belt' or 'chain' (selected by user)
   final String? strapColor; // Color in hex format (selected by user)
+  final String? productColor; // Main color of the watch (name)
 
   CartItem({
     required this.id,
@@ -20,6 +21,7 @@ class CartItem {
     this.watch,
     this.strapType,
     this.strapColor,
+    this.productColor,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -29,13 +31,16 @@ class CartItem {
       watchId: json['watchId'] as String? ?? '',
       quantity: json['quantity'] as int? ?? 1,
       createdAt: json['createdAt'] != null
-          ? (json['createdAt'] is Timestamp 
-              ? (json['createdAt'] as Timestamp).toDate() 
+          ? (json['createdAt'] is Timestamp
+              ? (json['createdAt'] as Timestamp).toDate()
               : DateTime.parse(json['createdAt'] as String))
           : DateTime.now(),
-      watch: json['watch'] != null ? Watch.fromJson(json['watch'] as Map<String, dynamic>) : null,
+      watch: json['watch'] != null
+          ? Watch.fromJson(json['watch'] as Map<String, dynamic>)
+          : null,
       strapType: json['strapType'] as String?,
       strapColor: json['strapColor'] as String?,
+      productColor: json['productColor'] as String?,
     );
   }
 
@@ -48,6 +53,7 @@ class CartItem {
       quantity: data['quantity'] ?? 1,
       strapType: data['strapType'] as String?,
       strapColor: data['strapColor'] as String?,
+      productColor: data['productColor'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -59,6 +65,7 @@ class CartItem {
       'quantity': quantity,
       'strapType': strapType,
       'strapColor': strapColor,
+      'productColor': productColor,
       'createdAt': createdAt,
     };
   }
@@ -68,4 +75,3 @@ class CartItem {
     return watch!.currentPrice * quantity;
   }
 }
-

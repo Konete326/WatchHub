@@ -364,6 +364,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (item.productColor != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Selected Color: ${item.productColor}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

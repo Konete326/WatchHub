@@ -10,6 +10,7 @@ class OrderItem {
   final Watch? watch;
   final String? strapType; // 'belt' or 'chain' (selected by user)
   final String? strapColor; // Color in hex format (selected by user)
+  final String? productColor; // Main color of the watch (name)
 
   OrderItem({
     required this.id,
@@ -20,6 +21,7 @@ class OrderItem {
     this.watch,
     this.strapType,
     this.strapColor,
+    this.productColor,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -29,9 +31,12 @@ class OrderItem {
       watchId: json['watchId'] as String? ?? '',
       quantity: json['quantity'] as int? ?? 1,
       priceAtPurchase: double.parse(json['priceAtPurchase'].toString()),
-      watch: json['watch'] != null ? Watch.fromJson(json['watch'] as Map<String, dynamic>) : null,
+      watch: json['watch'] != null
+          ? Watch.fromJson(json['watch'] as Map<String, dynamic>)
+          : null,
       strapType: json['strapType'] as String?,
       strapColor: json['strapColor'] as String?,
+      productColor: json['productColor'] as String?,
     );
   }
 
@@ -45,6 +50,7 @@ class OrderItem {
       priceAtPurchase: (data['priceAtPurchase'] ?? 0.0).toDouble(),
       strapType: data['strapType'] as String?,
       strapColor: data['strapColor'] as String?,
+      productColor: data['productColor'] as String?,
     );
   }
 
@@ -56,9 +62,9 @@ class OrderItem {
       'priceAtPurchase': priceAtPurchase,
       'strapType': strapType,
       'strapColor': strapColor,
+      'productColor': productColor,
     };
   }
 
   double get subtotal => priceAtPurchase * quantity;
 }
-
