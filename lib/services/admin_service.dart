@@ -12,8 +12,11 @@ import '../models/coupon.dart';
 import '../models/promotion_banner.dart';
 import '../models/brand.dart';
 import '../models/category.dart';
+import '../models/address.dart';
+import '../models/order_item.dart';
 import 'cloudinary_service.dart';
 import 'package:intl/intl.dart';
+import 'notification_service.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -499,7 +502,9 @@ class AdminService {
     required String title,
     required String body,
     required String type,
-    int expiryDays = 7, // Default 7 days
+    int expiryDays = 7,
+    bool addToHistory = true,
+    String? customTarget,
   }) async {
     final notificationData = {
       'title': title,
@@ -511,9 +516,12 @@ class AdminService {
       'sentBy': 'admin',
     };
 
+    DocumentReference? notifDocRef;
+    String targetName = customTarget ?? 'System';
+
     if (userId != null) {
       // Send to specific user
-      final notifRef = await _firestore
+      notifDocRef = await _firestore
           .collection('users')
           .doc(userId)
           .collection('notifications')
@@ -525,36 +533,49 @@ class AdminService {
         'targetUser': userId,
         'status': 'pending',
       });
-
-      // Save to Admin History
-      await _firestore.collection('admin_notification_history').add({
-        ...notificationData,
-        'notificationId': notifRef.id,
-        'target': 'User: $userId',
-        'seenCount': 0,
-      });
+      targetName = customTarget ?? 'User: $userId';
+    } else {
       // Send to all users (Broadcast)
-      final announcementRef =
+      notifDocRef =
           await _firestore.collection('announcements').add(notificationData);
 
-      // 2. Add to queue for Cloud Functions to send to 'all_users' topic
+      // Add to queue for Cloud Functions to send to 'all_users' topic
       await _firestore.collection('notification_queue').add({
         ...notificationData,
         'targetTopic': 'all_users',
         'status': 'pending',
       });
+      targetName = customTarget ?? 'Broadcast (All Users)';
+    }
 
-      // Save to Admin History
+    // Save to Admin History
+    if (addToHistory) {
       await _firestore.collection('admin_notification_history').add({
         ...notificationData,
-        'notificationId': announcementRef.id,
-        'target': 'Broadcast (All Users)',
+        'notificationId': notifDocRef.id,
+        'target': targetName,
         'seenCount': 0,
       });
     }
   }
 
   Future<List<Map<String, dynamic>>> getNotificationHistory() async {
+    // 1. Cleanup old history (Older than 3 days)
+    final threeDaysAgo = DateTime.now().subtract(const Duration(days: 3));
+    final oldRecords = await _firestore
+        .collection('admin_notification_history')
+        .where('createdAt', isLessThan: threeDaysAgo)
+        .get();
+
+    if (oldRecords.docs.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (var doc in oldRecords.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+
+    // 2. Fetch history
     final snapshot = await _firestore
         .collection('admin_notification_history')
         .orderBy('createdAt', descending: true)
@@ -565,6 +586,13 @@ class AdminService {
       final data = doc.data();
       return {...data, 'id': doc.id};
     }).toList();
+  }
+
+  Future<void> deleteNotificationHistory(String historyId) async {
+    await _firestore
+        .collection('admin_notification_history')
+        .doc(historyId)
+        .delete();
   }
 
   Future<Watch> createWatch({
@@ -696,38 +724,187 @@ class AdminService {
     }
   }
 
+  Future<Order> getOrderById(String id) async {
+    final doc = await _firestore.collection('orders').doc(id).get();
+    if (!doc.exists) {
+      throw Exception('Order not found');
+    }
+
+    final order = Order.fromFirestore(doc);
+    User? user;
+    Address? address;
+    List<OrderItem> orderItems = [];
+
+    // 1. Fetch User (Independent)
+    if (order.userId.isNotEmpty) {
+      try {
+        final userDoc =
+            await _firestore.collection('users').doc(order.userId).get();
+        if (userDoc.exists) {
+          user = User.fromFirestore(userDoc);
+        }
+      } catch (e) {
+        print('Error fetching user for order ${order.id}: $e');
+      }
+    }
+
+    // 2. Fetch Address (Independently, using userId)
+    if (order.userId.isNotEmpty && order.addressId.isNotEmpty) {
+      try {
+        final addressDoc = await _firestore
+            .collection('users')
+            .doc(order.userId)
+            .collection('addresses')
+            .doc(order.addressId)
+            .get();
+        if (addressDoc.exists) {
+          address = Address.fromFirestore(addressDoc);
+        }
+      } catch (e) {
+        print('Error fetching address for order ${order.id}: $e');
+      }
+    }
+
+    // 3. Fetch Order Items & Watches
+    try {
+      final itemsSnapshot = await doc.reference.collection('orderItems').get();
+      for (var itemDoc in itemsSnapshot.docs) {
+        // We create a temporary item first
+        var item = OrderItem.fromFirestore(itemDoc);
+
+        // Fetch the Watch details
+        if (item.watchId.isNotEmpty) {
+          final watchDoc =
+              await _firestore.collection('watches').doc(item.watchId).get();
+          if (watchDoc.exists) {
+            // Re-create item with watch populated
+            final watch = Watch.fromFirestore(watchDoc);
+            item = OrderItem(
+              id: item.id,
+              orderId: item.orderId,
+              watchId: item.watchId,
+              quantity: item.quantity,
+              priceAtPurchase: item.priceAtPurchase,
+              strapType: item.strapType,
+              strapColor: item.strapColor,
+              productColor: item.productColor,
+              watch: watch,
+            );
+          }
+        }
+        orderItems.add(item);
+      }
+    } catch (e) {
+      print('Error fetching order items: $e');
+    }
+
+    // Return fully populated Order
+    return Order(
+      id: order.id,
+      userId: order.userId,
+      addressId: order.addressId,
+      totalAmount: order.totalAmount,
+      shippingCost: order.shippingCost,
+      couponId: order.couponId,
+      status: order.status,
+      paymentIntentId: order.paymentIntentId,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt,
+      user: user,
+      address: address,
+      orderItems: orderItems,
+    );
+  }
+
   // Orders Management
   Future<Map<String, dynamic>> getAllOrders({
     int page = 1,
     int limit = 20,
     String? status,
   }) async {
+    // 1. Base Query
     Query query =
         _firestore.collection('orders').orderBy('createdAt', descending: true);
+
     if (status != null && status.isNotEmpty) {
       query = query.where('status', isEqualTo: status);
     }
 
-    final aggregateQuery = await query.count().get();
+    // 2. Count Total (Approximate if huge, but precise enough for admin)
+    // Note: Creating a separate count query to avoid issues with pagination limits
+    Query countQuery = _firestore.collection('orders');
+    if (status != null && status.isNotEmpty) {
+      countQuery = countQuery.where('status', isEqualTo: status);
+    }
+    final aggregateQuery = await countQuery.count().get();
     final totalCount = aggregateQuery.count ?? 0;
 
-    final snapshot = await query.limit(page * limit).get();
-    final orders =
-        snapshot.docs.map((doc) => Order.fromFirestore(doc)).toList();
+    // 3. Fetch Data for current page
+    // Since we don't have a cursor, we use offset logic (inefficient for deep pages but fine for now)
+    // Note: 'limit' on the query with 'orderBy' + 'where' might require index.
+    // If it fails with "indexes", we fallback to client-side filtering or ask user to create index.
+    // We already do (page * limit) to emulate offset.
 
+    final snapshot = await query.limit(page * limit).get();
+    var docs = snapshot.docs;
+
+    // Pagination slicing
     final startIndex = (page - 1) * limit;
-    final paginatedOrders = orders.length > startIndex
-        ? orders.sublist(
-            startIndex, (startIndex + limit).clamp(0, orders.length))
-        : <Order>[];
+    if (startIndex >= docs.length) {
+      docs = [];
+    } else {
+      final endIndex = (startIndex + limit).clamp(0, docs.length);
+      docs = docs.sublist(startIndex, endIndex);
+    }
+
+    // 4. Enrich with User Data
+    final orders = <Order>[];
+    for (final doc in docs) {
+      final order = Order.fromFirestore(doc);
+      // Fetch user data manually since it's not in the Order document
+      if (order.userId.isNotEmpty) {
+        try {
+          final userDoc =
+              await _firestore.collection('users').doc(order.userId).get();
+          if (userDoc.exists) {
+            // Create a new Order instance with the User object attached
+            // We need to use Order.fromJson because Order.fromFirestore doesn't accept a User object directly
+            // or we can modify Order model.
+            // Best way: Create a copyWith or modify the model to be mutable (bad).
+            // Let's rely on JSON conversion or constructor for now.
+
+            // Actually, Order model has a 'user' field that is nullable.
+            // We can re-create the order object.
+            orders.add(Order(
+              id: order.id,
+              userId: order.userId,
+              addressId: order.addressId,
+              totalAmount: order.totalAmount,
+              shippingCost: order.shippingCost,
+              couponId: order.couponId,
+              status: order.status,
+              paymentIntentId: order.paymentIntentId,
+              paymentMethod: order.paymentMethod,
+              createdAt: order.createdAt,
+              address: order.address,
+              orderItems: order.orderItems,
+              user: User.fromFirestore(userDoc), // ATTACH USER HERE
+            ));
+            continue;
+          }
+        } catch (e) {
+          print('Error fetching user for order ${order.id}: $e');
+        }
+      }
+      orders.add(order);
+    }
 
     return {
-      'orders': paginatedOrders,
+      'orders': orders,
       'pagination': {
-        'page': page,
-        'limit': limit,
         'total': totalCount,
-        'totalPages': (totalCount / limit).ceil()
+        'currentPage': page,
+        'totalPages': (totalCount / limit).ceil(),
       }
     };
   }
@@ -735,10 +912,65 @@ class AdminService {
   Future<Order> updateOrderStatus(String id, String status) async {
     // Get current order data for audit logging
     final currentDoc = await _firestore.collection('orders').doc(id).get();
+    if (!currentDoc.exists) {
+      throw Exception('Order with ID $id not found.');
+    }
     final oldStatus = currentDoc.data()?['status'] ?? 'UNKNOWN';
+    final orderData = currentDoc.data()!;
+    final userId = orderData['userId'] as String;
 
     // Update the order status
-    await _firestore.collection('orders').doc(id).update({'status': status});
+    await currentDoc.reference.update({'status': status});
+
+    // Send notification to user
+    String title = '';
+    String body = '';
+
+    switch (status) {
+      case 'PENDING':
+        title = 'Order Received 📝';
+        body =
+            'We have received your order #$id. It is currently pending confirmation.';
+        break;
+      case 'CONFIRMED':
+        title = 'Order Confirmed! ✅';
+        body =
+            'Your order #$id has been confirmed. We will start processing it soon.';
+        break;
+      case 'PROCESSING':
+        title = 'Order Processing ⚙️';
+        body = 'Your order #$id is now being processed.';
+        break;
+      case 'SHIPPED':
+        title = 'Order Shipped! 🚚';
+        body =
+            'Great news! Your order #$id has been shipped and is on its way.';
+        break;
+      case 'OUT_FOR_DELIVERY':
+        title = 'Out for Delivery 📦';
+        body = 'Your order #$id is out for delivery and will reach you soon.';
+        break;
+      case 'DELIVERED':
+        title = 'Order Delivered! 🎉';
+        body =
+            'Your order #$id has been delivered. We hope you love your new watch! Please leave a review to share your experience.';
+        break;
+      case 'CANCELLED':
+        title = 'Order Cancelled ❌';
+        body = 'Your order #$id has been cancelled.';
+        break;
+    }
+
+    if (title.isNotEmpty) {
+      // NotificationService needs to be imported at the top of the file
+      await NotificationService.sendNotification(
+        userId: userId,
+        title: title,
+        body: body,
+        type: 'order_status',
+        data: {'orderId': id, 'status': status},
+      );
+    }
 
     // Log the audit event
     try {

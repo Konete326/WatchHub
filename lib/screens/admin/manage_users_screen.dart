@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/admin_service.dart';
 import '../../models/user.dart';
 import 'admin_user_detail_screen.dart';
+import 'send_notification_screen.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -377,13 +378,28 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                             );
                                           },
                                         ),
+                                        IconButton(
+                                          icon: const Icon(Icons.message,
+                                              color: Colors.blue, size: 20),
+                                          tooltip: 'Send Notification',
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SendNotificationScreen(
+                                                        targetUser: user),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                         if (user.id !=
                                             Provider.of<AuthProvider>(context,
                                                     listen: false)
                                                 .user
                                                 ?.id)
                                           IconButton(
-                                            icon: const Icon(Icons.edit),
+                                            icon: const Icon(Icons.edit,
+                                                size: 20),
                                             onPressed: () =>
                                                 _showRoleDialog(user),
                                           ),

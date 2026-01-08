@@ -291,6 +291,28 @@ class _CartScreenState extends State<CartScreen> {
                                       color: AppTheme.primaryColor,
                                     ),
                                   ),
+                                  if (item.productColor != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryColor
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          'Color: ${item.productColor}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   const SizedBox(height: 8),
 
                                   // Quantity Controls

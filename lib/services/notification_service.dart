@@ -1,103 +1,82 @@
-import 'dart:io';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class NotificationService {
-  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static Future<void> initialize() async {
-    // Request permission for iOS/Android 13+
-    NotificationSettings settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+  static Future<void> sendNotification({
+    required String userId,
+    required String title,
+    required String body,
+    required String type,
+    Map<String, dynamic>? data,
+    int expiryDays = 7,
+  }) async {
+    final notificationData = {
+      'title': title,
+      'body': body,
+      'type': type,
+      'data': data,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(Duration(days: expiryDays)),
+      ),
+    };
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
-    }
+    // 1. Add to user's notifications subcollection
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .add(notificationData);
 
-    // Initialize local notifications for foreground
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings();
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+    // 2. Add to global notification queue (for FCM)
+    await _firestore.collection('notification_queue').add({
+      ...notificationData,
+      'targetUser': userId,
+      'status': 'pending',
+    });
+  }
 
-    await _localNotificationsPlugin.initialize(initializationSettings);
+  static Future<void> sendBroadcastNotification({
+    required String title,
+    required String body,
+    required String type,
+    Map<String, dynamic>? data,
+    int expiryDays = 7,
+  }) async {
+    final notificationData = {
+      'title': title,
+      'body': body,
+      'type': type,
+      'data': data,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(Duration(days: expiryDays)),
+      ),
+    };
 
-    // Get FCM Token
-    String? token = await _messaging.getToken();
-    print('FCM Token: $token');
-    if (token != null) {
-      await saveTokenToFirestore(token);
-    }
+    // 1. Add to announcements collection
+    await _firestore.collection('announcements').add(notificationData);
 
-    // Listen to token refresh
-    _messaging.onTokenRefresh.listen(saveTokenToFirestore);
-
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-
-      if (notification != null) {
-        // Save to Firestore for Notification History
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('notifications')
-              .add({
-            'title': notification.title,
-            'body': notification.body,
-            'type': message.data['type'] ?? 'general',
-            'data': message.data,
-            'timestamp': FieldValue.serverTimestamp(),
-            'isRead': false,
-          });
-        }
-
-        if (android != null) {
-          _localNotificationsPlugin.show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'watchhub_channel',
-                'WatchHub Notifications',
-                importance: Importance.max,
-                priority: Priority.high,
-                icon: '@mipmap/ic_launcher',
-              ),
-            ),
-          );
-        }
-      }
+    // 2. Add to global notification queue (for FCM)
+    await _firestore.collection('notification_queue').add({
+      ...notificationData,
+      'targetTopic': 'all_users',
+      'status': 'pending',
     });
   }
 
   static Future<void> saveTokenToFirestore(String token) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set({'fcmToken': token}, SetOptions(merge: true));
+      await _firestore.collection('users').doc(user.uid).update({
+        'fcmToken': token,
+        'lastTokenUpdate': FieldValue.serverTimestamp(),
+      });
     }
-  }
-
-  static Future<void> deleteToken() async {
-    await _messaging.deleteToken();
   }
 }

@@ -4,6 +4,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../models/app_settings.dart';
 import '../../utils/theme.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class ShippingSettingsScreen extends StatefulWidget {
   const ShippingSettingsScreen({super.key});
@@ -93,6 +94,7 @@ class _ShippingSettingsScreenState extends State<ShippingSettingsScreen> {
       appBar: AppBar(
         title: const Text('App Settings'),
       ),
+      drawer: const AdminDrawer(),
       body: Consumer<AdminProvider>(
         builder: (context, adminProvider, child) {
           if (adminProvider.isLoading && adminProvider.settings == null) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
+import '../utils/theme.dart';
 import 'home/home_screen.dart';
 import 'browse/browse_screen.dart';
 import 'cart/cart_screen.dart';
@@ -51,36 +52,138 @@ class _MainNavigationState extends State<MainNavigation> {
         }
       },
       child: Scaffold(
+        extendBody: true,
         body: IndexedStack(
           index: _currentIndex,
           children: _screens,
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          type: BottomNavigationBarType.fixed, // Ensure consistency
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+        bottomNavigationBar: BottomAppBar(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          color: Colors.transparent,
+          elevation: 0,
+          clipBehavior: Clip.none,
+          child: Container(
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor,
+              borderRadius: BorderRadius.circular(35),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF283593), // Light highlight
+                  offset: Offset(-4, -4),
+                  blurRadius: 8,
+                ),
+                BoxShadow(
+                  color: Color(0xFF000051), // Dark shadow
+                  offset: Offset(4, 4),
+                  blurRadius: 8,
+                ),
+              ],
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.search),
-              label: 'Browse',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNavItem(
+                    0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+                _buildNavItem(1, Icons.grid_view_rounded,
+                    Icons.grid_view_outlined, 'Browse'),
+                _buildCenterNavItem(2),
+                _buildNavItem(3, Icons.person_rounded,
+                    Icons.person_outline_rounded, 'Profile'),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: const AnimatedCartIcon(),
-              label: 'Cart',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+      int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 50,
+        height: 50,
+        decoration: isSelected
+            ? BoxDecoration(
+                color: AppTheme.primaryColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF283593), // Light highlight
+                    offset: const Offset(-4, -4),
+                    blurRadius: 8,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF000051), // Dark shadow
+                    offset: const Offset(4, 4),
+                    blurRadius: 8,
+                  ),
+                ],
+              )
+            : null,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              color: isSelected ? Colors.white : Colors.white60,
+              size: 24,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
+            if (!isSelected) ...[
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 10,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterNavItem(int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 50,
+        height: 50,
+        decoration: isSelected
+            ? BoxDecoration(
+                color: AppTheme.primaryColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF283593), // Light highlight
+                    offset: const Offset(-4, -4),
+                    blurRadius: 8,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF000051), // Dark shadow
+                    offset: const Offset(4, 4),
+                    blurRadius: 8,
+                  ),
+                ],
+              )
+            : null,
+        child: Center(
+          child: IconTheme(
+            data: IconThemeData(
+              color: isSelected ? Colors.white : Colors.white60,
+            ),
+            child: const AnimatedCartIcon(),
+          ),
         ),
       ),
     );

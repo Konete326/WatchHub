@@ -13,6 +13,7 @@ import '../../utils/theme.dart';
 import '../../utils/image_utils.dart';
 import '../../widgets/reviews_section.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../models/watch.dart';
 import '../../widgets/watch_card.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -26,6 +27,9 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _currentImageIndex = 0;
+  WatchVariant? _selectedVariant;
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   void initState() {
@@ -98,6 +102,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
           final watch = watchProvider.selectedWatch!;
 
+          // Initialize selected variant if not already set
+          if (_selectedVariant == null &&
+              watch.variants != null &&
+              watch.variants!.isNotEmpty) {
+            _selectedVariant = watch.variants!.first;
+          }
+
           return Column(
             children: [
               Expanded(
@@ -111,6 +122,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           alignment: Alignment.bottomCenter,
                           children: [
                             CarouselSlider(
+                              carouselController: _carouselController,
                               options: CarouselOptions(
                                 height: 350,
                                 viewportFraction: 1.0,
@@ -374,6 +386,92 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                             const SizedBox(height: 30),
 
+                            // Color Selection
+                            if (watch.variants != null &&
+                                watch.variants!.isNotEmpty) ...[
+                              const Text(
+                                'Available Colors',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 50,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: watch.variants!.length,
+                                  itemBuilder: (context, index) {
+                                    final variant = watch.variants![index];
+                                    final isSelected =
+                                        _selectedVariant?.colorName ==
+                                            variant.colorName;
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedVariant = variant;
+                                          if (variant.image != null) {
+                                            final imgIndex = watch.images
+                                                .indexOf(variant.image!);
+                                            if (imgIndex != -1) {
+                                              _carouselController
+                                                  .animateToPage(imgIndex);
+                                            }
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(right: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? AppTheme.primaryColor
+                                              : Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? AppTheme.primaryColor
+                                                : Colors.grey.shade300,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 14,
+                                              height: 14,
+                                              decoration: BoxDecoration(
+                                                color: Color(int.parse(variant
+                                                    .colorHex
+                                                    .replaceAll('#', '0xFF'))),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              variant.colorName,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: isSelected
+                                                    ? Colors.white
+                                                    : AppTheme.textPrimaryColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                            ],
+
                             // Specifications
                             if (watch.specifications != null &&
                                 watch.specifications!.isNotEmpty)
@@ -541,8 +639,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onPressed: canAddToCart
                             ? () async {
                                 HapticFeedback.lightImpact();
-                                final success =
-                                    await cartProvider.addToCart(watch);
+                                final success = await cartProvider.addToCart(
+                                  watch,
+                                  productColor: _selectedVariant?.colorName,
+                                );
 
                                 if (!mounted) return;
 

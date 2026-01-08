@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:typed_data';
-
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/admin_provider.dart';
-import '../../utils/theme.dart';
+import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class ManageBannersScreen extends StatefulWidget {
   const ManageBannersScreen({super.key});
@@ -45,6 +43,7 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
           ),
         ],
       ),
+      drawer: const AdminDrawer(),
       body: Consumer<AdminProvider>(
         builder: (context, adminProvider, child) {
           if (adminProvider.isLoading && adminProvider.banners.isEmpty) {
@@ -63,7 +62,7 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
             itemBuilder: (context, index) {
               final banner = adminProvider.banners[index];
               final imageUrl = banner.image;
-              
+
               // Debug: Print image URL to console
               if (imageUrl.isEmpty) {
                 print('Banner ${banner.id} has empty image URL');
@@ -123,7 +122,8 @@ class _ManageBannersScreenState extends State<ManageBannersScreen> {
                                     height: 150,
                                     color: Colors.grey[300],
                                     child: const Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.error, color: Colors.red),
                                         SizedBox(height: 4),
@@ -407,7 +407,7 @@ class _AddBannerSheetState extends State<AddBannerSheet> {
                           setState(() {
                             _imageFile = null;
                           });
-                          
+
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

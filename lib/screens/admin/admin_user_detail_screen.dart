@@ -202,18 +202,27 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
-            const Spacer(),
-            Text(value,
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
-            Text(title, style: TextStyle(color: Colors.grey[600])),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: TextStyle(color: Colors.grey[600], fontSize: 11),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

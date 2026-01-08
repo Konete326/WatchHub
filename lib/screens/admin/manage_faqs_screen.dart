@@ -3,6 +3,7 @@ import '../../services/admin_service.dart';
 import '../../services/support_service.dart';
 import '../../models/faq.dart';
 import '../../utils/theme.dart';
+import '../../widgets/admin/admin_drawer.dart';
 
 class ManageFAQsScreen extends StatefulWidget {
   const ManageFAQsScreen({super.key});
@@ -15,7 +16,7 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
   final AdminService _adminService = AdminService();
   final SupportService _supportService = SupportService();
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<FAQ> _faqs = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -41,7 +42,7 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
     try {
       // Use support service to get FAQs (public endpoint)
       final result = await _supportService.getFAQs();
-      
+
       if (mounted) {
         setState(() {
           _faqs = result['faqs'] ?? [];
@@ -96,7 +97,13 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                     labelText: 'Category *',
                     border: OutlineInputBorder(),
                   ),
-                  items: ['General', 'Shipping', 'Returns', 'Payment', 'Products'].map((cat) {
+                  items: [
+                    'General',
+                    'Shipping',
+                    'Returns',
+                    'Payment',
+                    'Products'
+                  ].map((cat) {
                     return DropdownMenuItem(
                       value: cat,
                       child: Text(cat),
@@ -120,7 +127,8 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                     answerController.text.isEmpty ||
                     selectedCategory == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all required fields')),
+                    const SnackBar(
+                        content: Text('Please fill all required fields')),
                   );
                   return;
                 }
@@ -140,11 +148,13 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                       category: selectedCategory!,
                     );
                   }
-                  
+
                   if (mounted) {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(faq != null ? 'FAQ updated' : 'FAQ created')),
+                      SnackBar(
+                          content: Text(
+                              faq != null ? 'FAQ updated' : 'FAQ created')),
                     );
                     _loadFAQs();
                   }
@@ -222,6 +232,7 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
           ),
         ],
       ),
+      drawer: const AdminDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -229,7 +240,8 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                      Icon(Icons.error_outline,
+                          size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       Text(
                         _errorMessage!,
@@ -249,7 +261,8 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.help_outline, size: 64, color: Colors.grey[400]),
+                          Icon(Icons.help_outline,
+                              size: 64, color: Colors.grey[400]),
                           const SizedBox(height: 16),
                           Text(
                             'No FAQs found',
@@ -270,29 +283,37 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
                             child: ExpansionTile(
                               title: Text(
                                 faq.question,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(faq.category),
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(faq.answer),
                                       const SizedBox(height: 16),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
                                           TextButton.icon(
                                             icon: const Icon(Icons.edit),
                                             label: const Text('Edit'),
-                                            onPressed: () => _showAddEditDialog(faq: faq),
+                                            onPressed: () =>
+                                                _showAddEditDialog(faq: faq),
                                           ),
                                           TextButton.icon(
-                                            icon: const Icon(Icons.delete, color: Colors.red),
-                                            label: const Text('Delete', style: TextStyle(color: Colors.red)),
-                                            onPressed: () => _deleteFAQ(faq.id, faq.question),
+                                            icon: const Icon(Icons.delete,
+                                                color: Colors.red),
+                                            label: const Text('Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red)),
+                                            onPressed: () => _deleteFAQ(
+                                                faq.id, faq.question),
                                           ),
                                         ],
                                       ),
@@ -308,4 +329,3 @@ class _ManageFAQsScreenState extends State<ManageFAQsScreen> {
     );
   }
 }
-

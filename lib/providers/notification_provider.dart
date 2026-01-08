@@ -201,7 +201,8 @@ class NotificationProvider with ChangeNotifier {
 
     try {
       final batch = _firestore.batch();
-      // Only update actual user notifications
+
+      // 1. Update actual user notifications
       final userNotifs = await _firestore
           .collection('users')
           .doc(uid)
@@ -212,6 +213,22 @@ class NotificationProvider with ChangeNotifier {
       for (var doc in userNotifs.docs) {
         batch.update(doc.reference, {'isRead': true});
       }
+
+      // 2. Mark current announcements as read
+      for (var notification in _notifications) {
+        final isAnnouncement =
+            !userNotifs.docs.any((d) => d.id == notification.id);
+        if (isAnnouncement && !_readAnnouncementIds.contains(notification.id)) {
+          final readRef = _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('read_announcements')
+              .doc(notification.id);
+          batch.set(readRef, {'readAt': FieldValue.serverTimestamp()});
+          _readAnnouncementIds.add(notification.id);
+        }
+      }
+
       await batch.commit();
     } catch (e) {
       print('Error marking all as read: $e');

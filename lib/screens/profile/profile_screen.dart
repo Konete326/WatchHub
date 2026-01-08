@@ -246,6 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
+
               _buildMenuItem(
                 icon: Icons.support_agent,
                 title: 'Customer Support',

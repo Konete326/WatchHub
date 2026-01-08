@@ -75,8 +75,14 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String message = e.toString();
+        if (message.contains('FAILED_PRECONDITION') ||
+            message.contains('index')) {
+          message =
+              'Database index required. Please contact developer or check Firebase console logs to create the required composite index.';
+        }
         setState(() {
-          _errorMessage = 'Failed to load orders: ${e.toString()}';
+          _errorMessage = 'Failed to load orders: $message';
           _isLoading = false;
         });
       }
@@ -109,11 +115,18 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
           title: const Text('Manage Orders'),
           bottom: TabBar(
             isScrollable: true,
+            labelColor: AppTheme.secondaryColor,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: AppTheme.secondaryColor,
+            indicatorWeight: 3,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            labelPadding: const EdgeInsets.symmetric(horizontal: 20),
             onTap: (index) {
               if (index == 0) {
                 _loadOrders(page: 1, status: null);
               } else {
-                _loadOrders(page: 1, status: _statuses[index - 1]);
+                _loadOrders(
+                    page: 1, status: _statuses[index - 1].toUpperCase());
               }
             },
             tabs: const [

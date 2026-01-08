@@ -47,24 +47,13 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
     });
 
     try {
-      final result = await _adminService.getAllOrders(page: 1, limit: 1000);
-      final ordersData = result['orders'];
-      if (ordersData != null && ordersData is List) {
-        final orders = (ordersData as List)
-            .map((json) => Order.fromJson(json as Map<String, dynamic>))
-            .toList();
-        final order = orders.firstWhere(
-          (o) => o.id == widget.orderId,
-          orElse: () => orders.first,
-        );
-
-        if (mounted) {
-          setState(() {
-            _order = order;
-            _selectedStatus = order.status;
-            _isLoading = false;
-          });
-        }
+      final order = await _adminService.getOrderById(widget.orderId);
+      if (mounted) {
+        setState(() {
+          _order = order;
+          _selectedStatus = order.status;
+          _isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -72,6 +61,22 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
           _errorMessage = 'Failed to load order: ${e.toString()}';
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _printInvoice() async {
+    if (_order == null) return;
+    try {
+      await InvoiceService.generateAndPrintInvoice(_order!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to print: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
       }
     }
   }
@@ -137,11 +142,7 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
           IconButton(
             icon: const Icon(Icons.print),
             tooltip: 'Print Invoice',
-            onPressed: () async {
-              if (_order != null) {
-                await InvoiceService.generateAndPrintInvoice(_order!);
-              }
-            },
+            onPressed: _printInvoice,
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/admin_service.dart';
 import '../../models/user.dart';
 import '../../widgets/admin/admin_drawer.dart';
+import '../../utils/theme.dart';
 
 class SendNotificationScreen extends StatefulWidget {
   final User? targetUser; // If null, sending to all users (initially)
@@ -95,22 +96,31 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
     setState(() => _isLoading = true);
 
     try {
+      final title = _titleController.text.trim();
+      final body = _bodyController.text.trim();
+
       if (_targetType == 'broadcast') {
         await _adminService.sendNotification(
-          title: _titleController.text.trim(),
-          body: _bodyController.text.trim(),
+          title: title,
+          body: body,
           type: 'general',
-          expiryDays: 3, // Auto expire after 3 days
+          expiryDays: 3,
         );
       } else {
-        // Send to each selected user
-        for (final user in _selectedUsers) {
+        // Send to each selected user, but only add ONE history record for the batch
+        for (int i = 0; i < _selectedUsers.length; i++) {
+          final user = _selectedUsers[i];
           await _adminService.sendNotification(
             userId: user.id,
-            title: _titleController.text.trim(),
-            body: _bodyController.text.trim(),
+            title: title,
+            body: body,
             type: 'general',
             expiryDays: 3,
+            addToHistory:
+                i == 0, // Only add historical record for the first user sent
+            customTarget: _selectedUsers.length > 1
+                ? 'Batch (${_selectedUsers.length} Users)'
+                : 'User: ${user.name}',
           );
         }
       }
@@ -124,7 +134,9 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
         );
         _titleController.clear();
         _bodyController.clear();
-        _loadHistory(); // Refresh history
+        // Switch to history tab and refresh
+        _tabController.animateTo(1);
+        _loadHistory();
       }
     } catch (e) {
       if (mounted) {
@@ -140,46 +152,119 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
     }
   }
 
+  Future<void> _deleteHistory(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete History'),
+        content: const Text(
+            'Are you sure you want to delete this notification record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _adminService.deleteNotificationHistory(id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('History record deleted')),
+          );
+          _loadHistory();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   void _showUserSelectionDialog() async {
     await _loadAllUsers();
     if (!mounted) return;
+
+    String searchQuery = '';
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
+          final filteredUsers = _allUsers.where((u) {
+            final query = searchQuery.toLowerCase();
+            return u.name.toLowerCase().contains(query) ||
+                u.email.toLowerCase().contains(query);
+          }).toList();
+
           return AlertDialog(
             title: const Text('Select Users'),
             content: SizedBox(
               width: double.maxFinite,
-              child: _isLoadingUsers
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _allUsers.length,
-                      itemBuilder: (context, index) {
-                        final user = _allUsers[index];
-                        final isSelected =
-                            _selectedUsers.any((u) => u.id == user.id);
-                        return CheckboxListTile(
-                          title: Text(user.name),
-                          subtitle: Text(user.email),
-                          value: isSelected,
-                          onChanged: (bool? value) {
-                            setStateDialog(() {
-                              if (value == true) {
-                                _selectedUsers.add(user);
-                              } else {
-                                _selectedUsers
-                                    .removeWhere((u) => u.id == user.id);
-                              }
-                            });
-                            // Update main state as well
-                            this.setState(() {});
-                          },
-                        );
-                      },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search users...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0, horizontal: 16),
                     ),
+                    onChanged: (val) {
+                      setStateDialog(() => searchQuery = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 300,
+                    child: _isLoadingUsers
+                        ? const Center(child: CircularProgressIndicator())
+                        : filteredUsers.isEmpty
+                            ? const Center(child: Text('No users found'))
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: filteredUsers.length,
+                                itemBuilder: (context, index) {
+                                  final user = filteredUsers[index];
+                                  final isSelected = _selectedUsers
+                                      .any((u) => u.id == user.id);
+                                  return CheckboxListTile(
+                                    title: Text(user.name),
+                                    subtitle: Text(user.email),
+                                    value: isSelected,
+                                    activeColor: Theme.of(context).primaryColor,
+                                    onChanged: (bool? value) {
+                                      setStateDialog(() {
+                                        if (value == true) {
+                                          _selectedUsers.add(user);
+                                        } else {
+                                          _selectedUsers.removeWhere(
+                                              (u) => u.id == user.id);
+                                        }
+                                      });
+                                      // Update main state as well
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                              ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -200,6 +285,11 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
         title: const Text('Notifications'),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: AppTheme.secondaryColor,
+          indicatorWeight: 4,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'Compose'),
             Tab(text: 'History'),
@@ -225,6 +315,15 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
                   Wrap(
                     spacing: 8.0,
                     children: [
+                      if (widget.targetUser != null)
+                        ChoiceChip(
+                          label: Text('User: ${widget.targetUser!.name}'),
+                          selected: _targetType == 'single',
+                          onSelected: (selected) {
+                            if (selected)
+                              setState(() => _targetType = 'single');
+                          },
+                        ),
                       ChoiceChip(
                         label: const Text('All Users (Broadcast)'),
                         selected: _targetType == 'broadcast',
@@ -293,10 +392,13 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
                       label:
                           Text(_isLoading ? 'Sending...' : 'Send Notification'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _targetType == 'broadcast'
-                            ? Colors.orange
-                            : Colors.blue,
+                        backgroundColor: AppTheme.primaryColor,
                         foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppTheme.primaryColor.withOpacity(0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -306,68 +408,135 @@ class _SendNotificationScreenState extends State<SendNotificationScreen>
           ),
 
           // History Tab
-          _isLoadingHistory
-              ? const Center(child: CircularProgressIndicator())
-              : _history.isEmpty
-                  ? const Center(child: Text('No notification history'))
-                  : ListView.builder(
-                      itemCount: _history.length,
-                      itemBuilder: (context, index) {
-                        final item = _history[index];
-
-                        DateTime date = DateTime.now();
-                        if (item['createdAt'] != null) {
-                          try {
-                            if (item['createdAt'] is Timestamp) {
-                              date = (item['createdAt'] as Timestamp).toDate();
-                            } else {
-                              date =
-                                  DateTime.parse(item['createdAt'].toString());
-                            }
-                          } catch (e) {
-                            // fallback
-                          }
-                        }
-
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: item['type'] == 'general'
-                                ? Colors.blue
-                                : Colors.orange,
-                            child: const Icon(Icons.notifications,
-                                color: Colors.white),
-                          ),
-                          title: Text(item['title'] ?? 'No Title'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item['body'] ?? ''),
-                              Text(
-                                '${DateFormat('MMM dd, HH:mm').format(date)} • ${item['target'] ?? 'Broadcast'}',
+          RefreshIndicator(
+            onRefresh: _loadHistory,
+            color: AppTheme.primaryColor,
+            child: _isLoadingHistory
+                ? const Center(child: CircularProgressIndicator())
+                : _history.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text('No notification history',
                                 style: TextStyle(
-                                    fontSize: 12, color: Colors.grey[600]),
+                                    color: Colors.grey, fontSize: 16)),
+                            Text('(History older than 3 days is auto-deleted)',
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 12)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: _history.length,
+                        itemBuilder: (context, index) {
+                          final item = _history[index];
+
+                          DateTime date = DateTime.now();
+                          if (item['createdAt'] != null) {
+                            try {
+                              if (item['createdAt'] is Timestamp) {
+                                date =
+                                    (item['createdAt'] as Timestamp).toDate();
+                              } else {
+                                date = DateTime.parse(
+                                    item['createdAt'].toString());
+                              }
+                            } catch (e) {}
+                          }
+
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: item['target']
+                                                .toString()
+                                                .contains('Broadcast')
+                                            ? Colors.orange.withOpacity(0.1)
+                                            : Colors.blue.withOpacity(0.1),
+                                        child: Icon(
+                                          item['target']
+                                                  .toString()
+                                                  .contains('Broadcast')
+                                              ? Icons.campaign
+                                              : Icons.person,
+                                          color: item['target']
+                                                  .toString()
+                                                  .contains('Broadcast')
+                                              ? Colors.orange
+                                              : Colors.blue,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item['title'] ?? 'No Title',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16),
+                                            ),
+                                            Text(
+                                              '${DateFormat('MMM dd, hh:mm a').format(date)} • ${item['target']}',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline,
+                                            color: Colors.red),
+                                        onPressed: () =>
+                                            _deleteHistory(item['id']),
+                                      ),
+                                    ],
+                                  ),
+                                  const Divider(),
+                                  Text(
+                                    item['body'] ?? '',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      const Icon(Icons.remove_red_eye_outlined,
+                                          size: 16, color: Colors.blue),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${item['seenCount'] ?? 0} Seen',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.remove_red_eye_outlined,
-                                  size: 16, color: Colors.grey),
-                              Text(
-                                '${item['seenCount'] ?? 0}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ],
-                          ),
-                          isThreeLine: true,
-                        );
-                      },
-                    ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
         ],
       ),
     );

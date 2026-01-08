@@ -8,6 +8,7 @@ class User {
   final String role;
   final String? profileImage;
   final String? fcmToken;
+  final bool notificationsEnabled;
   final DateTime createdAt;
 
   User({
@@ -18,6 +19,7 @@ class User {
     required this.role,
     this.profileImage,
     this.fcmToken,
+    this.notificationsEnabled = true,
     required this.createdAt,
   });
 
@@ -30,6 +32,7 @@ class User {
       role: json['role'] as String? ?? 'USER',
       profileImage: json['profileImage'] as String?,
       fcmToken: json['fcmToken'] as String?,
+      notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
@@ -48,6 +51,7 @@ class User {
       role: data['role'] ?? 'USER',
       profileImage: data['profileImage'],
       fcmToken: data['fcmToken'],
+      notificationsEnabled: data['notificationsEnabled'] ?? true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -61,6 +65,7 @@ class User {
       'role': role,
       'profileImage': profileImage,
       'fcmToken': fcmToken,
+      'notificationsEnabled': notificationsEnabled,
       'createdAt': createdAt,
     };
   }
