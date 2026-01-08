@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -5,17 +6,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/watch_provider.dart';
 
 import '../../widgets/watch_card.dart';
-import '../../widgets/shimmer_loading.dart';
 import '../../utils/theme.dart';
 import '../product/product_detail_screen.dart';
 import '../search/search_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../browse/browse_screen.dart';
 import '../../providers/notification_provider.dart';
-import '../../providers/user_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../wishlist/wishlist_screen.dart';
-import '../../widgets/countdown_timer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,14 +23,24 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
+
     Future.microtask(() {
       final watchProvider = Provider.of<WatchProvider>(context, listen: false);
       watchProvider.fetchFeaturedWatches();
       watchProvider.fetchBanners();
       watchProvider.fetchBrands();
+      // fetchCategories is less critical for the main view now but good to have
       watchProvider.fetchCategories();
       watchProvider.fetchPromotionHighlight();
       Provider.of<NotificationProvider>(context, listen: false)
@@ -41,380 +49,109 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('WatchHub'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SearchScreen()),
-              );
-            },
-          ),
-          Consumer<WishlistProvider>(
-            builder: (context, wishlistProvider, child) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const WishlistScreen()),
-                      );
-                    },
-                  ),
-                  if (wishlistProvider.itemCount > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '${wishlistProvider.itemCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-          Consumer2<NotificationProvider, UserProvider>(
-            builder: (context, provider, userProvider, child) {
-              final notificationsEnabled =
-                  userProvider.user?.notificationsEnabled ?? true;
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const NotificationsScreen()),
-                      );
-                    },
-                  ),
-                  if (notificationsEnabled && provider.unreadCount > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '${provider.unreadCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Provider.of<WatchProvider>(context, listen: false)
-              .fetchFeaturedWatches();
-        },
-        child: Consumer<WatchProvider>(
-          builder: (context, watchProvider, child) {
-            if (watchProvider.isLoading &&
-                watchProvider.featuredWatches.isEmpty) {
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const BannerShimmer(),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.7,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: 6,
-                        itemBuilder: (context, index) =>
-                            const ProductCardShimmer(),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
+      backgroundColor: const Color(0xFFFAFAFA),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Main Content
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Spacing for the fixed header
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 120),
+              ),
 
-            // Only show error screen if there's a real error AND no data at all
-            // Otherwise, show content with empty states
-            if (watchProvider.errorMessage != null &&
-                watchProvider.featuredWatches.isEmpty &&
-                watchProvider.banners.isEmpty &&
-                !watchProvider.isLoading) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: AppTheme.errorColor),
-                    const SizedBox(height: 16),
-                    Text(watchProvider.errorMessage!),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        watchProvider.clearError();
-                        watchProvider.fetchFeaturedWatches();
-                        watchProvider.fetchBanners();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
+              SliverToBoxAdapter(
+                child: Consumer<WatchProvider>(
+                  builder: (context, watchProvider, child) {
+                    // Loading State with no data
+                    if (watchProvider.isLoading &&
+                        watchProvider.featuredWatches.isEmpty &&
+                        watchProvider.banners.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Dynamic Banner Slider
-                  Consumer<WatchProvider>(
-                    builder: (context, watchProvider, child) {
-                      if (watchProvider.banners.isEmpty) {
-                        // Fallback static banner
-                        return Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.primaryColor,
-                                AppTheme.accentColor
-                              ],
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                    // Error State
+                    if (watchProvider.errorMessage != null &&
+                        watchProvider.featuredWatches.isEmpty) {
+                      return Center(
+                        child: Text(watchProvider.errorMessage!),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Dynamic Hero Section (Banners)
+                        if (watchProvider.banners.isNotEmpty)
+                          _buildHeroSection(watchProvider.banners),
+
+                        // Top Brands Section
+                        if (watchProvider.brands.isNotEmpty)
+                          _buildTopBrandsSection(watchProvider.brands),
+
+                        // Limited Edition / Promotion Section
+                        if (watchProvider.promotionHighlight != null)
+                          _buildLimitedEditionSection(
+                              watchProvider.promotionHighlight!),
+
+                        // Featured Watches Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Icon(Icons.watch,
-                                  size: 64, color: Colors.white),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Discover Premium Watches',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
                               Text(
-                                'Luxury timepieces for every occasion',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
+                                'Featured Collection',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      color: const Color(0xFF1A1A1A),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.5,
+                                    ),
                               ),
                             ],
                           ),
-                        );
-                      }
-
-                      return CarouselSlider(
-                        options: CarouselOptions(
-                          height: 200,
-                          viewportFraction: 1.0,
-                          autoPlay: true,
-                          autoPlayInterval: const Duration(seconds: 5),
-                          enlargeCenterPage: false,
-                        ),
-                        items: watchProvider.banners.map((banner) {
-                          return Builder(
-                            builder: (BuildContext context) {
-                              final imageUrl = banner.image;
-
-                              return Stack(
-                                children: [
-                                  CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    width: MediaQuery.of(context).size.width,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        const BannerShimmer(),
-                                    errorWidget: (context, url, error) =>
-                                        Container(
-                                      color: AppTheme.primaryColor,
-                                      child: const Icon(Icons.error,
-                                          color: Colors.white),
-                                    ),
-                                  ),
-                                  if (banner.title != null ||
-                                      banner.subtitle != null)
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.bottomCenter,
-                                            end: Alignment.topCenter,
-                                            colors: [
-                                              Colors.black.withOpacity(0.7),
-                                              Colors.transparent,
-                                            ],
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.all(24),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            if (banner.title != null)
-                                              Text(
-                                                banner.title!,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            if (banner.subtitle != null)
-                                              Text(
-                                                banner.subtitle!,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            },
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
-
-                  // Categories Horizontal Slider
-                  _buildCategorySlider(watchProvider),
-
-                  // Sale Highlight
-                  if (watchProvider.promotionHighlight != null)
-                    _buildPromotionHighlight(watchProvider.promotionHighlight!),
-
-                  // Featured Watches Section
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Featured Watches',
-                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
                       ],
-                    ),
-                  ),
+                    );
+                  },
+                ),
+              ),
 
-                  if (watchProvider.featuredWatches.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text('No watches available'),
+              // Featured Product Grid
+              Consumer<WatchProvider>(
+                builder: (context, watchProvider, child) {
+                  if (watchProvider.featuredWatches.isEmpty) {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.60, // Taller cards for classy feel
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
                       ),
-                    )
-                  else
-                    LayoutBuilder(builder: (context, constraints) {
-                      final double screenWidth =
-                          MediaQuery.of(context).size.width;
-
-                      // Responsive Grid Count
-                      int crossAxisCount = 2;
-                      if (screenWidth > 1200) {
-                        crossAxisCount = 5;
-                      } else if (screenWidth > 900) {
-                        crossAxisCount = 4;
-                      } else if (screenWidth > 600) {
-                        crossAxisCount = 3;
-                      }
-
-                      // Calculate Aspect Ratio dynamically
-                      // Width available for each item
-                      // padding: 16 (left) + 16 (right) + (n-1)*16 (spacing)
-                      final totalHorizontalPadding =
-                          32.0 + (crossAxisCount - 1) * 16.0;
-                      final itemWidth = (screenWidth - totalHorizontalPadding) /
-                          crossAxisCount;
-
-                      // We need enough height for image (width) + approx 130px details
-                      // ratio = width / height => height = width / ratio
-                      // we want height = width + 135 (details height with padding)
-                      // width / ratio = width + 135
-                      // ratio = width / (width + 135)
-
-                      final double textContentHeight = 135.0;
-                      double childAspectRatio =
-                          itemWidth / (itemWidth + textContentHeight);
-
-                      // Clamp to safe limits
-                      childAspectRatio = childAspectRatio.clamp(0.5, 0.85);
-
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          childAspectRatio: childAspectRatio,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: watchProvider.featuredWatches.length,
-                        itemBuilder: (context, index) {
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
                           final watch = watchProvider.featuredWatches[index];
                           return WatchCard(
                             watch: watch,
@@ -428,55 +165,300 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           );
                         },
-                      );
-                    }),
-
-                  const SizedBox(
-                      height: 100), // Adjusted for floating bottom bar
-                ],
+                        childCount: watchProvider.featuredWatches.length,
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 100),
+              ),
+            ],
+          ),
+
+          // Glassmorphism Header & Search Bar
+          _buildGlassHeader(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassHeader(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 10,
+              bottom: 16,
+              left: 20,
+              right: 20,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.7),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Brand Logo / Title
+                    const Text(
+                      'WatchHub',
+                      style: TextStyle(
+                        fontFamily:
+                            'Didot', // Serif font for luxury if available, or fallbacks
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    // Actions
+                    Row(
+                      children: [
+                        _buildHeaderIcon(
+                          icon: Icons.favorite_border,
+                          hasBadge:
+                              Provider.of<WishlistProvider>(context).itemCount >
+                                  0,
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const WishlistScreen())),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildHeaderIcon(
+                          icon: Icons.notifications_none,
+                          hasBadge: Provider.of<NotificationProvider>(context)
+                                  .unreadCount >
+                              0,
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const NotificationsScreen())),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Glassmorphism Search Bar
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) => const SearchScreen()),
+                    );
+                  },
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.8),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFA6ABBD).withOpacity(0.1),
+                          offset: const Offset(0, 4),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.search,
+                          color: Colors.grey[600],
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Find your perfect timepiece...',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCategorySlider(WatchProvider watchProvider) {
-    if (watchProvider.categories.isEmpty) {
-      return const SizedBox.shrink();
-    }
+  Widget _buildHeaderIcon({
+    required IconData icon,
+    required bool hasBadge,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.5),
+            ),
+            child: Icon(icon, color: const Color(0xFF1A1A1A), size: 24),
+          ),
+          if (hasBadge)
+            Container(
+              margin: const EdgeInsets.only(top: 8, right: 8),
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppTheme.errorColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildHeroSection(List<dynamic> banners) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: CarouselSlider(
+        options: CarouselOptions(
+          height: 220,
+          viewportFraction: 0.92,
+          enlargeCenterPage: true,
+          autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 6),
+          enableInfiniteScroll: true,
+        ),
+        items: banners.map((banner) {
+          return Builder(
+            builder: (BuildContext context) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 5),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(banner.image),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (banner.title != null)
+                        Text(
+                          banner.title!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black45,
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (banner.subtitle != null)
+                        Text(
+                          banner.subtitle!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTopBrandsSection(List<dynamic> brands) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Text(
-            'Categories',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+            'Top Brands',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: const Color(0xFF1A1A1A),
+                ),
           ),
         ),
         SizedBox(
           height: 110,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: watchProvider.categories.length,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: brands.length,
+            physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
-              final category = watchProvider.categories[index];
+              final brand = brands[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.only(right: 16),
                 child: InkWell(
                   onTap: () {
+                    // Navigate to brand specific page or generic browse
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => BrowseScreen(
-                          initialCategory: category.name,
+                          initialBrand: brand.name,
                         ),
                       ),
                     );
@@ -484,42 +466,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 65,
-                        height: 65,
+                        width: 70,
+                        height: 70,
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
                           color: Colors.white,
+                          shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withOpacity(0.08),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: category.imageUrl != null &&
-                                category.imageUrl!.isNotEmpty
+                        child: brand.imageUrl != null
                             ? CachedNetworkImage(
-                                imageUrl: category.imageUrl!,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    Container(color: Colors.grey[200]),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.category, size: 30),
+                                imageUrl: brand.imageUrl!,
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.grey[100],
+                                ),
                               )
-                            : Container(
-                                color: AppTheme.primaryColor.withOpacity(0.1),
-                                child: const Icon(Icons.category,
-                                    color: AppTheme.primaryColor, size: 30),
-                              ),
+                            : Icon(Icons.watch,
+                                color: Colors.grey[400], size: 30),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        category.name,
+                        brand.name,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
+                          color: Color(0xFF424242),
                         ),
                       ),
                     ],
@@ -533,92 +511,154 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPromotionHighlight(dynamic promotion) {
+  Widget _buildLimitedEditionSection(dynamic promotion) {
     final bool isImage = promotion.type == 'image';
+    if (!isImage && promotion.title == null) return const SizedBox.shrink();
 
-    return InkWell(
-      onTap: promotion.link != null && promotion.link!.isNotEmpty
-          ? () {
-              // Navigate to link (e.g. product detail)
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ProductDetailScreen(watchId: promotion.link!),
-                ),
-              );
-            }
-          : null,
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: !isImage
-              ? Color(int.parse(promotion.backgroundColor ?? '0xFFB71C1C'))
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: isImage
-            ? CachedNetworkImage(
-                imageUrl: promotion.imageUrl!,
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    Container(height: 120, color: Colors.grey[200]),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
-              )
-            : Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: Column(
-                  children: [
-                    Text(
-                      promotion.title ?? '',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(
-                            int.parse(promotion.textColor ?? '0xFFFFFFFF')),
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Limited Edition',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: const Color(0xFF1A1A1A),
                     ),
-                    if (promotion.subtitle != null &&
-                        promotion.subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        promotion.subtitle!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(int.parse(
-                                  promotion.textColor ?? '0xFFFFFFFF'))
-                              .withOpacity(0.9),
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    if (promotion.expiryDate != null) ...[
-                      const SizedBox(height: 16),
-                      CountdownTimer(
-                        targetDate: promotion.expiryDate!,
-                        textColor: Color(
-                            int.parse(promotion.textColor ?? '0xFFFFFFFF')),
-                      ),
-                    ],
-                  ],
-                ),
               ),
+              const Spacer(),
+              // Maybe a 'See All' button if relevant
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 400, // Large height for impact
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: isImage
+                  ? Colors.black
+                  : Color(int.parse(promotion.backgroundColor ?? '0xFF1A1A1A')),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+              image: isImage && promotion.imageUrl != null
+                  ? DecorationImage(
+                      image: CachedNetworkImageProvider(promotion.imageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: Stack(
+              children: [
+                // Gradient Overlay
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.6),
+                        Colors.black.withOpacity(0.9),
+                      ],
+                      stops: const [0.5, 0.8, 1.0],
+                    ),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.secondaryColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'EXCLUSIVE',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        promotion.title ?? 'Timeless Elegance',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        promotion.subtitle ??
+                            'Discover the pinnacle of craftsmanship.',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (promotion.link != null &&
+                                promotion.link!.isNotEmpty) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailScreen(
+                                      watchId: promotion.link!),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Shop Now',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
