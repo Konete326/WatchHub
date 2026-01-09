@@ -9,7 +9,7 @@ import '../providers/watch_provider.dart';
 import '../models/review.dart';
 import '../utils/theme.dart';
 import 'review_dialog.dart';
-import 'shimmer_loading.dart';
+import 'neumorphic_widgets.dart';
 
 class ReviewsSection extends StatefulWidget {
   final String watchId;
@@ -27,18 +27,22 @@ class _ReviewsSectionState extends State<ReviewsSection> {
   @override
   void initState() {
     super.initState();
+    // Original review fetching
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       Provider.of<ReviewProvider>(context, listen: false)
           .fetchWatchReviews(widget.watchId, refresh: true);
     });
   }
 
   void _refreshReviews() {
+    if (!mounted) return;
     Provider.of<ReviewProvider>(context, listen: false)
         .fetchWatchReviews(widget.watchId, refresh: true);
   }
 
   void _loadMoreReviews() {
+    if (!mounted) return;
     Provider.of<ReviewProvider>(context, listen: false)
         .fetchWatchReviews(widget.watchId, refresh: false);
   }
@@ -64,6 +68,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
 
   @override
   Widget build(BuildContext context) {
+    const kBackgroundColor = Color(0xFFE0E5EC);
+    const kTextColor = Color(0xFF4A5568);
     final authProvider = Provider.of<AuthProvider>(context);
     final currentUserId = authProvider.user?.id;
 
@@ -79,173 +85,158 @@ class _ReviewsSectionState extends State<ReviewsSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Section Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Reviews',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Reviews',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: kTextColor,
                   ),
-                  if (currentUserId != null)
-                    FutureBuilder<bool>(
-                      future:
-                          Provider.of<ReviewProvider>(context, listen: false)
-                              .canUserReview(widget.watchId),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done &&
-                            snapshot.data == true) {
-                          return TextButton.icon(
-                            onPressed: () async {
-                              final result = await showDialog(
-                                context: context,
-                                builder: (context) => ReviewDialog(
-                                  watchId: widget.watchId,
-                                ),
-                              );
-                              if (result == true) {
-                                _refreshReviews();
-                                if (mounted) {
-                                  Provider.of<WatchProvider>(context,
-                                          listen: false)
-                                      .fetchWatchById(widget.watchId);
-                                }
-                                // Trigger a rebuild to hide the button after review
-                                setState(() {});
-                              }
-                            },
-                            icon: const Icon(Icons.edit, size: 18),
-                            label: const Text('Write Review'),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                ],
-              ),
+                ),
+                if (currentUserId != null)
+                  FutureBuilder<bool>(
+                    future: Provider.of<ReviewProvider>(context, listen: false)
+                        .canUserReview(widget.watchId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done &&
+                          snapshot.data == true) {
+                        return _NeumorphicButton(
+                          onTap: () async {
+                            final result = await showDialog(
+                              context: context,
+                              builder: (context) => ReviewDialog(
+                                watchId: widget.watchId,
+                              ),
+                            );
+                            if (result == true && mounted) {
+                              _refreshReviews();
+                              Provider.of<WatchProvider>(context, listen: false)
+                                  .fetchWatchById(widget.watchId);
+                              setState(() {});
+                            }
+                          },
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          borderRadius: BorderRadius.circular(12),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.edit,
+                                  size: 16, color: AppTheme.primaryColor),
+                              SizedBox(width: 8),
+                              Text('Write Review',
+                                  style: TextStyle(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+              ],
             ),
+            const SizedBox(height: 24),
 
             // Rating Distribution
             if (reviewProvider.ratingDistribution != null)
               _buildRatingDistribution(reviewProvider.ratingDistribution!),
 
-            // Filters and Sort
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  // Rating Filter
-                  Expanded(
-                    child: DropdownButtonFormField<int?>(
-                      value: _filterRating,
-                      decoration: const InputDecoration(
-                        labelText: 'Filter by Rating',
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        isDense: true,
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                            value: null, child: Text('All Ratings')),
-                        ...List.generate(
-                            5,
-                            (index) => DropdownMenuItem(
-                                  value: index + 1,
-                                  child: Row(
-                                    children: [
-                                      ...List.generate(
+            const SizedBox(height: 24),
+
+            // Filters and Sort (Neumorphic)
+            Row(
+              children: [
+                Expanded(
+                  child: _NeumorphicIndicatorContainer(
+                    isSelected: true,
+                    borderRadius: BorderRadius.circular(15),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int?>(
+                        value: _filterRating,
+                        isExpanded: true,
+                        dropdownColor: kBackgroundColor,
+                        style: const TextStyle(color: kTextColor),
+                        items: [
+                          const DropdownMenuItem(
+                              value: null, child: Text('All Ratings')),
+                          ...List.generate(
+                              5,
+                              (index) => DropdownMenuItem(
+                                    value: index + 1,
+                                    child: Row(
+                                      children: List.generate(
                                           index + 1,
                                           (_) => const Icon(Icons.star,
-                                              size: 16, color: Colors.amber)),
-                                    ],
-                                  ),
-                                )),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _filterRating = value;
-                        });
-                      },
+                                              size: 14, color: Colors.amber)),
+                                    ),
+                                  )),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _filterRating = value),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Sort
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedSort,
-                      decoration: const InputDecoration(
-                        labelText: 'Sort',
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        isDense: true,
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'newest', child: Text('Newest')),
-                        DropdownMenuItem(
-                            value: 'oldest', child: Text('Oldest')),
-                        DropdownMenuItem(
-                            value: 'highest', child: Text('Highest Rating')),
-                        DropdownMenuItem(
-                            value: 'lowest', child: Text('Lowest Rating')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedSort = value!;
-                          _applySort();
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Error Message
-            if (reviewProvider.errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.error_outline,
-                          size: 48, color: Colors.red[300]),
-                      const SizedBox(height: 8),
-                      Text(
-                        reviewProvider.errorMessage!,
-                        style: TextStyle(color: Colors.red[700]),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _refreshReviews,
-                        child: const Text('Retry'),
-                      ),
-                    ],
                   ),
                 ),
-              )
-            // Reviews List
-            else if (reviewProvider.isLoading && reviews.isEmpty)
-              const ListShimmer(itemCount: 3)
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _NeumorphicIndicatorContainer(
+                    isSelected: true,
+                    borderRadius: BorderRadius.circular(15),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedSort,
+                        isExpanded: true,
+                        dropdownColor: kBackgroundColor,
+                        style: const TextStyle(color: kTextColor),
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'newest', child: Text('Newest')),
+                          DropdownMenuItem(
+                              value: 'oldest', child: Text('Oldest')),
+                          DropdownMenuItem(
+                              value: 'highest', child: Text('Highest')),
+                          DropdownMenuItem(
+                              value: 'lowest', child: Text('Lowest')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSort = value!;
+                            _applySort();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Review List
+            if (reviewProvider.isLoading && reviews.isEmpty)
+              const Center(
+                  child:
+                      CircularProgressIndicator(color: AppTheme.primaryColor))
             else if (reviews.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(32),
-                child: Center(
+              _NeumorphicContainer(
+                padding: const EdgeInsets.all(40),
+                borderRadius: BorderRadius.circular(20),
+                isConcave: true,
+                child: const Center(
                   child: Column(
                     children: [
-                      Icon(Icons.reviews, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No reviews yet',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+                      Icon(Icons.reviews, size: 48, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No reviews yet',
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -257,23 +248,24 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     reviewProvider,
                   )),
 
-            // Load More Button
+            // Load More
             if (reviewProvider.hasMorePages && !reviewProvider.isLoading)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
-                  child: OutlinedButton(
-                    onPressed: _loadMoreReviews,
-                    child: const Text('Load More Reviews'),
+                  child: _NeumorphicButton(
+                    onTap: _loadMoreReviews,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    borderRadius: BorderRadius.circular(15),
+                    child: const Text('Load More',
+                        style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
-
-            if (reviewProvider.isLoading && reviews.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              ),
+            const SizedBox(height: 60), // Extra space for bottom bar
           ],
         );
       },
@@ -281,7 +273,6 @@ class _ReviewsSectionState extends State<ReviewsSection> {
   }
 
   Widget _buildRatingDistribution(dynamic distribution) {
-    // Calculate total reviews
     int total = 0;
     final ratingCounts = <int, int>{};
 
@@ -295,7 +286,6 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         }
       }
     } else if (distribution is Map) {
-      // Handle Map<String, dynamic> format where keys are rating strings
       for (var entry in distribution.entries) {
         final rating = int.tryParse(entry.key.toString());
         if (rating != null && rating >= 1 && rating <= 5) {
@@ -308,57 +298,49 @@ class _ReviewsSectionState extends State<ReviewsSection> {
 
     if (total == 0) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+    return _NeumorphicContainer(
+      padding: const EdgeInsets.all(20),
+      borderRadius: BorderRadius.circular(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Rating Distribution',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          for (int index = 0; index < 5; index++)
-            Builder(
-              builder: (context) {
-                final rating = 5 - index;
-                final count = ratingCounts[rating] ?? 0;
-                final percentage = total > 0 ? (count / total) : 0.0;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Text('$rating', style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: Colors.grey[300],
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.amber),
+          const Text('Rating Distribution',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: Color(0xFF4A5568))),
+          const SizedBox(height: 16),
+          for (int i = 5; i >= 1; i--)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Text('$i',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF4A5568))),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.star, size: 12, color: Colors.amber),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      height: 8,
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor:
+                            total > 0 ? (ratingCounts[i] ?? 0) / total : 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$count (${(percentage * 100).toStringAsFixed(0)}%)',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                  const SizedBox(width: 12),
+                  Text('${ratingCounts[i] ?? 0}',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF4A5568))),
+                ],
+              ),
             ),
         ],
       ),
@@ -366,30 +348,32 @@ class _ReviewsSectionState extends State<ReviewsSection> {
   }
 
   Widget _buildReviewItem(
-    Review review,
-    String? currentUserId,
-    ReviewProvider reviewProvider,
-  ) {
+      Review review, String? currentUserId, ReviewProvider provider) {
+    const kTextColor = Color(0xFF4A5568);
     final dateFormat = DateFormat('MMM dd, yyyy');
     final isOwnReview = currentUserId != null && review.userId == currentUserId;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: _NeumorphicContainer(
+        padding: const EdgeInsets.all(20),
+        borderRadius: BorderRadius.circular(25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Info and Rating
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                  child: Text(
-                    review.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
-                    style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.bold,
+                _NeumorphicContainer(
+                  shape: BoxShape.circle,
+                  padding: const EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.transparent,
+                    child: Text(
+                      review.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
+                      style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -398,193 +382,83 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        review.user?.name ?? 'Anonymous',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
+                      Text(review.user?.name ?? 'Anonymous',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: kTextColor)),
                       RatingBarIndicator(
                         rating: review.rating.toDouble(),
-                        itemBuilder: (context, index) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
+                        itemBuilder: (context, index) =>
+                            const Icon(Icons.star, color: Colors.amber),
                         itemCount: 5,
-                        itemSize: 16,
+                        itemSize: 14,
                       ),
                     ],
                   ),
                 ),
                 if (isOwnReview)
-                  PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                    onSelected: (value) async {
-                      if (value == 'edit') {
-                        final result = await showDialog(
-                          context: context,
-                          builder: (context) => ReviewDialog(
-                            watchId: widget.watchId,
-                            review: review,
-                          ),
-                        );
-                        if (result == true) {
-                          _refreshReviews();
-                          if (mounted) {
-                            Provider.of<WatchProvider>(context, listen: false)
-                                .fetchWatchById(widget.watchId);
-                          }
-                        }
-                      } else if (value == 'delete') {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Review'),
-                            content: const Text(
-                                'Are you sure you want to delete this review?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirmed == true) {
-                          final success =
-                              await reviewProvider.deleteReview(review.id);
-                          if (mounted) {
-                            if (success) {
-                              Provider.of<WatchProvider>(context, listen: false)
-                                  .fetchWatchById(widget.watchId);
-                            }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success
-                                    ? 'Review deleted'
-                                    : reviewProvider.errorMessage ??
-                                        'Failed to delete review'),
-                                backgroundColor: success
-                                    ? AppTheme.successColor
-                                    : AppTheme.errorColor,
-                              ),
-                            );
-                            if (success) {
-                              _refreshReviews();
-                            }
-                          }
-                        }
-                      }
-                    },
+                  _NeumorphicButton(
+                    onTap: () => _showReviewOptions(review, provider),
+                    shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(Icons.more_vert,
+                        size: 18, color: kTextColor),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            Text(
-              review.comment,
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-
-            // Images
-            if (review.images.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(review.comment,
+                style: const TextStyle(color: kTextColor, height: 1.5)),
+            const SizedBox(height: 16),
+            if (review.images.isNotEmpty)
               SizedBox(
                 height: 80,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: review.images.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullImageGallery(
-                                images: review.images,
-                                initialIndex: index,
-                              ),
-                            ),
-                          );
-                        },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
-                            imageUrl: review.images[index],
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                const ShimmerWidget.rounded(
-                              width: 80,
-                              height: 80,
-                            ),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                          ),
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: _NeumorphicContainer(
+                      isConcave: true,
+                      borderRadius: BorderRadius.circular(12),
+                      padding: const EdgeInsets.all(4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: review.images[index],
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-            ],
-
-            // Date and Helpful
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  dateFormat.format(review.createdAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    await reviewProvider.markReviewHelpful(review.id);
-                    _refreshReviews();
-                  },
-                  icon: const Icon(Icons.thumb_up, size: 16),
-                  label: Text('${review.helpfulCount}'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: const Size(0, 32),
+                Text(dateFormat.format(review.createdAt),
+                    style: TextStyle(
+                        fontSize: 12, color: kTextColor.withOpacity(0.5))),
+                _NeumorphicButton(
+                  onTap: () => provider.markReviewHelpful(review.id).then((_) {
+                    if (mounted) _refreshReviews();
+                  }),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.thumb_up_alt_outlined,
+                          size: 14, color: AppTheme.primaryColor),
+                      const SizedBox(width: 6),
+                      Text('${review.helpfulCount}',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor)),
+                    ],
                   ),
                 ),
               ],
@@ -594,82 +468,265 @@ class _ReviewsSectionState extends State<ReviewsSection> {
       ),
     );
   }
-}
 
-class FullImageGallery extends StatefulWidget {
-  final List<String> images;
-  final int initialIndex;
-
-  const FullImageGallery({
-    super.key,
-    required this.images,
-    this.initialIndex = 0,
-  });
-
-  @override
-  State<FullImageGallery> createState() => _FullImageGalleryState();
-}
-
-class _FullImageGalleryState extends State<FullImageGallery> {
-  late PageController _pageController;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+  void _showReviewOptions(Review review, ReviewProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+        decoration: const BoxDecoration(
+          color: Color(0xFFE0E5EC),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
-        title: Text(
-          '${_currentIndex + 1} / ${widget.images.length}',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: widget.images.length,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          return InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 3.0,
-            child: Center(
-              child: CachedNetworkImage(
-                imageUrl: widget.images[index],
-                fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-                errorWidget: (context, url, error) => const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, color: Colors.white, size: 48),
-                    SizedBox(height: 16),
-                    Text('Failed to load image',
-                        style: TextStyle(color: Colors.white)),
-                  ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            _NeumorphicButton(
+              onTap: () async {
+                Navigator.pop(context);
+                final confirm = await _showDeleteConfirmation();
+                if (confirm == true) {
+                  final success = await provider.deleteReview(review.id);
+                  if (success && mounted) {
+                    _refreshReviews();
+                    // Update main watch rating
+                    Provider.of<WatchProvider>(context, listen: false)
+                        .fetchWatchById(widget.watchId);
+                  }
+                }
+              },
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              borderRadius: BorderRadius.circular(15),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.delete_outline_rounded,
+                      color: AppTheme.errorColor),
+                  SizedBox(width: 12),
+                  Text(
+                    'Delete Review',
+                    style: TextStyle(
+                      color: AppTheme.errorColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _NeumorphicButton(
+              onTap: () => Navigator.pop(context),
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              borderRadius: BorderRadius.circular(15),
+              child: const Center(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Color(0xFF4A5568),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => NeumorphicDialog(
+        title: 'Delete Review',
+        content:
+            'Are you sure you want to remove this review? This action cannot be undone.',
+        confirmLabel: 'Delete',
+        onConfirm: () => Navigator.pop(context, true),
+        onCancel: () => Navigator.pop(context, false),
+      ),
+    );
+  }
+}
+
+// --- Neumorphic Components ---
+
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+  final bool isConcave;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+    this.isConcave = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const baseColor = Color(0xFFE0E5EC);
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: baseColor,
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: isConcave
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    offset: const Offset(4, 4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+                BoxShadow(
+                    color: Colors.white.withOpacity(0.8),
+                    offset: const Offset(-4, -4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(6, 6),
+                    blurRadius: 16),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-6, -6),
+                    blurRadius: 16),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0E5EC),
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      offset: const Offset(2, 2),
+                      blurRadius: 2),
+                  const BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-2, -2),
+                      blurRadius: 2),
+                ]
+              : [
+                  const BoxShadow(
+                      color: Color(0xFFA3B1C6),
+                      offset: Offset(4, 4),
+                      blurRadius: 10),
+                  const BoxShadow(
+                      color: Color(0xFFFFFFFF),
+                      offset: Offset(-4, -4),
+                      blurRadius: 10),
+                ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicIndicatorContainer extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  const _NeumorphicIndicatorContainer({
+    required this.child,
+    required this.isSelected,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E5EC),
+        borderRadius: borderRadius,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(2, 2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+                const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-2, -2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(4, 4),
+                    blurRadius: 10),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-4, -4),
+                    blurRadius: 10),
+              ],
+      ),
+      child: child,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/theme.dart';
+import 'neumorphic_widgets.dart';
 
 class CheckoutProgressBar extends StatelessWidget {
   final int currentStep;
@@ -12,86 +13,76 @@ class CheckoutProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
-      ),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      color: AppTheme.softUiBackground,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          _buildStep(0, 'Address', Icons.location_on_outlined),
-          _buildDivider(0),
-          _buildStep(1, 'Payment', Icons.payment_outlined),
-          _buildDivider(1),
-          _buildStep(2, 'Confirm', Icons.check_circle_outline),
+          // Deep Recessed Track
+          Positioned(
+            left: 40,
+            right: 40,
+            child: NeumorphicContainer(
+              isConcave: true,
+              borderRadius: BorderRadius.circular(10),
+              child: const SizedBox(height: 8, width: double.infinity),
+            ),
+          ),
+
+          // Steps
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStep(0, 'Address', Icons.location_on_rounded),
+              _buildStep(1, 'Payment', Icons.account_balance_wallet_rounded),
+              _buildStep(2, 'Success', Icons.verified_rounded),
+            ],
+          ),
         ],
       ),
     );
   }
 
   Widget _buildStep(int step, String label, IconData icon) {
-    bool isCompleted = step < currentStep;
-    bool isActive = step == currentStep;
-    Color color =
-        isCompleted || isActive ? AppTheme.primaryColor : Colors.grey.shade300;
+    final bool isCompleted = step < currentStep;
+    final bool isActive = step == currentStep;
 
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? AppTheme.primaryColor
-                  : (isCompleted
-                      ? AppTheme.primaryColor.withOpacity(0.1)
-                      : Colors.white),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: color,
-                width: 2,
-              ),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      )
-                    ]
-                  : null,
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NeumorphicContainer(
+          isConcave: !isActive && !isCompleted,
+          shape: BoxShape.circle,
+          padding: const EdgeInsets.all(12),
+          backgroundColor: isActive || isCompleted
+              ? AppTheme.softUiBackground
+              : AppTheme.softUiBackground,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
             child: Icon(
-              isCompleted ? Icons.check : icon,
-              size: 18,
-              color: isActive ? Colors.white : color,
+              isCompleted ? Icons.check_rounded : icon,
+              key: ValueKey('${step}_${isCompleted}'),
+              size: 20,
+              color: isActive || isCompleted
+                  ? AppTheme.primaryColor
+                  : AppTheme.softUiTextColor.withOpacity(0.2),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-              color:
-                  isActive ? AppTheme.textPrimaryColor : Colors.grey.shade500,
-            ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight:
+                isActive || isCompleted ? FontWeight.bold : FontWeight.w500,
+            color: isActive || isCompleted
+                ? AppTheme.softUiTextColor
+                : AppTheme.softUiTextColor.withOpacity(0.3),
+            letterSpacing: 0.5,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider(int step) {
-    bool isCompleted = step < currentStep;
-    return Container(
-      width: 40,
-      height: 2,
-      margin: const EdgeInsets.only(bottom: 24),
-      color: isCompleted ? AppTheme.primaryColor : Colors.grey.shade200,
+        ),
+      ],
     );
   }
 }

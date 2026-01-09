@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
-import '../../widgets/shimmer_loading.dart';
-import '../../widgets/empty_state.dart';
 import 'order_detail_screen.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -41,14 +41,51 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const kBackgroundColor = Color(0xFFE0E5EC);
+    const kTextColor = Color(0xFF4A5568);
     final dateFormat = DateFormat('MMM dd, yyyy');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order History'),
+      backgroundColor: kBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(90),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+            child: _NeumorphicContainer(
+              borderRadius: BorderRadius.circular(20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  _NeumorphicButton(
+                    onTap: () => Navigator.of(context).pop(),
+                    padding: const EdgeInsets.all(10),
+                    shape: BoxShape.circle,
+                    child: const Icon(Icons.arrow_back,
+                        color: kTextColor, size: 20),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Order History',
+                        style: TextStyle(
+                          color: kTextColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 44),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
+        color: AppTheme.primaryColor,
+        backgroundColor: kBackgroundColor,
         onRefresh: () async {
           await Provider.of<OrderProvider>(context, listen: false)
               .fetchOrders(refresh: true);
@@ -56,25 +93,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         child: Consumer2<OrderProvider, SettingsProvider>(
           builder: (context, orderProvider, settings, child) {
             if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-              return const ListShimmer();
+              return _buildShimmerLoading();
             }
 
             if (orderProvider.orders.isEmpty) {
-              return EmptyState(
-                icon: Icons.receipt_long_outlined,
-                title: 'No orders yet',
-                message:
-                    'When you place an order, it will appear here. Start exploring our luxury collection!',
-                actionLabel: 'Start Shopping',
-                onActionPressed: () {
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/home', (route) => false);
-                },
-              );
+              return _buildEmptyState(context);
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
               itemCount: orderProvider.orders.length,
               itemBuilder: (context, index) {
                 final order = orderProvider.orders[index];
@@ -86,56 +113,65 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     ? firstItem!.watch!.images.first
                     : null;
 
-                return _MinimalistOrderCard(
-                  orderId: order.id,
-                  orderDate: dateFormat.format(order.createdAt),
-                  status: order.status,
-                  statusDisplay: order.statusDisplay,
-                  thumbnailUrl: thumbnailUrl,
-                  itemCount: order.orderItems?.length ?? 0,
-                  totalAmount: settings.formatPrice(order.totalAmount),
-                  isExpanded: isExpanded,
-                  isDark: isDark,
-                  onTap: () => _toggleExpanded(order.id),
-                  onViewDetails: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            OrderDetailScreen(orderId: order.id),
-                      ),
-                    );
-                  },
-                  onBuyAgain: () async {
-                    final cartProvider =
-                        Provider.of<CartProvider>(context, listen: false);
-                    final orderProv =
-                        Provider.of<OrderProvider>(context, listen: false);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: _NeumorphicOrderCard(
+                    orderId: order.id,
+                    orderDate: dateFormat.format(order.createdAt),
+                    status: order.status,
+                    statusDisplay: order.statusDisplay,
+                    thumbnailUrl: thumbnailUrl,
+                    itemCount: order.orderItems?.length ?? 0,
+                    totalAmount: settings.formatPrice(order.totalAmount),
+                    isExpanded: isExpanded,
+                    onTap: () => _toggleExpanded(order.id),
+                    onViewDetails: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              OrderDetailScreen(orderId: order.id),
+                        ),
+                      );
+                    },
+                    onBuyAgain: () async {
+                      final cartProvider =
+                          Provider.of<CartProvider>(context, listen: false);
+                      final orderProv =
+                          Provider.of<OrderProvider>(context, listen: false);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Adding items to cart...'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Adding items to cart...'),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15)),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
 
-                    if (order.orderItems == null) {
-                      await orderProv.fetchOrderById(order.id);
-                    }
-
-                    final fullOrder = orderProv.selectedOrder;
-                    if (fullOrder != null && fullOrder.orderItems != null) {
-                      final success =
-                          await cartProvider.reorder(fullOrder.orderItems!);
-                      if (success && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Items added to cart successfully!'),
-                            backgroundColor: AppTheme.successColor,
-                          ),
-                        );
+                      if (order.orderItems == null) {
+                        await orderProv.fetchOrderById(order.id);
                       }
-                    }
-                  },
+
+                      final fullOrder = orderProv.selectedOrder;
+                      if (fullOrder != null && fullOrder.orderItems != null) {
+                        final success =
+                            await cartProvider.reorder(fullOrder.orderItems!);
+                        if (success && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                  'Items added to cart successfully!'),
+                              backgroundColor: AppTheme.successColor,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
                 );
               },
             );
@@ -144,9 +180,86 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       ),
     );
   }
+
+  Widget _buildEmptyState(BuildContext context) {
+    const kTextColor = Color(0xFF4A5568);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _NeumorphicContainer(
+              shape: BoxShape.circle,
+              padding: const EdgeInsets.all(50),
+              isConcave: true,
+              child: Icon(
+                Icons.receipt_long_outlined,
+                size: 80,
+                color: kTextColor.withOpacity(0.15),
+              ),
+            ),
+            const SizedBox(height: 40),
+            const Text(
+              'No orders yet',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: kTextColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'When you place an order, it will appear here. Start exploring our luxury collection!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: kTextColor.withOpacity(0.6),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 48),
+            _NeumorphicButton(
+              onTap: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/home', (route) => false);
+              },
+              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+              borderRadius: BorderRadius.circular(20),
+              child: const Text(
+                'Start Shopping',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: 5,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Container(
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _MinimalistOrderCard extends StatelessWidget {
+class _NeumorphicOrderCard extends StatelessWidget {
   final String orderId;
   final String orderDate;
   final String status;
@@ -155,12 +268,11 @@ class _MinimalistOrderCard extends StatelessWidget {
   final int itemCount;
   final String totalAmount;
   final bool isExpanded;
-  final bool isDark;
   final VoidCallback onTap;
   final VoidCallback onViewDetails;
   final VoidCallback onBuyAgain;
 
-  const _MinimalistOrderCard({
+  const _NeumorphicOrderCard({
     required this.orderId,
     required this.orderDate,
     required this.status,
@@ -169,7 +281,6 @@ class _MinimalistOrderCard extends StatelessWidget {
     required this.itemCount,
     required this.totalAmount,
     required this.isExpanded,
-    required this.isDark,
     required this.onTap,
     required this.onViewDetails,
     required this.onBuyAgain,
@@ -214,231 +325,192 @@ class _MinimalistOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const kTextColor = Color(0xFF4A5568);
     final statusColor = _getStatusColor();
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Column(
-            children: [
-              // Main Card Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Thumbnail
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white10 : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      clipBehavior: Clip.antiAlias,
+    return _NeumorphicContainer(
+      borderRadius: BorderRadius.circular(25),
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          // Main Body
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(25),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Thumbnail in Concave Square
+                  _NeumorphicContainer(
+                    isConcave: true,
+                    borderRadius: BorderRadius.circular(15),
+                    padding: const EdgeInsets.all(8),
+                    child: SizedBox(
+                      width: 50,
+                      height: 50,
                       child: thumbnailUrl != null
                           ? CachedNetworkImage(
                               imageUrl: thumbnailUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Center(
-                                child: Icon(
-                                  Icons.watch_outlined,
-                                  color: Colors.grey.shade400,
-                                  size: 24,
-                                ),
-                              ),
-                              errorWidget: (context, url, error) => Center(
-                                child: Icon(
-                                  Icons.watch_outlined,
-                                  color: Colors.grey.shade400,
-                                  size: 24,
-                                ),
-                              ),
+                              fit: BoxFit.contain,
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.watch, color: Colors.grey),
                             )
-                          : Center(
-                              child: Icon(
-                                Icons.watch_outlined,
-                                color: Colors.grey.shade400,
-                                size: 24,
-                              ),
-                            ),
+                          : const Icon(Icons.watch, color: Colors.grey),
                     ),
-                    const SizedBox(width: 14),
+                  ),
+                  const SizedBox(width: 16),
 
-                    // Order Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            orderDate,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
+                  // Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          orderDate,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kTextColor,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$itemCount item${itemCount != 1 ? 's' : ''} • $totalAmount',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? Colors.white60
-                                  : Colors.grey.shade600,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$itemCount item${itemCount != 1 ? 's' : ''} • $totalAmount',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: kTextColor.withOpacity(0.6),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
 
-                    // Status Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getStatusIcon(),
-                            size: 14,
+                  // Status Pill
+                  _NeumorphicIndicatorContainer(
+                    isSelected: true,
+                    borderRadius: BorderRadius.circular(12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_getStatusIcon(), size: 14, color: statusColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          statusDisplay,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                             color: statusColor,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            statusDisplay,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(width: 8),
 
-                    const SizedBox(width: 8),
-
-                    // Expand Arrow
-                    AnimatedRotation(
-                      turns: isExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: isDark ? Colors.white38 : Colors.grey.shade400,
-                      ),
+                  // Expand Arrow
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: kTextColor.withOpacity(0.3),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-
-              // Expanded Content - Order Timeline
-              AnimatedCrossFade(
-                firstChild: const SizedBox.shrink(),
-                secondChild: _buildExpandedContent(context),
-                crossFadeState: isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 250),
-              ),
-            ],
+            ),
           ),
-        ),
+
+          // Expanded Section
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildExpandedContent(context),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildExpandedContent(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.white10 : Colors.grey.shade200,
-          ),
-        ),
-      ),
+    const kTextColor = Color(0xFF4A5568);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         children: [
-          // Order Timeline
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: _OrderTimeline(
-              currentStatus: status,
-              isDark: isDark,
+          // Divider Line (Concave)
+          Container(
+            height: 2,
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0E5EC),
+              borderRadius: BorderRadius.circular(1),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(1, 1),
+                    blurRadius: 1),
+                const BoxShadow(
+                    color: Colors.white, offset: Offset(-1, -1), blurRadius: 1),
+              ],
             ),
           ),
 
-          // Action Buttons
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onViewDetails,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          isDark ? Colors.white70 : Colors.grey.shade700,
-                      side: BorderSide(
-                        color: isDark ? Colors.white24 : Colors.grey.shade300,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text(
+          // Order Timeline
+          _OrderTimeline(currentStatus: status),
+          const SizedBox(height: 24),
+
+          // Actions
+          Row(
+            children: [
+              Expanded(
+                child: _NeumorphicButton(
+                  onTap: onViewDetails,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Center(
+                    child: Text(
                       'View Details',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onBuyAgain,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: kTextColor,
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text(
-                      'Buy Again',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _NeumorphicButton(
+                  onTap: onBuyAgain,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.reorder_rounded,
+                          size: 16, color: AppTheme.primaryColor),
+                      SizedBox(width: 8),
+                      Text(
+                        'Buy Again',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -448,12 +520,8 @@ class _MinimalistOrderCard extends StatelessWidget {
 
 class _OrderTimeline extends StatelessWidget {
   final String currentStatus;
-  final bool isDark;
 
-  const _OrderTimeline({
-    required this.currentStatus,
-    required this.isDark,
-  });
+  const _OrderTimeline({required this.currentStatus});
 
   @override
   Widget build(BuildContext context) {
@@ -480,7 +548,6 @@ class _OrderTimeline extends StatelessWidget {
       ),
     ];
 
-    // Handle cancelled status
     if (currentStatus == 'CANCELLED') {
       return _buildCancelledTimeline();
     }
@@ -496,75 +563,79 @@ class _OrderTimeline extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Timeline Dot and Line
+            // Timeline Rail
             SizedBox(
-              width: 24,
+              width: 30,
               child: Column(
                 children: [
-                  // Dot
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isCompleted
-                          ? _getStepColor(step.status)
-                          : (isDark ? Colors.white24 : Colors.grey.shade300),
-                      border: isCompleted
-                          ? null
-                          : Border.all(
-                              color: isDark
-                                  ? Colors.white12
-                                  : Colors.grey.shade200,
-                              width: 2,
-                            ),
+                  // Dot (Convex if completed, Concave if pending)
+                  _NeumorphicContainer(
+                    isConcave: !isCompleted,
+                    shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(4),
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isCompleted
+                            ? _getStepColor(step.status)
+                            : Colors.transparent,
+                      ),
+                      child: isCompleted
+                          ? const Icon(Icons.check,
+                              size: 8, color: Colors.white)
+                          : null,
                     ),
-                    child: isCompleted
-                        ? const Icon(
-                            Icons.check,
-                            size: 8,
-                            color: Colors.white,
-                          )
-                        : null,
                   ),
 
-                  // Line
+                  // Line (Concave path)
                   if (!isLast)
                     Container(
-                      width: 2,
-                      height: 28,
-                      color: index < currentIndex
-                          ? _getStepColor(steps[index + 1].status)
-                          : (isDark ? Colors.white12 : Colors.grey.shade200),
+                      width: 4,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E5EC),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              offset: const Offset(1, 0),
+                              blurRadius: 1),
+                          const BoxShadow(
+                              color: Colors.white,
+                              offset: Offset(-1, 0),
+                              blurRadius: 1),
+                        ],
+                      ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
 
-            // Step Content
+            // Step Label
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                padding: EdgeInsets.only(top: 2, bottom: isLast ? 0 : 20),
                 child: Row(
                   children: [
                     Icon(
                       step.icon,
-                      size: 16,
+                      size: 18,
                       color: isCompleted
                           ? _getStepColor(step.status)
-                          : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          : const Color(0xFF4A5568).withOpacity(0.3),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Text(
                       step.label,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight:
-                            isCompleted ? FontWeight.w600 : FontWeight.w400,
+                            isCompleted ? FontWeight.bold : FontWeight.normal,
                         color: isCompleted
-                            ? (isDark ? Colors.white : Colors.black87)
-                            : (isDark ? Colors.white38 : Colors.grey.shade500),
+                            ? const Color(0xFF4A5568)
+                            : const Color(0xFF4A5568).withOpacity(0.3),
                       ),
                     ),
                   ],
@@ -578,26 +649,21 @@ class _OrderTimeline extends StatelessWidget {
   }
 
   Widget _buildCancelledTimeline() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.errorColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return _NeumorphicIndicatorContainer(
+      isSelected: true,
+      borderRadius: BorderRadius.circular(15),
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(
-            Icons.cancel_outlined,
-            color: AppTheme.errorColor,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
+          const Icon(Icons.cancel_outlined,
+              color: AppTheme.errorColor, size: 24),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               'This order has been cancelled',
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
                 color: AppTheme.errorColor,
               ),
             ),
@@ -649,4 +715,179 @@ class _TimelineStep {
     required this.label,
     required this.icon,
   });
+}
+
+// --- Neumorphic Helpers ---
+
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+  final bool isConcave;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+    this.isConcave = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const baseColor = Color(0xFFE0E5EC);
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: baseColor,
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: isConcave
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    offset: const Offset(4, 4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+                BoxShadow(
+                    color: Colors.white.withOpacity(0.8),
+                    offset: const Offset(-4, -4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(6, 6),
+                    blurRadius: 16),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-6, -6),
+                    blurRadius: 16),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0E5EC),
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      offset: const Offset(2, 2),
+                      blurRadius: 2,
+                      spreadRadius: 1),
+                  const BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-2, -2),
+                      blurRadius: 2,
+                      spreadRadius: 1),
+                ]
+              : [
+                  const BoxShadow(
+                      color: Color(0xFFA3B1C6),
+                      offset: Offset(4, 4),
+                      blurRadius: 10),
+                  const BoxShadow(
+                      color: Color(0xFFFFFFFF),
+                      offset: Offset(-4, -4),
+                      blurRadius: 10),
+                ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicIndicatorContainer extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicIndicatorContainer({
+    required this.child,
+    required this.isSelected,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E5EC),
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(2, 2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+                const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-2, -2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(4, 4),
+                    blurRadius: 10),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-4, -4),
+                    blurRadius: 10),
+              ],
+      ),
+      child: child,
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/support_service.dart';
 import '../../models/support_ticket.dart';
 import '../../utils/theme.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class ContactScreen extends StatefulWidget {
   final SupportTicket? ticket;
@@ -60,15 +61,25 @@ class _ContactScreenState extends State<ContactScreen> {
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.ticket != null ? 'Ticket updated successfully' : 'Support ticket created successfully'),
+          content: Text(widget.ticket != null
+              ? 'Ticket updated successfully'
+              : 'Support ticket created successfully'),
           backgroundColor: AppTheme.successColor,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to create ticket: $e'),
+          content: Text('Failed to request support: $e'),
           backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     } finally {
@@ -83,22 +94,27 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.ticket != null ? 'Edit Ticket' : 'Contact Support'),
+      backgroundColor: AppTheme.softUiBackground,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(90),
+        child: NeumorphicTopBar(
+          title: widget.ticket != null ? 'Edit Ticket' : 'Contact Support',
+          onBackTap: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
+              _buildInputField(
+                label: 'Subject',
                 controller: _subjectController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject',
-                  prefixIcon: Icon(Icons.subject),
-                ),
+                icon: Icons.subject_rounded,
+                hintText: 'What can we help you with?',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a subject';
@@ -106,15 +122,13 @@ class _ContactScreenState extends State<ContactScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+              const SizedBox(height: 24),
+              _buildInputField(
+                label: 'Message',
                 controller: _messageController,
-                decoration: const InputDecoration(
-                  labelText: 'Message',
-                  prefixIcon: Icon(Icons.message),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 5,
+                icon: Icons.message_rounded,
+                hintText: 'Describe your issue in detail...',
+                maxLines: 6,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a message';
@@ -122,16 +136,31 @@ class _ContactScreenState extends State<ContactScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitTicket,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Submit'),
+              const SizedBox(height: 40),
+              NeumorphicButton(
+                onTap: _isSubmitting ? () {} : _submitTicket,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                borderRadius: BorderRadius.circular(15),
+                isPressed: _isSubmitting,
+                child: Center(
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppTheme.primaryColor,
+                          ),
+                        )
+                      : const Text(
+                          'Submit Ticket',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                ),
               ),
             ],
           ),
@@ -139,5 +168,54 @@ class _ContactScreenState extends State<ContactScreen> {
       ),
     );
   }
-}
 
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required String hintText,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.softUiTextColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            style: const TextStyle(color: AppTheme.softUiTextColor),
+            cursorColor: AppTheme.primaryColor,
+            decoration: InputDecoration(
+              prefixIcon: Icon(
+                icon,
+                color: AppTheme.softUiTextColor.withOpacity(0.5),
+              ),
+              hintText: hintText,
+              hintStyle: TextStyle(
+                color: AppTheme.softUiTextColor.withOpacity(0.3),
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorStyle: const TextStyle(height: 0, color: Colors.transparent),
+            ),
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification.dart';
 import '../../utils/theme.dart';
-import '../../widgets/empty_state.dart';
+
 import '../product/product_detail_screen.dart';
 import '../orders/order_detail_screen.dart';
 
@@ -24,76 +24,95 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final provider =
           Provider.of<NotificationProvider>(context, listen: false);
       provider.fetchNotifications();
-      // Optionally mark all as read when screen is opened to clear the badge
       provider.markAllAsRead();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    const kBackgroundColor = Color(0xFFE0E5EC);
+    const kTextColor = Color(0xFF4A5568);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          Consumer<UserProvider>(
-            builder: (context, userProvider, child) {
-              final user = userProvider.user;
-              if (user == null) return const SizedBox.shrink();
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    user.notificationsEnabled ? 'ON' : 'OFF',
-                    style: const TextStyle(
-                      fontSize: 14,
+      backgroundColor: kBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            color: kBackgroundColor,
+            child: Row(
+              children: [
+                _NeumorphicButton(
+                  onTap: () => Navigator.pop(context),
+                  padding: const EdgeInsets.all(10),
+                  shape: BoxShape.circle,
+                  child: const Icon(Icons.arrow_back, color: kTextColor),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Text(
+                    'Notifications',
+                    style: TextStyle(
+                      color: kTextColor,
                       fontWeight: FontWeight.bold,
-                      // Ensure text is visible depending on AppBar color, usually white for app bars
-                      color: Colors.black,
+                      fontSize: 22,
                     ),
                   ),
-                  Switch(
-                    value: user.notificationsEnabled,
-                    onChanged: userProvider.isLoading
-                        ? null
-                        : (value) async {
-                            final success =
-                                await userProvider.toggleNotifications(value);
-                            if (success && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(value
-                                      ? 'Notifications Enabled'
-                                      : 'Notifications Disabled'),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          },
-                    activeColor: Colors.white,
-                    activeTrackColor: Colors.green,
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.red,
-                  ),
-                ],
-              );
-            },
-          ),
-          // Keep the 'Mark all' button if needed, or remove if space is tight.
-          // User asked for "yaha pr" (here) toggle.
-          Consumer<NotificationProvider>(
-            builder: (context, provider, child) {
-              if (provider.notifications.isEmpty)
-                return const SizedBox.shrink();
-              return TextButton(
-                onPressed: () => provider.markAllAsRead(),
-                child: const Text(
-                  'Mark all',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
                 ),
-              );
-            },
+                Consumer<NotificationProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.notifications.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return _NeumorphicButton(
+                      onTap: () => provider.markAllAsRead(),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      borderRadius: BorderRadius.circular(10),
+                      child: const Text(
+                        'Mark all',
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 12),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, child) {
+                    final user = userProvider.user;
+                    if (user == null) return const SizedBox.shrink();
+                    return _NeumorphicToggle(
+                      value: user.notificationsEnabled,
+                      onChanged: userProvider.isLoading
+                          ? (v) {}
+                          : (value) async {
+                              final success =
+                                  await userProvider.toggleNotifications(value);
+                              if (success && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(value
+                                        ? 'Notifications Enabled'
+                                        : 'Notifications Disabled'),
+                                    duration: const Duration(seconds: 1),
+                                    behavior: SnackBarBehavior.floating,
+                                    backgroundColor: kTextColor,
+                                  ),
+                                );
+                              }
+                            },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
       body: Consumer2<NotificationProvider, UserProvider>(
         builder: (context, provider, userProvider, child) {
@@ -103,7 +122,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           if (userProvider.user?.notificationsEnabled == false &&
               provider.notifications.isEmpty) {
-            return EmptyState(
+            return _buildEmptyState(
+              context,
               icon: Icons.notifications_off_outlined,
               title: 'Notifications Disabled',
               message:
@@ -114,7 +134,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
 
           if (provider.notifications.isEmpty) {
-            return EmptyState(
+            return _buildEmptyState(
+              context,
               icon: Icons.notifications_none_outlined,
               title: 'No Notifications',
               message:
@@ -126,17 +147,84 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           return RefreshIndicator(
             onRefresh: () => provider.fetchNotifications(),
-            child: ListView.separated(
+            color: AppTheme.primaryColor,
+            backgroundColor: kBackgroundColor,
+            child: ListView.builder(
               itemCount: provider.notifications.length,
-              padding: const EdgeInsets.all(16),
-              separatorBuilder: (context, index) => const Divider(height: 1),
+              padding: const EdgeInsets.all(24),
               itemBuilder: (context, index) {
                 final notification = provider.notifications[index];
-                return _NotificationItem(notification: notification);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: _NotificationItem(notification: notification),
+                );
               },
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onActionPressed,
+  }) {
+    const kTextColor = Color(0xFF4A5568);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _NeumorphicContainer(
+              shape: BoxShape.circle,
+              padding: const EdgeInsets.all(40),
+              isConcave: true,
+              child: Icon(
+                icon,
+                size: 64,
+                color: kTextColor.withOpacity(0.3),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: kTextColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: kTextColor.withOpacity(0.6),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            _NeumorphicButton(
+              onTap: onActionPressed,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              borderRadius: BorderRadius.circular(15),
+              child: Text(
+                actionLabel,
+                style: const TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -151,109 +239,132 @@ class _NotificationItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<NotificationProvider>(context, listen: false);
     final isRead = notification.isRead;
+    const kTextColor = Color(0xFF4A5568);
 
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Colors.red,
+        padding: const EdgeInsets.only(right: 24),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE5E5), // Soft red background
+          borderRadius: BorderRadius.circular(20),
+        ),
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: _NeumorphicContainer(
+          shape: BoxShape.circle,
+          padding: const EdgeInsets.all(12),
+          isConcave: true,
+          color: const Color(0xFFFFE5E5),
+          child: const Icon(Icons.delete, color: Colors.redAccent, size: 24),
+        ),
       ),
       onDismissed: (direction) => provider.deleteNotification(notification.id),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: _getIconColor(notification.type).withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            _getIcon(notification.type),
-            color: _getIconColor(notification.type),
-            size: 24,
-          ),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                notification.title,
-                style: TextStyle(
-                  fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            if (!isRead)
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(left: 8),
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              notification.body,
-              style: TextStyle(
-                color: isRead ? Colors.grey : Colors.black87,
-                fontSize: 13,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              DateFormat('MMM dd, yyyy • hh:mm a')
-                  .format(notification.timestamp),
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
-          onPressed: () async {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Delete Notification'),
-                content: const Text(
-                    'Are you sure you want to delete this notification?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            );
-            if (confirm == true) {
-              provider.deleteNotification(notification.id);
-            }
-          },
-        ),
+      child: GestureDetector(
         onTap: () {
           if (!isRead) provider.markAsRead(notification.id);
           _handleNotificationTap(context, notification);
         },
+        child: _NeumorphicIndicatorContainer(
+          isSelected: !isRead,
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NeumorphicContainer(
+                shape: BoxShape.circle,
+                padding: const EdgeInsets.all(12),
+                isConcave: true,
+                child: Icon(
+                  _getIcon(notification.type),
+                  color: _getIconColor(notification.type),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            notification.title,
+                            style: TextStyle(
+                              fontWeight:
+                                  isRead ? FontWeight.w600 : FontWeight.bold,
+                              fontSize: 16,
+                              color: kTextColor,
+                            ),
+                          ),
+                        ),
+                        if (!isRead)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.blueAccent,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blueAccent,
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      notification.body,
+                      style: TextStyle(
+                        color: kTextColor.withOpacity(0.7),
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      DateFormat('MMM dd • hh:mm a')
+                          .format(notification.timestamp),
+                      style: TextStyle(
+                        color: kTextColor.withOpacity(0.4),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _NeumorphicButton(
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => _NeumorphicAlertDialog(
+                      title: 'Delete Notification',
+                      content:
+                          'Are you sure you want to delete this notification?',
+                    ),
+                  );
+                  if (confirm == true) {
+                    provider.deleteNotification(notification.id);
+                  }
+                },
+                padding: const EdgeInsets.all(8),
+                shape: BoxShape.circle,
+                child: Icon(Icons.close,
+                    color: kTextColor.withOpacity(0.5), size: 16),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -280,7 +391,7 @@ class _NotificationItem extends StatelessWidget {
       case NotificationType.discount:
         return Colors.orange;
       default:
-        return AppTheme.primaryColor;
+        return const Color(0xFF6366F1);
     }
   }
 
@@ -290,141 +401,555 @@ class _NotificationItem extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.4,
-        minChildSize: 0.2,
-        maxChildSize: 0.75,
-        builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
+      builder: (context) =>
+          _NotificationDetailSheet(notification: notification),
+    );
+  }
+}
+
+class _NotificationDetailSheet extends StatelessWidget {
+  final NotificationModel notification;
+
+  const _NotificationDetailSheet({required this.notification});
+
+  @override
+  Widget build(BuildContext context) {
+    const kBackgroundColor = Color(0xFFE0E5EC);
+    const kTextColor = Color(0xFF4A5568);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.8,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: kBackgroundColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(40),
+            topRight: Radius.circular(40),
           ),
-          padding: const EdgeInsets.all(20),
-          child: ListView(
-            controller: controller,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+        child: ListView(
+          controller: controller,
+          children: [
+            Center(
+              child: Container(
+                width: 50,
+                height: 5,
+                margin: const EdgeInsets.only(bottom: 32),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: const Offset(1, 1),
+                      blurRadius: 1,
+                    ),
+                    const BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-1, -1),
+                      blurRadius: 1,
+                    ),
+                  ],
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _getIconColor(notification.type).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _getIcon(notification.type),
-                      color: _getIconColor(notification.type),
-                      size: 28,
-                    ),
+            ),
+            Row(
+              children: [
+                _NeumorphicContainer(
+                  shape: BoxShape.circle,
+                  padding: const EdgeInsets.all(16),
+                  isConcave: true,
+                  child: Icon(
+                    _getIcon(notification.type),
+                    color: _getIconColor(notification.type),
+                    size: 32,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          notification.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: kTextColor,
                         ),
-                        Text(
-                          DateFormat('MMM dd, yyyy • hh:mm a')
-                              .format(notification.timestamp),
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
-                          ),
+                      ),
+                      Text(
+                        DateFormat('MMM dd, yyyy • hh:mm a')
+                            .format(notification.timestamp),
+                        style: TextStyle(
+                          color: kTextColor.withOpacity(0.5),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const Divider(height: 32),
-              Text(
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            _NeumorphicContainer(
+              padding: const EdgeInsets.all(20),
+              borderRadius: BorderRadius.circular(20),
+              isConcave: true,
+              child: Text(
                 notification.body,
                 style: const TextStyle(
                   fontSize: 16,
-                  height: 1.5,
-                  color: Colors.black87,
+                  height: 1.6,
+                  color: kTextColor,
                 ),
               ),
-              const SizedBox(height: 24),
-              if (notification.data?['watchId'] != null)
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetailScreen(
-                          watchId: notification.data!['watchId'],
-                        ),
+            ),
+            const SizedBox(height: 40),
+            if (notification.data?['watchId'] != null)
+              _NeumorphicButton(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailScreen(
+                        watchId: notification.data!['watchId'],
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  );
+                },
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                borderRadius: BorderRadius.circular(15),
+                child: const Center(
+                  child: Text(
+                    'View Product',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
                   ),
-                  child: const Text('View Product'),
                 ),
-              if (notification.type == NotificationType.orderUpdate &&
-                  notification.data?['orderId'] != null)
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OrderDetailScreen(
-                          orderId: notification.data!['orderId'],
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text('View Order Details'),
-                ),
-              if (notification.type == NotificationType.promotion ||
-                  notification.type == NotificationType.discount)
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Could navigate to search or special offer page
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text('Shop Now'),
-                ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
               ),
-            ],
-          ),
+            if (notification.type == NotificationType.orderUpdate &&
+                notification.data?['orderId'] != null)
+              _NeumorphicButton(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderDetailScreen(
+                        orderId: notification.data!['orderId'],
+                      ),
+                    ),
+                  );
+                },
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                borderRadius: BorderRadius.circular(15),
+                child: const Center(
+                  child: Text(
+                    'View Order Details',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
+              ),
+            if (notification.type == NotificationType.promotion ||
+                notification.type == NotificationType.discount)
+              _NeumorphicButton(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                borderRadius: BorderRadius.circular(15),
+                child: const Center(
+                  child: Text(
+                    'Shop Now',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            _NeumorphicButton(
+              onTap: () => Navigator.pop(context),
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              borderRadius: BorderRadius.circular(15),
+              child: const Center(
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: kTextColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderUpdate:
+        return Icons.local_shipping_outlined;
+      case NotificationType.promotion:
+        return Icons.campaign_outlined;
+      case NotificationType.discount:
+        return Icons.sell_outlined;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+
+  Color _getIconColor(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderUpdate:
+        return Colors.blue;
+      case NotificationType.promotion:
+        return Colors.purple;
+      case NotificationType.discount:
+        return Colors.orange;
+      default:
+        return const Color(0xFF6366F1);
+    }
+  }
+}
+
+// --- Neumorphic Components ---
+
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+  final bool isConcave;
+  final Color? color;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+    this.isConcave = false,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = color ?? const Color(0xFFE0E5EC);
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: baseColor,
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: isConcave
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: const Offset(4, 4),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.7),
+                  offset: const Offset(-4, -4),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ]
+            : [
+                const BoxShadow(
+                  color: Color(0xFFA3B1C6),
+                  offset: Offset(6, 6),
+                  blurRadius: 16,
+                ),
+                const BoxShadow(
+                  color: Color(0xFFFFFFFF),
+                  offset: Offset(-6, -6),
+                  blurRadius: 16,
+                ),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicIndicatorContainer extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry borderRadius;
+
+  const _NeumorphicIndicatorContainer({
+    required this.child,
+    required this.isSelected,
+    required this.padding,
+    required this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E5EC),
+        borderRadius: borderRadius,
+        boxShadow: isSelected
+            ? [
+                const BoxShadow(
+                  color: Color(0xFFA3B1C6),
+                  offset: Offset(8, 8),
+                  blurRadius: 20,
+                ),
+                const BoxShadow(
+                  color: Color(0xFFFFFFFF),
+                  offset: Offset(-8, -8),
+                  blurRadius: 20,
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 1,
+                  spreadRadius: 1,
+                ),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0E5EC),
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    offset: const Offset(2, 2),
+                    blurRadius: 2,
+                  ),
+                  const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-2, -2),
+                    blurRadius: 2,
+                  ),
+                ]
+              : [
+                  const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(4, 4),
+                    blurRadius: 10,
+                  ),
+                  const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-4, -4),
+                    blurRadius: 10,
+                  ),
+                ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _NeumorphicToggle({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 50,
+        height: 28,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0E5EC),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              offset: const Offset(2, 2),
+              blurRadius: 2,
+              spreadRadius: 1,
+            ),
+            const BoxShadow(
+              color: Colors.white,
+              offset: Offset(-2, -2),
+              blurRadius: 2,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeIn,
+              left: value ? 22 : 2,
+              top: 2,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color:
+                      value ? AppTheme.primaryColor : const Color(0xFFE0E5EC),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    const BoxShadow(
+                      color: Color(0xFFA3B1C6),
+                      offset: Offset(2, 2),
+                      blurRadius: 4,
+                    ),
+                    const BoxShadow(
+                      color: Color(0xFFFFFFFF),
+                      offset: Offset(-2, -2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: value
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : const Icon(Icons.close, size: 14, color: Colors.grey),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NeumorphicAlertDialog extends StatelessWidget {
+  final String title;
+  final String content;
+
+  const _NeumorphicAlertDialog({required this.title, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    const kTextColor = Color(0xFF4A5568);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: _NeumorphicContainer(
+        padding: const EdgeInsets.all(24),
+        borderRadius: BorderRadius.circular(30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: kTextColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              content,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: kTextColor.withOpacity(0.8),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _NeumorphicButton(
+                    onTap: () => Navigator.pop(context, false),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    borderRadius: BorderRadius.circular(15),
+                    child: const Center(
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, color: kTextColor),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _NeumorphicButton(
+                    onTap: () => Navigator.pop(context, true),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    borderRadius: BorderRadius.circular(15),
+                    child: const Center(
+                      child: Text(
+                        'Delete',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.redAccent),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -58,6 +59,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(authProvider.errorMessage ?? 'Registration failed'),
           backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     }
@@ -66,105 +71,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Account'),
+      backgroundColor: AppTheme.softUiBackground,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(90),
+        child: NeumorphicTopBar(
+          title: 'Create Account',
+          onBackTap: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(32),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Register',
+                  'Join WatchHub',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
+                    color: AppTheme.softUiTextColor,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Create a new account',
+                const SizedBox(height: 12),
+                Text(
+                  'Discover luxury timepieces today',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppTheme.textSecondaryColor,
+                    color: AppTheme.softUiTextColor.withOpacity(0.6),
                   ),
                 ),
-                const SizedBox(height: 32),
-                TextFormField(
+                const SizedBox(height: 48),
+                _buildInputField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person),
-                  ),
+                  label: 'Full Name',
+                  icon: Icons.person_outline_rounded,
                   validator: (value) => Validators.required(value, 'Full Name'),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: 24),
+                _buildInputField(
                   controller: _emailController,
+                  label: 'Email',
+                  icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                  ),
                   validator: Validators.email,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: 24),
+                _buildInputField(
                   controller: _phoneController,
+                  label: 'Phone (Optional)',
+                  icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (Optional)',
-                    prefixIcon: Icon(Icons.phone),
-                  ),
                   validator: Validators.phone,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: 24),
+                _buildInputField(
                   controller: _passwordController,
+                  label: 'Password',
+                  icon: Icons.lock_outline_rounded,
+                  isPassword: true,
                   obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
+                  onTogglePassword: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
                   validator: Validators.password,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: 24),
+                _buildInputField(
                   controller: _confirmPasswordController,
+                  label: 'Confirm Password',
+                  icon: Icons.lock_clock_outlined,
+                  isPassword: true,
                   obscureText: _obscureConfirmPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
-                      },
-                    ),
-                  ),
+                  onTogglePassword: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
                   validator: (value) {
                     if (value != _passwordController.text) {
                       return 'Passwords do not match';
@@ -172,30 +162,107 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 40),
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
-                    return ElevatedButton(
-                      onPressed: authProvider.isLoading ? null : _register,
-                      child: authProvider.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                    return NeumorphicButton(
+                      onTap: authProvider.isLoading ? () {} : _register,
+                      isPressed: authProvider.isLoading,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      borderRadius: BorderRadius.circular(15),
+                      child: Center(
+                        child: authProvider.isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Register',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            )
-                          : const Text('Register'),
+                      ),
+                      backgroundColor: AppTheme.primaryColor,
                     );
                   },
                 ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onTogglePassword,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.softUiTextColor,
+            ),
+          ),
+        ),
+        NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            validator: validator,
+            style: const TextStyle(
+                color: AppTheme.softUiTextColor, fontWeight: FontWeight.w600),
+            cursorColor: AppTheme.primaryColor,
+            decoration: InputDecoration(
+              prefixIcon:
+                  Icon(icon, color: AppTheme.softUiTextColor.withOpacity(0.4)),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        obscureText
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        color: AppTheme.softUiTextColor.withOpacity(0.4),
+                      ),
+                      onPressed: onTogglePassword,
+                    )
+                  : null,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorStyle: const TextStyle(height: 0, color: Colors.transparent),
+              hintText: 'Enter your $label',
+              hintStyle:
+                  TextStyle(color: AppTheme.softUiTextColor.withOpacity(0.2)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

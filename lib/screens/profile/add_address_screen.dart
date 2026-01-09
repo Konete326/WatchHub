@@ -4,6 +4,7 @@ import '../../providers/user_provider.dart';
 import '../../models/address.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class AddAddressScreen extends StatefulWidget {
   final Address? address;
@@ -22,6 +23,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   final _phoneController = TextEditingController();
   final _countryController = TextEditingController(text: 'USA');
   bool _isDefault = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -51,6 +53,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   Future<void> _saveAddress() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isLoading = true);
+
     final address = Address(
       id: widget.address?.id ?? '',
       userId: widget.address?.userId ?? '',
@@ -75,113 +79,281 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     }
 
     if (!mounted) return;
+    setState(() => _isLoading = false);
 
     if (success) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.address != null
-              ? 'Address updated successfully'
-              : 'Address added successfully'),
-          backgroundColor: AppTheme.successColor,
-        ),
-      );
+      _showSnackBar(widget.address != null
+          ? 'Address updated successfully'
+          : 'Address added successfully');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(userProvider.errorMessage ?? 'Failed to add address'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      _showSnackBar(userProvider.errorMessage ?? 'Failed to save address',
+          isError: true);
     }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppTheme.errorColor : AppTheme.successColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.address != null ? 'Edit Address' : 'Add Address'),
+      backgroundColor: AppTheme.softUiBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            NeumorphicTopBar(
+              title: widget.address != null ? 'Edit Address' : 'New Address',
+              onBackTap: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildInputField(
+                        controller: _addressLineController,
+                        label: 'Street Address',
+                        icon: Icons.map_outlined,
+                        validator: (value) =>
+                            Validators.required(value, 'Address'),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildInputField(
+                              controller: _cityController,
+                              label: 'City',
+                              icon: Icons.location_city_outlined,
+                              validator: (value) =>
+                                  Validators.required(value, 'City'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildInputField(
+                              controller: _stateController,
+                              label: 'State',
+                              icon: Icons.explore_outlined,
+                              validator: (value) =>
+                                  Validators.required(value, 'State'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildInputField(
+                              controller: _zipController,
+                              label: 'ZIP Code',
+                              icon: Icons.pin_drop_outlined,
+                              keyboardType: TextInputType.number,
+                              validator: (value) =>
+                                  Validators.required(value, 'ZIP'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildInputField(
+                              controller: _countryController,
+                              label: 'Country',
+                              icon: Icons.public_outlined,
+                              validator: (value) =>
+                                  Validators.required(value, 'Country'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildInputField(
+                        controller: _phoneController,
+                        label: 'Phone Number',
+                        icon: Icons.phone_android_outlined,
+                        keyboardType: TextInputType.phone,
+                        validator: Validators.phone,
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Neumorphic Toggle for Default Address
+                      _buildDefaultToggle(),
+
+                      const SizedBox(height: 48),
+
+                      NeumorphicButton(
+                        onTap: _isLoading ? () {} : _saveAddress,
+                        isPressed: _isLoading,
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        borderRadius: BorderRadius.circular(20),
+                        backgroundColor: AppTheme.primaryColor,
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Save Address',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _addressLineController,
-                decoration: const InputDecoration(
-                  labelText: 'Address Line',
-                  prefixIcon: Icon(Icons.home),
-                ),
-                maxLines: 2,
-                validator: (value) => Validators.required(value, 'Address'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  prefixIcon: Icon(Icons.location_city),
-                ),
-                validator: (value) => Validators.required(value, 'City'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _stateController,
-                decoration: const InputDecoration(
-                  labelText: 'State',
-                  prefixIcon: Icon(Icons.map),
-                ),
-                validator: (value) => Validators.required(value, 'State'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _zipController,
-                decoration: const InputDecoration(
-                  labelText: 'ZIP Code',
-                  prefixIcon: Icon(Icons.pin_drop),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) => Validators.required(value, 'ZIP Code'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: Validators.phone,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _countryController,
-                decoration: const InputDecoration(
-                  labelText: 'Country',
-                  prefixIcon: Icon(Icons.flag),
-                ),
-                validator: (value) => Validators.required(value, 'Country'),
-              ),
-              const SizedBox(height: 16),
-              CheckboxListTile(
-                title: const Text('Set as default address'),
-                value: _isDefault,
-                onChanged: (value) {
-                  setState(() {
-                    _isDefault = value ?? false;
-                  });
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _saveAddress,
-                child: const Text('Save Address'),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.softUiTextColor,
+            ),
           ),
+        ),
+        NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            style: const TextStyle(
+              color: AppTheme.softUiTextColor,
+              fontWeight: FontWeight.w600,
+            ),
+            cursorColor: AppTheme.primaryColor,
+            decoration: InputDecoration(
+              icon: Icon(icon,
+                  color: AppTheme.softUiTextColor.withOpacity(0.7), size: 20),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              hintText: 'Enter $label',
+              hintStyle: TextStyle(
+                  color: AppTheme.softUiTextColor.withOpacity(0.4),
+                  fontSize: 14),
+              errorStyle: const TextStyle(height: 0, color: Colors.transparent),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDefaultToggle() {
+    return GestureDetector(
+      onTap: () => setState(() => _isDefault = !_isDefault),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            // Custom Neumorphic Toggle
+            SizedBox(
+              width: 60,
+              height: 32,
+              child: NeumorphicContainer(
+                isConcave: true,
+                borderRadius: BorderRadius.circular(20),
+                padding: const EdgeInsets.all(4),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  alignment:
+                      _isDefault ? Alignment.centerRight : Alignment.centerLeft,
+                  child: NeumorphicContainer(
+                    borderRadius: BorderRadius.circular(12),
+                    backgroundColor: _isDefault
+                        ? AppTheme.primaryColor
+                        : AppTheme.softUiShadowDark.withOpacity(0.5),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      alignment: Alignment.center,
+                      child: _isDefault
+                          ? const Icon(Icons.check,
+                              size: 14, color: Colors.white)
+                          : Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.white54,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Set as Default',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.softUiTextColor,
+                  ),
+                ),
+                Text(
+                  'Use this for all future orders',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.softUiTextColor.withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

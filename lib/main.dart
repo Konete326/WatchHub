@@ -21,6 +21,7 @@ import 'utils/constants.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_navigation.dart';
+import 'screens/cart/cart_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/manage_products_screen.dart';
 import 'screens/admin/manage_orders_screen.dart';
@@ -94,6 +95,7 @@ class MyApp extends StatelessWidget {
             routes: {
               '/login': (context) => const LoginScreen(),
               '/home': (context) => const MainNavigation(),
+              '/cart': (context) => const CartScreen(showBackButton: true),
               '/admin': (context) => const AdminDashboardScreen(),
               '/admin/products': (context) => const ManageProductsScreen(),
               '/admin/orders': (context) => const ManageOrdersScreen(),

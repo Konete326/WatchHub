@@ -20,6 +20,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // Neumorphic Design Constants
+  static const Color kBackgroundColor = Color(0xFFE0E5EC);
+  static const Color kShadowDark = Color(0xFFA3B1C6);
+  static const Color kShadowLight = Color(0xFFFFFFFF);
+  static const Color kTextColor = Color(0xFF4A5568);
+
   @override
   void initState() {
     super.initState();
@@ -65,10 +71,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        // Only show back button if we actually have a route to pop
-        automaticallyImplyLeading: Navigator.canPop(context),
+      backgroundColor: kBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            color: kBackgroundColor,
+            child: Row(
+              children: [
+                if (Navigator.canPop(context))
+                  _NeumorphicButton(
+                    onTap: () => Navigator.pop(context),
+                    padding: const EdgeInsets.all(10),
+                    shape: BoxShape.circle,
+                    child: const Icon(Icons.arrow_back, color: kTextColor),
+                  )
+                else
+                  const SizedBox(width: 44),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Profile',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: kTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                    ),
+                  ),
+                ),
+                // Spacer to balance the centered title
+                const SizedBox(width: 44),
+              ],
+            ),
+          ),
+        ),
       ),
       body: Consumer2<UserProvider, AuthProvider>(
         builder: (context, userProvider, authProvider, child) {
@@ -83,11 +121,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Could not load profile'),
+                  const Text('Could not load profile',
+                      style: TextStyle(color: kTextColor)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => userProvider.fetchProfile(),
-                    child: const Text('Retry'),
+                  _NeumorphicButton(
+                    onTap: () => userProvider.fetchProfile(),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Text('Retry',
+                        style: TextStyle(color: AppTheme.primaryColor)),
                   ),
                 ],
               ),
@@ -95,33 +138,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             children: [
               // Profile Header
-              Container(
-                padding: const EdgeInsets.all(24),
-                color: AppTheme.primaryColor,
+              Center(
                 child: Column(
                   children: [
                     Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: user.profileImage != null
-                              ? CachedNetworkImageProvider(
-                                  user.profileImage!,
-                                )
-                              : null,
-                          child: user.profileImage == null
-                              ? Text(
-                                  user.name.substring(0, 1).toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                )
-                              : null,
+                        _NeumorphicContainer(
+                          padding: const EdgeInsets.all(4),
+                          shape: BoxShape.circle,
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundColor: kBackgroundColor,
+                            backgroundImage: user.profileImage != null
+                                ? CachedNetworkImageProvider(user.profileImage!)
+                                : null,
+                            child: user.profileImage == null
+                                ? Text(
+                                    user.name.substring(0, 1).toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                      color: kTextColor,
+                                    ),
+                                  )
+                                : null,
+                          ),
                         ),
                         if (userProvider.isLoading)
                           Positioned.fill(
@@ -139,60 +183,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: GestureDetector(
+                          child: _NeumorphicButton(
                             onTap: _pickAndUploadImage,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppTheme.secondaryColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 20,
-                                color: AppTheme.primaryColor,
-                              ),
+                            padding: const EdgeInsets.all(8),
+                            shape: BoxShape.circle,
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: AppTheme.primaryColor,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Text(
                       user.name,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: kTextColor,
                       ),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       user.email,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: kTextColor.withOpacity(0.7),
                       ),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     if (authProvider.isAdmin)
-                      Container(
-                        margin: const EdgeInsets.only(top: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'ADMIN',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: _NeumorphicContainer(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
+                          borderRadius: BorderRadius.circular(20),
+                          child: const Text(
+                            'ADMIN',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                       ),
@@ -200,68 +236,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Menu Items
-              const SizedBox(height: 8),
-              _buildMenuItem(
-                icon: Icons.person,
-                title: 'Edit Profile',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EditProfileScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuItem(
-                icon: Icons.location_on,
-                title: 'My Addresses',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AddressesScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuItem(
-                icon: Icons.receipt_long,
-                title: 'Order History',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const OrderHistoryScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildMenuItem(
-                icon: Icons.notifications,
-                title: 'Notifications',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationsScreen(),
-                    ),
-                  );
-                },
-              ),
+              const SizedBox(height: 40),
 
-              _buildMenuItem(
-                icon: Icons.support_agent,
-                title: 'Customer Support',
-                onTap: () {
-                  Navigator.of(context).push(
+              // Menu Items
+              _NeumorphicMenuItem(
+                icon: Icons.edit,
+                title: 'Edit Profile',
+                onTap: () => Navigator.push(
+                    context,
                     MaterialPageRoute(
-                      builder: (context) => const SupportScreen(),
-                    ),
-                  );
-                },
+                        builder: (_) => const EditProfileScreen())),
               ),
-              _buildMenuItem(
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
+                icon: Icons.location_on_outlined,
+                title: 'Addresses',
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AddressesScreen())),
+              ),
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
+                icon: Icons.shopping_bag_outlined,
+                title: 'Orders',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const OrderHistoryScreen())),
+              ),
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
+                icon: Icons.notifications_none,
+                title: 'Notifications',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen())),
+              ),
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
+                icon: Icons.headset_mic_outlined,
+                title: 'Support',
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SupportScreen())),
+              ),
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
                 icon: Icons.logout,
                 title: 'Logout',
-                iconColor: AppTheme.errorColor,
+                textColor: const Color(0xFFEF5350), // Soft Red
+                iconColor: const Color(0xFFEF5350),
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
@@ -270,64 +293,174 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       content: const Text('Are you sure you want to logout?'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel')),
                         TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Logout'),
-                        ),
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Logout')),
                       ],
                     ),
                   );
-
                   if (confirm == true && mounted) {
                     await Provider.of<AuthProvider>(context, listen: false)
                         .logout();
-                    if (mounted) {
-                      Navigator.of(context).pushReplacementNamed('/login');
-                    }
+                    if (mounted)
+                      Navigator.pushReplacementNamed(context, '/login');
                   }
                 },
               ),
+              const SizedBox(height: 30),
             ],
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    Color? iconColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.shade200),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? AppTheme.primaryColor),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+  final bool pressed;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+    this.pressed = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: _ProfileScreenState.kBackgroundColor,
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: pressed
+            // Concave/Pressed effect (Inner shadow simulation or effectively flat/inset look)
+            ? [] // No outer shadow creates a "flat" or "pressed" interaction relative to elevated
+            : [
+                const BoxShadow(
+                  color: _ProfileScreenState.kShadowDark,
+                  offset: Offset(6, 6),
+                  blurRadius: 16,
                 ),
+                const BoxShadow(
+                  color: _ProfileScreenState.kShadowLight,
+                  offset: Offset(-6, -6),
+                  blurRadius: 16,
+                ),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: _ProfileScreenState.kBackgroundColor,
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [] // Pressed state (flat)
+              : [
+                  const BoxShadow(
+                    color: _ProfileScreenState.kShadowDark,
+                    offset: Offset(6, 6),
+                    blurRadius: 16,
+                  ),
+                  const BoxShadow(
+                    color: _ProfileScreenState.kShadowLight,
+                    offset: Offset(-6, -6),
+                    blurRadius: 16,
+                  ),
+                ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final Color? iconColor;
+  final Color? textColor;
+
+  const _NeumorphicMenuItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.iconColor,
+    this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _NeumorphicButton(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      borderRadius: BorderRadius.circular(20),
+      child: Row(
+        children: [
+          Icon(icon,
+              color:
+                  iconColor ?? _ProfileScreenState.kTextColor.withOpacity(0.8),
+              size: 22),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: textColor ?? _ProfileScreenState.kTextColor,
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppTheme.textSecondaryColor),
-          ],
-        ),
+          ),
+          Icon(Icons.chevron_right,
+              color: _ProfileScreenState.kTextColor.withOpacity(0.4), size: 20),
+        ],
       ),
     );
   }
