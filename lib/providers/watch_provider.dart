@@ -227,6 +227,8 @@ class WatchProvider with ChangeNotifier {
   Future<void> fetchWatchById(String id) async {
     _isLoading = true;
     _errorMessage = null;
+    _selectedWatch = null;
+    _relatedWatches = [];
     notifyListeners();
 
     try {

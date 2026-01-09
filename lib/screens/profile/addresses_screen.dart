@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
-import '../../widgets/shimmer_loading.dart';
 import 'add_address_screen.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class AddressesScreen extends StatefulWidget {
   const AddressesScreen({super.key});
@@ -24,134 +25,133 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Addresses'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AddAddressScreen(),
-                ),
-              );
-            },
-          ),
-        ],
+      backgroundColor: AppTheme.softUiBackground,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(90),
+        child: NeumorphicTopBar(
+          title: 'My Addresses',
+          onBackTap: () => Navigator.of(context).pop(),
+          actions: [
+            NeumorphicButton(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddAddressScreen(),
+                  ),
+                );
+              },
+              padding: const EdgeInsets.all(10),
+              shape: BoxShape.circle,
+              child: const Icon(Icons.add_rounded,
+                  color: AppTheme.primaryColor, size: 20),
+            ),
+          ],
+        ),
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           if (userProvider.isLoading) {
-            return const ListShimmer();
+            return _buildShimmerLoading();
           }
 
           if (userProvider.addresses.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.location_off, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('No addresses added'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const AddAddressScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text('Add Address'),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState(context);
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             itemCount: userProvider.addresses.length,
+            physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
               final address = userProvider.addresses[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: ListTile(
-                  leading: Icon(
-                    address.isDefault ? Icons.home : Icons.location_on,
-                    color: AppTheme.primaryColor,
-                  ),
-                  title: Text(
-                    address.fullAddress,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: address.isDefault
-                      ? const Text(
-                          'Default Address',
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )
-                      : null,
-                  trailing: PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Text('Edit'),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: NeumorphicContainer(
+                  borderRadius: BorderRadius.circular(25),
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Location Icon in Concave Well
+                      NeumorphicContainer(
+                        isConcave: true,
+                        shape: BoxShape.circle,
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(
+                          address.isDefault
+                              ? Icons.home_rounded
+                              : Icons.location_on_rounded,
+                          color: AppTheme.primaryColor,
+                          size: 24,
+                        ),
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete'),
-                      ),
-                    ],
-                    onSelected: (value) async {
-                      if (value == 'edit') {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AddAddressScreen(address: address),
-                          ),
-                        );
-                      } else if (value == 'delete') {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Address'),
-                            content: const Text(
-                                'Are you sure you want to delete this address?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
+                      const SizedBox(width: 20),
+
+                      // Address Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              address.fullAddress,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.softUiTextColor,
+                                height: 1.4,
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Delete'),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (address.isDefault) ...[
+                              const SizedBox(height: 12),
+                              NeumorphicPill(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                child: const Text(
+                                  'Default Address',
+                                  style: TextStyle(
+                                    color: AppTheme.primaryColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                        );
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
 
-                        if (confirm == true && mounted) {
-                          final success =
-                              await userProvider.deleteAddress(address.id);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success
-                                    ? 'Address deleted'
-                                    : 'Failed to delete address'),
-                                backgroundColor: success
-                                    ? AppTheme.successColor
-                                    : AppTheme.errorColor,
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
+                      // Actions
+                      Column(
+                        children: [
+                          NeumorphicButton(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AddAddressScreen(address: address),
+                                ),
+                              );
+                            },
+                            padding: const EdgeInsets.all(8),
+                            shape: BoxShape.circle,
+                            child: const Icon(Icons.edit_outlined,
+                                color: AppTheme.softUiTextColor, size: 18),
+                          ),
+                          const SizedBox(height: 12),
+                          NeumorphicButton(
+                            onTap: () => _showDeleteDialog(
+                                context, userProvider, address.id),
+                            padding: const EdgeInsets.all(8),
+                            shape: BoxShape.circle,
+                            child: const Icon(Icons.delete_outline_rounded,
+                                color: AppTheme.errorColor, size: 18),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -160,5 +160,117 @@ class _AddressesScreenState extends State<AddressesScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            NeumorphicContainer(
+              shape: BoxShape.circle,
+              padding: const EdgeInsets.all(50),
+              isConcave: true,
+              child: Icon(
+                Icons.location_off_rounded,
+                size: 80,
+                color: AppTheme.softUiTextColor.withOpacity(0.15),
+              ),
+            ),
+            const SizedBox(height: 40),
+            const Text(
+              'No addresses added',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.softUiTextColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Please add an address to proceed with checkout and receive your orders.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppTheme.softUiTextColor.withOpacity(0.6),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 48),
+            NeumorphicButton(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddAddressScreen(),
+                  ),
+                );
+              },
+              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+              borderRadius: BorderRadius.circular(20),
+              child: const Text(
+                'Add Address',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: 4,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteDialog(
+      BuildContext context, UserProvider userProvider, String addressId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.1),
+      builder: (context) => NeumorphicDialog(
+        title: 'Delete Address',
+        content: 'Are you sure you want to remove this address?',
+        confirmLabel: 'Delete',
+        onConfirm: () => Navigator.pop(context, true),
+        onCancel: () => Navigator.pop(context, false),
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final success = await userProvider.deleteAddress(addressId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(success ? 'Address deleted' : 'Failed to delete address'),
+            backgroundColor:
+                success ? AppTheme.successColor : AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
   }
 }

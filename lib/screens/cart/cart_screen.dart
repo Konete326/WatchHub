@@ -5,11 +5,8 @@ import 'package:shimmer/shimmer.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
-import '../../utils/image_utils.dart';
-import '../../widgets/shimmer_loading.dart';
 import '../../widgets/empty_state.dart';
 import '../checkout/address_selection_screen.dart';
-import '../../widgets/glass_app_bar.dart';
 
 class CartScreen extends StatefulWidget {
   final bool showBackButton;
@@ -20,6 +17,14 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  // Neumorphic Design Constants
+  static const Color kBackgroundColor = Color(0xFFE0E5EC);
+  static const Color kShadowDark = Color(0xFFA3B1C6);
+  static const Color kShadowLight = Color(0xFFFFFFFF);
+  static const Color kTextColor = Color(0xFF4A5568);
+  static const Color kPrimaryColor = AppTheme.primaryColor;
+  static const Color kRedColor = Color(0xFFEF5350);
+
   @override
   void initState() {
     super.initState();
@@ -31,64 +36,83 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      appBar: GlassAppBar(
-        title: 'My Cart',
-        showBackButton: widget.showBackButton,
-        actions: [
-          Consumer<CartProvider>(
-            builder: (context, cartProvider, child) {
-              if (cartProvider.isEmpty) return const SizedBox();
-              return IconButton(
-                icon: const Icon(Icons.delete_sweep_outlined,
-                    color: AppTheme.errorColor),
-                tooltip: 'Clear Cart',
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Clear Cart'),
-                      content: const Text(
-                          'Are you sure you want to remove all items?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.errorColor),
-                          child: const Text('Clear All'),
-                        ),
-                      ],
+      backgroundColor: kBackgroundColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            color: kBackgroundColor,
+            child: Row(
+              children: [
+                if (widget.showBackButton && Navigator.canPop(context))
+                  _NeumorphicButton(
+                    onTap: () => Navigator.pop(context),
+                    padding: const EdgeInsets.all(10),
+                    shape: BoxShape.circle,
+                    child: const Icon(Icons.arrow_back, color: kTextColor),
+                  )
+                else
+                  const SizedBox(width: 44),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'My Cart',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: kTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
                     ),
-                  );
-
-                  if (confirm == true && mounted) {
-                    final success =
-                        await Provider.of<CartProvider>(context, listen: false)
-                            .clearCart();
-                    if (success && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Cart cleared'),
-                          backgroundColor: AppTheme.successColor,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  }
-                },
-              );
-            },
+                  ),
+                ),
+                Consumer<CartProvider>(
+                  builder: (context, cartProvider, child) {
+                    if (cartProvider.isEmpty) return const SizedBox(width: 44);
+                    return _NeumorphicButton(
+                      onTap: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Clear Cart'),
+                            content: const Text(
+                                'Are you sure you want to remove all items?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: TextButton.styleFrom(
+                                    foregroundColor: kRedColor),
+                                child: const Text('Clear All'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && mounted) {
+                          await Provider.of<CartProvider>(context,
+                                  listen: false)
+                              .clearCart();
+                        }
+                      },
+                      padding: const EdgeInsets.all(10),
+                      shape: BoxShape.circle,
+                      child: const Icon(Icons.delete_outline,
+                          color: kRedColor, size: 22),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
       body: Consumer2<CartProvider, SettingsProvider>(
         builder: (context, cartProvider, settings, child) {
           if (cartProvider.isLoading && cartProvider.isEmpty) {
-            return const ListShimmer();
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (cartProvider.isEmpty) {
@@ -96,7 +120,7 @@ class _CartScreenState extends State<CartScreen> {
               icon: Icons.shopping_basket_outlined,
               title: 'Your cart is empty',
               message:
-                  'Looks like you haven\'t added any luxury timepieces to your cart yet. Discover our collection today.',
+                  'Looks like you haven\'t added any luxury timepieces to your cart yet.',
               actionLabel: 'Start Shopping',
               onActionPressed: () {
                 Navigator.of(context)
@@ -107,320 +131,235 @@ class _CartScreenState extends State<CartScreen> {
 
           return Column(
             children: [
-              // Select All Row
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Transform.scale(
-                      scale: 1.1,
-                      child: Checkbox(
+              // Select All Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                child: _NeumorphicContainer(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  borderRadius: BorderRadius.circular(15),
+                  child: Row(
+                    children: [
+                      _NeumorphicCheckbox(
                         value: cartProvider.isAllSelected,
-                        activeColor: AppTheme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4)),
-                        onChanged: (value) =>
-                            cartProvider.selectAll(value ?? false),
+                        onChanged: (value) => cartProvider.selectAll(value),
                       ),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'Select All Items',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          color: Color(0xFF1A1A1A),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Select All Items',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: kTextColor,
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
+                      Text(
                         '${cartProvider.selectedItemIds.length} Selected',
                         style: const TextStyle(
-                          color: AppTheme.primaryColor,
+                          color: kPrimaryColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
               // Cart Items List
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                   itemCount: cartProvider.cartItems.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 20),
                   itemBuilder: (context, index) {
                     final item = cartProvider.cartItems[index];
                     final watch = item.watch!;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Dismissible(
-                        key: Key(item.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          margin: const EdgeInsets.only(left: 60),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFFF5252),
-                                Color(0xFFD32F2F),
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 28),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.delete_rounded,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Delete',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                    return Dismissible(
+                      key: Key(item.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        margin: const EdgeInsets.only(left: 40),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE), // Light red
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 28),
+                        child: _NeumorphicContainer(
+                          shape: BoxShape.circle,
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: kRedColor,
+                            size: 24,
                           ),
                         ),
-                        onDismissed: (direction) async {
-                          await cartProvider.removeItem(item.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('${watch.name} removed from cart'),
-                                backgroundColor: AppTheme.errorColor,
-                                behavior: SnackBarBehavior.floating,
-                                action: SnackBarAction(
-                                  label: 'Undo',
-                                  textColor: Colors.white,
-                                  onPressed: () {
-                                    // Add logic to undo removal if backend supports it efficiently
-                                    // or just re-add (complex without quantity logic here)
-                                  },
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 4),
-                                spreadRadius: 0,
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                                spreadRadius: 0,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              // Checkbox
-                              Checkbox(
-                                value: cartProvider.selectedItemIds
-                                    .contains(item.id),
-                                activeColor: AppTheme.primaryColor,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4)),
-                                onChanged: (value) =>
-                                    cartProvider.toggleSelection(item.id),
-                              ),
+                      ),
+                      onDismissed: (direction) async {
+                        await cartProvider.removeItem(item.id);
+                      },
+                      child: _NeumorphicContainer(
+                        padding: const EdgeInsets.all(12),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // 1. Selection Checkbox
+                            _NeumorphicCheckbox(
+                              value: cartProvider.selectedItemIds
+                                  .contains(item.id),
+                              size: 22,
+                              onChanged: (value) =>
+                                  cartProvider.toggleSelection(item.id),
+                            ),
 
-                              // Product Image
-                              Stack(
+                            const SizedBox(width: 12),
+
+                            // 2. Product Image
+                            // Using a white container to ensure image pops against the grey background
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(13),
+                                child: watch.images.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        imageUrl: watch.images.first,
+                                        fit: BoxFit
+                                            .contain, // Contain ensures standard watch faces show fully
+                                        placeholder: (context, url) =>
+                                            Shimmer.fromColors(
+                                          baseColor: Colors.grey[300]!,
+                                          highlightColor: Colors.grey[100]!,
+                                          child: Container(color: Colors.white),
+                                        ),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.broken_image,
+                                                color: Colors.grey),
+                                      )
+                                    : const Icon(Icons.watch,
+                                        color: Colors.grey, size: 40),
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Container(
-                                      width: 90,
-                                      height: 90,
-                                      color: const Color(0xFFF7F8FA),
-                                      child: watch.images.isNotEmpty
-                                          ? CachedNetworkImage(
-                                              imageUrl: watch.images.first,
-                                              fit: BoxFit.contain,
-                                              placeholder: (context, url) =>
-                                                  Shimmer.fromColors(
-                                                baseColor: Colors.grey[200]!,
-                                                highlightColor:
-                                                    Colors.grey[100]!,
-                                                child: Container(
-                                                    color: Colors.white),
-                                              ),
-                                            )
-                                          : const Icon(Icons.watch,
-                                              color: Colors.grey),
+                                  Text(
+                                    watch.brand?.name.toUpperCase() ?? 'BRAND',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: kTextColor.withOpacity(0.5),
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
-                                  if (item.productColor != null)
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(10),
-                                          ),
-                                        ),
-                                        child: Container(
-                                          width: 12,
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color: AppTheme
-                                                .primaryColor, // You might want real color hex here
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                        ),
-                                      ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    watch.name,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: kTextColor,
+                                      height: 1.1,
                                     ),
-                                ],
-                              ),
-                              const SizedBox(width: 16),
-
-                              // Details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (watch.brand != null)
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
                                       Text(
-                                        watch.brand!.name.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 10,
+                                        settings
+                                            .formatPrice(watch.currentPrice),
+                                        style: const TextStyle(
+                                          fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.grey[500],
-                                          letterSpacing: 0.5,
+                                          color: kPrimaryColor,
                                         ),
                                       ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      watch.name,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          settings
-                                              .formatPrice(watch.currentPrice),
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.primaryColor,
-                                          ),
-                                        ),
-                                        // Quantity Controls
-                                        Container(
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF7F8FA),
+
+                                      // Quantity Controls
+                                      Row(
+                                        children: [
+                                          _NeumorphicButton(
+                                            onTap: () async {
+                                              if (item.quantity > 1) {
+                                                await cartProvider
+                                                    .updateQuantity(item.id,
+                                                        item.quantity - 1);
+                                              }
+                                            },
+                                            padding: const EdgeInsets.all(6),
                                             borderRadius:
                                                 BorderRadius.circular(8),
+                                            child: const Icon(Icons.remove,
+                                                size: 14, color: kTextColor),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              _buildQtyBtn(Icons.remove,
-                                                  () async {
-                                                if (item.quantity > 1) {
-                                                  await cartProvider
-                                                      .updateQuantity(item.id,
-                                                          item.quantity - 1);
-                                                }
-                                              }, isEnabled: item.quantity > 1),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8),
-                                                child: Text(
-                                                  '${item.quantity}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
+                                          Container(
+                                            margin: const EdgeInsets.symmetric(
+                                                horizontal: 8),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white70,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              '${item.quantity}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: kTextColor,
                                               ),
-                                              _buildQtyBtn(Icons.add, () async {
-                                                if (item.quantity <
-                                                    watch.stock) {
-                                                  await cartProvider
-                                                      .updateQuantity(item.id,
-                                                          item.quantity + 1);
-                                                } else {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                        content: Text(
-                                                            'Maximum stock reached')),
-                                                  );
-                                                }
-                                              },
-                                                  isEnabled: item.quantity <
-                                                      watch.stock),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                          _NeumorphicButton(
+                                            onTap: () async {
+                                              if (item.quantity < watch.stock) {
+                                                await cartProvider
+                                                    .updateQuantity(item.id,
+                                                        item.quantity + 1);
+                                              }
+                                            },
+                                            padding: const EdgeInsets.all(6),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child: const Icon(Icons.add,
+                                                size: 14, color: kTextColor),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -428,34 +367,22 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
 
-              // Enhanced Sticky Bottom Summary Card
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 30,
-                      offset: const Offset(0, -8),
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
+              // Bottom Checkout Slab
+              _NeumorphicContainer(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 30),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(30)),
                 child: SafeArea(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Subtotal Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Subtotal',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: kTextColor,
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                             ),
@@ -464,23 +391,21 @@ class _CartScreenState extends State<CartScreen> {
                             settings.formatPrice(cartProvider.totalAmount),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: Color(0xFF1A1A1A),
+                              fontSize: 16,
+                              color: kTextColor,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-
-                      // Shipping Row
-                      if (cartProvider.deliveryCharge > 0)
+                      if (cartProvider.deliveryCharge > 0) ...[
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'Shipping',
                               style: TextStyle(
-                                color: Colors.grey[700],
+                                color: kTextColor,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -489,55 +414,17 @@ class _CartScreenState extends State<CartScreen> {
                               settings.formatPrice(cartProvider.deliveryCharge),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: Color(0xFF1A1A1A),
+                                fontSize: 16,
+                                color: kTextColor,
                               ),
                             ),
                           ],
                         ),
-                      if (cartProvider.deliveryCharge == 0 &&
-                          cartProvider.totalAmount > 0)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Shipping',
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppTheme.successColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                'FREE',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppTheme.successColor,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: Colors.grey.shade200,
-                        ),
+                      ],
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Divider(height: 1, color: Colors.grey),
                       ),
-
-                      // Grand Total
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -546,83 +433,57 @@ class _CartScreenState extends State<CartScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: kTextColor,
                             ),
                           ),
                           Text(
                             settings.formatPrice(cartProvider.totalAmount +
                                 cartProvider.deliveryCharge),
                             style: const TextStyle(
-                              fontSize: 26,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
-                              letterSpacing: -0.5,
+                              color: kPrimaryColor,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-
-                      // Checkout Button - Solid Blue
-                      Container(
+                      const SizedBox(height: 24),
+                      SizedBox(
                         width: double.infinity,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: cartProvider.hasSelection
-                              ? const Color(0xFF1565C0) // Solid Blue
-                              : Colors.grey.shade400,
+                        child: _NeumorphicButton(
+                          onTap: cartProvider.hasSelection
+                              ? () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const AddressSelectionScreen()),
+                                  );
+                                }
+                              : () {},
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: cartProvider.hasSelection
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF1565C0)
-                                        .withOpacity(0.35),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
-                                    spreadRadius: 0,
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: cartProvider.hasSelection
-                                ? () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AddressSelectionScreen()),
-                                    );
-                                  }
-                                : null,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    cartProvider.hasSelection
-                                        ? Icons.shopping_bag_rounded
-                                        : Icons.shopping_cart_outlined,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    cartProvider.hasSelection
-                                        ? 'Proceed to Checkout (${cartProvider.selectedItemIds.length})'
-                                        : 'Select Items to Checkout',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ],
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.credit_card,
+                                color: cartProvider.hasSelection
+                                    ? kPrimaryColor
+                                    : Colors.grey,
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Checkout',
+                                style: TextStyle(
+                                  color: cartProvider.hasSelection
+                                      ? kPrimaryColor
+                                      : Colors.grey,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -636,19 +497,159 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+}
 
-  Widget _buildQtyBtn(IconData icon, VoidCallback onTap,
-      {bool isEnabled = true}) {
-    return InkWell(
-      onTap: isEnabled ? onTap : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Icon(
-          icon,
-          size: 16,
-          color: isEnabled ? AppTheme.primaryColor : Colors.grey[400],
+// --- Neumorphic Components ---
+
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: _CartScreenState.kBackgroundColor,
+        shape: shape,
+        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
+        boxShadow: const [
+          BoxShadow(
+            color: _CartScreenState.kShadowDark,
+            offset: Offset(4, 4),
+            blurRadius: 10,
+          ),
+          BoxShadow(
+            color: _CartScreenState.kShadowLight,
+            offset: Offset(-4, -4),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: _CartScreenState.kBackgroundColor,
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [] // Flat/Pressed
+              : [
+                  const BoxShadow(
+                    color: _CartScreenState.kShadowDark,
+                    offset: Offset(4, 4),
+                    blurRadius: 10,
+                  ),
+                  const BoxShadow(
+                    color: _CartScreenState.kShadowLight,
+                    offset: Offset(-4, -4),
+                    blurRadius: 10,
+                  ),
+                ],
         ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final double size;
+
+  const _NeumorphicCheckbox({
+    required this.value,
+    required this.onChanged,
+    this.size = 24,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: _CartScreenState.kBackgroundColor,
+          borderRadius: BorderRadius.circular(size * 0.25),
+          boxShadow: value
+              ? [] // Pressed/Active state (Flat or slightly concave)
+              : [
+                  // Elevated
+                  const BoxShadow(
+                    color: _CartScreenState.kShadowDark,
+                    offset: Offset(2, 2),
+                    blurRadius: 4,
+                  ),
+                  const BoxShadow(
+                    color: _CartScreenState.kShadowLight,
+                    offset: Offset(-2, -2),
+                    blurRadius: 4,
+                  ),
+                ],
+          gradient: value
+              ? LinearGradient(
+                  colors: [
+                    _CartScreenState.kPrimaryColor.withOpacity(0.8),
+                    _CartScreenState.kPrimaryColor,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          border:
+              value ? null : Border.all(color: Colors.grey.withOpacity(0.1)),
+        ),
+        child: value
+            ? Icon(Icons.check, size: size * 0.7, color: Colors.white)
+            : null,
       ),
     );
   }

@@ -13,6 +13,12 @@ class AppTheme {
   static const Color textPrimaryColor = Color(0xFF212121);
   static const Color textSecondaryColor = Color(0xFF757575);
 
+  // Soft UI Palette
+  static const Color softUiBackground = Color(0xFFE0E5EC);
+  static const Color softUiTextColor = Color(0xFF4A5568);
+  static const Color softUiShadowDark = Color(0xFFA3B1C6);
+  static const Color softUiShadowLight = Color(0xFFFFFFFF);
+
   // Theme
   static ThemeData get lightTheme {
     return ThemeData(

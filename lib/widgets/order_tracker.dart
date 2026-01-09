@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/theme.dart';
+import 'neumorphic_widgets.dart';
 
 class OrderTracker extends StatelessWidget {
   final String currentStatus;
@@ -14,22 +15,21 @@ class OrderTracker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (currentStatus == 'CANCELLED') {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(8),
-        ),
+      return NeumorphicContainer(
+        isConcave: true,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        borderRadius: BorderRadius.circular(15),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cancel, color: Colors.red, size: 16),
-            const SizedBox(width: 8),
-            Text(
+            const Icon(Icons.cancel_rounded,
+                color: AppTheme.errorColor, size: 20),
+            const SizedBox(width: 12),
+            const Text(
               'Order Cancelled',
               style: TextStyle(
-                color: Colors.red.shade700,
-                fontSize: 12,
+                color: AppTheme.errorColor,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -61,7 +61,6 @@ class OrderTracker extends StatelessWidget {
       },
     ];
 
-    // Map PROCESSING to PENDING context for visual tracker
     String effectiveStatus = currentStatus;
     if (effectiveStatus == 'PROCESSING') effectiveStatus = 'PENDING';
 
@@ -69,87 +68,87 @@ class OrderTracker extends StatelessWidget {
     if (currentIndex == -1) currentIndex = 0;
 
     if (isHorizontal) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Column(
-          children: [
-            Row(
-              children: List.generate(steps.length, (index) {
-                final isCompleted = index <= currentIndex;
-                final isLast = index == steps.length - 1;
+      return Column(
+        children: [
+          Row(
+            children: List.generate(steps.length, (index) {
+              final isCompleted = index <= currentIndex;
+              final isLast = index == steps.length - 1;
 
-                return Expanded(
-                  flex: isLast ? 0 : 1,
-                  child: Row(
-                    children: [
-                      // Point
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? AppTheme.primaryColor
-                              : Colors.white,
-                          border: Border.all(
+              return Expanded(
+                flex: isLast ? 0 : 1,
+                child: Row(
+                  children: [
+                    // Dot
+                    NeumorphicContainer(
+                      isConcave: !isCompleted,
+                      shape: BoxShape.circle,
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(
+                        isCompleted
+                            ? Icons.check_rounded
+                            : (steps[index]['icon'] as IconData),
+                        size: 14,
+                        color: isCompleted
+                            ? AppTheme.primaryColor
+                            : AppTheme.softUiTextColor.withOpacity(0.3),
+                      ),
+                    ),
+                    // Line
+                    if (!isLast)
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
                             color: isCompleted
-                                ? AppTheme.primaryColor
-                                : Colors.grey.shade300,
-                            width: 2,
+                                ? AppTheme.primaryColor.withOpacity(0.5)
+                                : AppTheme.softUiShadowDark.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: isCompleted
+                                ? []
+                                : [
+                                    const BoxShadow(
+                                      color: AppTheme.softUiShadowLight,
+                                      offset: Offset(0, 1),
+                                      blurRadius: 1,
+                                    ),
+                                  ],
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isCompleted
-                              ? Icons.check
-                              : (steps[index]['icon'] as IconData),
-                          size: 12,
-                          color:
-                              isCompleted ? Colors.white : Colors.grey.shade400,
                         ),
                       ),
-                      // Line
-                      if (!isLast)
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            color: index < currentIndex
-                                ? AppTheme.primaryColor
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: steps.map((step) {
-                final index = steps.indexOf(step);
-                final isCompleted = index <= currentIndex;
-                final isActive = index == currentIndex;
+                  ],
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: steps.map((step) {
+              final index = steps.indexOf(step);
+              final isCompleted = index <= currentIndex;
+              final isActive = index == currentIndex;
 
-                return Expanded(
-                  child: Text(
-                    step['label'] as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                      color: isCompleted
-                          ? AppTheme.textPrimaryColor
-                          : Colors.grey.shade400,
-                    ),
+              return Expanded(
+                child: Text(
+                  step['label'] as String,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    color: isCompleted
+                        ? AppTheme.softUiTextColor
+                        : AppTheme.softUiTextColor.withOpacity(0.4),
                   ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       );
     } else {
-      // Vertical implementation
+      // Vertical
       return Column(
         children: List.generate(steps.length, (index) {
           final isCompleted = index <= currentIndex;
@@ -161,64 +160,71 @@ class OrderTracker extends StatelessWidget {
               children: [
                 Column(
                   children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color:
-                            isCompleted ? AppTheme.primaryColor : Colors.white,
-                        border: Border.all(
-                          color: isCompleted
-                              ? AppTheme.primaryColor
-                              : Colors.grey.shade300,
-                          width: 2,
-                        ),
-                        shape: BoxShape.circle,
-                      ),
+                    NeumorphicContainer(
+                      isConcave: !isCompleted,
+                      shape: BoxShape.circle,
+                      padding: const EdgeInsets.all(8),
                       child: Icon(
                         isCompleted
-                            ? Icons.check
+                            ? Icons.check_rounded
                             : (steps[index]['icon'] as IconData),
-                        size: 14,
-                        color:
-                            isCompleted ? Colors.white : Colors.grey.shade400,
+                        size: 16,
+                        color: isCompleted
+                            ? AppTheme.primaryColor
+                            : AppTheme.softUiTextColor.withOpacity(0.3),
                       ),
                     ),
                     if (!isLast)
                       Expanded(
                         child: Container(
-                          width: 2,
-                          color: index < currentIndex
-                              ? AppTheme.primaryColor
-                              : Colors.grey.shade300,
+                          width: 4,
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? AppTheme.primaryColor.withOpacity(0.5)
+                                : AppTheme.softUiShadowDark.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: isCompleted
+                                ? []
+                                : [
+                                    const BoxShadow(
+                                      color: AppTheme.softUiShadowLight,
+                                      offset: Offset(1, 0),
+                                      blurRadius: 1,
+                                    ),
+                                  ],
+                          ),
                         ),
                       ),
                   ],
                 ),
                 const SizedBox(width: 16),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0, top: 4),
+                  padding: const EdgeInsets.only(bottom: 32.0, top: 2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         steps[index]['label'] as String,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight:
                               isActive ? FontWeight.bold : FontWeight.w600,
                           color: isCompleted
-                              ? AppTheme.textPrimaryColor
-                              : Colors.grey,
+                              ? AppTheme.softUiTextColor
+                              : AppTheme.softUiTextColor.withOpacity(0.4),
                         ),
                       ),
                       if (isActive)
-                        Text(
-                          'Current Status',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.primaryColor.withOpacity(0.8),
-                            fontWeight: FontWeight.w500,
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            'Current Status',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.primaryColor.withOpacity(0.8),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                     ],

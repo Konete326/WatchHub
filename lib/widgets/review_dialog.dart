@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
@@ -120,6 +121,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 ? 'Review updated successfully'
                 : 'Review submitted successfully'),
             backgroundColor: AppTheme.successColor,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       } else {
@@ -129,6 +131,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
               reviewProvider.errorMessage ?? 'Failed to submit review',
             ),
             backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -138,6 +141,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
         SnackBar(
           content: Text('Error: ${e.toString()}'),
           backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -151,94 +155,108 @@ class _ReviewDialogState extends State<ReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    const kBackgroundColor = Color(0xFFE0E5EC);
+    const kTextColor = Color(0xFF4A5568);
+
     return Dialog(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 800),
-        child: Form(
-          key: _formKey,
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: _NeumorphicContainer(
+        borderRadius: BorderRadius.circular(30),
+        padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.review != null ? 'Edit Review' : 'Write a Review',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.review != null ? 'Edit Review' : 'Write a Review',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: kTextColor,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => Navigator.of(context).pop(false),
-                    ),
-                  ],
-                ),
+                  ),
+                  _NeumorphicButton(
+                    onTap: () => Navigator.of(context).pop(false),
+                    shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(Icons.close, size: 20, color: kTextColor),
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-
-              // Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Rating
-                      const Text(
-                        'Rating',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+              const SizedBox(height: 32),
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Rate your experience',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: kTextColor,
                       ),
-                      const SizedBox(height: 8),
-                      Center(
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: _NeumorphicContainer(
+                        isConcave: true,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        borderRadius: BorderRadius.circular(20),
                         child: RatingBar.builder(
                           initialRating: _rating,
                           minRating: 1,
                           direction: Axis.horizontal,
                           allowHalfRating: false,
                           itemCount: 5,
-                          itemSize: 40,
+                          itemSize: 36,
+                          unratedColor: kTextColor.withOpacity(0.1),
                           itemPadding:
                               const EdgeInsets.symmetric(horizontal: 4),
                           itemBuilder: (context, _) => const Icon(
-                            Icons.star,
+                            Icons.star_rounded,
                             color: Colors.amber,
                           ),
                           onRatingUpdate: (rating) {
+                            HapticFeedback.selectionClick();
                             setState(() {
                               _rating = rating;
                             });
                           },
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Comment
-                      const Text(
-                        'Your Review',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Your Review',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: kTextColor,
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
+                    ),
+                    const SizedBox(height: 12),
+                    _NeumorphicIndicatorContainer(
+                      isSelected: true,
+                      borderRadius: BorderRadius.circular(20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: TextFormField(
                         controller: _commentController,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText:
-                              'Share your experience with this product...',
-                          border: OutlineInputBorder(),
+                        style: const TextStyle(color: kTextColor),
+                        decoration: InputDecoration(
+                          hintText: 'Share your thoughts about the product...',
+                          hintStyle:
+                              TextStyle(color: kTextColor.withOpacity(0.4)),
+                          border: InputBorder.none,
+                          counterText: '',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -250,87 +268,87 @@ class _ReviewDialogState extends State<ReviewDialog> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${_commentController.text.length}/1000 characters',
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${_commentController.text.length}/1000',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: kTextColor.withOpacity(0.5),
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Images
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Photos',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Add Photos',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kTextColor,
                           ),
-                          Text(
-                            '${_selectedImages.length}/5',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
+                        ),
+                        Text(
+                          '${_selectedImages.length}/5',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: kTextColor.withOpacity(0.5),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 100,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _selectedImages.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == _selectedImages.length) {
-                              if (_selectedImages.length >= 5) {
-                                return const SizedBox.shrink();
-                              }
-                              return InkWell(
-                                onTap: _pickImages,
-                                child: Container(
-                                  width: 100,
-                                  margin: const EdgeInsets.only(right: 8),
-                                  decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: Colors.grey[300]!),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.add_a_photo,
-                                          color: Colors.grey),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'Add Photo',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.none,
+                        itemCount: _selectedImages.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == _selectedImages.length) {
+                            if (_selectedImages.length >= 5) {
+                              return const SizedBox.shrink();
                             }
-
-                            final image = _selectedImages[index];
-                            return Stack(
-                              children: [
-                                Container(
-                                  width: 100,
-                                  margin: const EdgeInsets.only(right: 8),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
+                            return _NeumorphicButton(
+                              onTap: _pickImages,
+                              borderRadius: BorderRadius.circular(15),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.add_a_photo_outlined,
+                                      color: AppTheme.primaryColor),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Add',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor
+                                          .withOpacity(0.7),
+                                    ),
                                   ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          final image = _selectedImages[index];
+                          return Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            child: Stack(
+                              children: [
+                                _NeumorphicContainer(
+                                  isConcave: true,
+                                  borderRadius: BorderRadius.circular(15),
+                                  padding: const EdgeInsets.all(4),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(12),
                                     child: FutureBuilder<Uint8List>(
                                       future: image.readAsBytes(),
                                       builder: (context, snapshot) {
@@ -338,17 +356,20 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                           return Image.memory(
                                             snapshot.data!,
                                             fit: BoxFit.cover,
-                                            width: 100,
-                                            height: 100,
+                                            width: 72,
+                                            height: 72,
                                           );
                                         }
                                         return Container(
-                                          width: 100,
-                                          height: 100,
-                                          color: Colors.grey[200],
+                                          width: 72,
+                                          height: 72,
+                                          color: Colors.white.withOpacity(0.3),
                                           child: const Center(
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
                                             ),
                                           ),
                                         );
@@ -357,66 +378,84 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   ),
                                 ),
                                 Positioned(
-                                  top: 4,
-                                  right: 12,
-                                  child: InkWell(
+                                  top: -4,
+                                  right: -4,
+                                  child: GestureDetector(
                                     onTap: () => _removeImage(index),
                                     child: Container(
-                                      padding: const EdgeInsets.all(2),
+                                      padding: const EdgeInsets.all(4),
                                       decoration: const BoxDecoration(
-                                        color: Colors.black54,
+                                        color: Colors.white,
                                         shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black12,
+                                              blurRadius: 4,
+                                              offset: Offset(2, 2))
+                                        ],
                                       ),
                                       child: const Icon(
                                         Icons.close,
-                                        size: 16,
-                                        color: Colors.white,
+                                        size: 14,
+                                        color: Colors.redAccent,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Footer
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  border: Border(
-                    top: BorderSide(color: Colors.grey[200]!),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitReview,
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                    const SizedBox(height: 40),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _NeumorphicButton(
+                            onTap: () => Navigator.of(context).pop(false),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            borderRadius: BorderRadius.circular(15),
+                            child: const Center(
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: kTextColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            )
-                          : Text(widget.review != null ? 'Update' : 'Submit'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _NeumorphicButton(
+                            onTap: _isSubmitting ? () {} : _submitReview,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            borderRadius: BorderRadius.circular(15),
+                            child: Center(
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.primaryColor,
+                                      ),
+                                    )
+                                  : Text(
+                                      widget.review != null
+                                          ? 'Update'
+                                          : 'Submit',
+                                      style: const TextStyle(
+                                        color: AppTheme.primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -425,6 +464,173 @@ class _ReviewDialogState extends State<ReviewDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// --- Neumorphic Components (Redundant but self-contained for Dialog) ---
+
+class _NeumorphicContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final bool isConcave;
+
+  const _NeumorphicContainer({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.isConcave = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const baseColor = Color(0xFFE0E5EC);
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: baseColor,
+        borderRadius: borderRadius,
+        boxShadow: isConcave
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    offset: const Offset(4, 4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+                BoxShadow(
+                    color: Colors.white.withOpacity(0.8),
+                    offset: const Offset(-4, -4),
+                    blurRadius: 4,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(6, 6),
+                    blurRadius: 16),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-6, -6),
+                    blurRadius: 16),
+              ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NeumorphicButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+  final BoxShape shape;
+
+  const _NeumorphicButton({
+    required this.child,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+  });
+
+  @override
+  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
+}
+
+class _NeumorphicButtonState extends State<_NeumorphicButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0E5EC),
+          shape: widget.shape,
+          borderRadius:
+              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+          boxShadow: _isPressed
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      offset: const Offset(2, 2),
+                      blurRadius: 2),
+                  const BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-2, -2),
+                      blurRadius: 2),
+                ]
+              : [
+                  const BoxShadow(
+                      color: Color(0xFFA3B1C6),
+                      offset: Offset(4, 4),
+                      blurRadius: 10),
+                  const BoxShadow(
+                      color: Color(0xFFFFFFFF),
+                      offset: Offset(-4, -4),
+                      blurRadius: 10),
+                ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _NeumorphicIndicatorContainer extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final EdgeInsetsGeometry padding;
+  final BorderRadiusGeometry? borderRadius;
+
+  const _NeumorphicIndicatorContainer({
+    required this.child,
+    required this.isSelected,
+    this.padding = EdgeInsets.zero,
+    this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E5EC),
+        borderRadius: borderRadius,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(2, 2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+                const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-2, -2),
+                    blurRadius: 2,
+                    spreadRadius: 1),
+              ]
+            : [
+                const BoxShadow(
+                    color: Color(0xFFA3B1C6),
+                    offset: Offset(4, 4),
+                    blurRadius: 10),
+                const BoxShadow(
+                    color: Color(0xFFFFFFFF),
+                    offset: Offset(-4, -4),
+                    blurRadius: 10),
+              ],
+      ),
+      child: child,
     );
   }
 }

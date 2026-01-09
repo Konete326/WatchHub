@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,18 +12,32 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rippleController;
+
   @override
   void initState() {
     super.initState();
+    _rippleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+
     // Defer initialization until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeApp();
     });
   }
 
+  @override
+  void dispose() {
+    _rippleController.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeApp() async {
-    // Start fetching settings in background (deferred to avoid setState during build)
+    // Start fetching settings in background
     Future.microtask(() {
       Provider.of<SettingsProvider>(context, listen: false).fetchSettings();
     });
@@ -31,7 +46,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 2));
+    // Give time for the splash animation to show
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
@@ -51,7 +67,6 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.of(context).pushReplacementNamed('/login');
       }
     } catch (e) {
-      // If auth check fails, go to login
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/login');
       }
@@ -61,36 +76,146 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: AppTheme.softUiBackground,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Rippling Logo Treatment
+                AnimatedBuilder(
+                  animation: _rippleController,
+                  builder: (context, child) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        _buildRippleCircle(1.0, 220),
+                        _buildRippleCircle(0.7, 180),
+                        _buildRippleCircle(0.4, 140),
+                        NeumorphicContainer(
+                          shape: BoxShape.circle,
+                          padding: const EdgeInsets.all(30),
+                          child: const Icon(
+                            Icons.watch_rounded,
+                            size: 60,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 60),
+                const Text(
+                  'WatchHub',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.softUiTextColor,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'PREMIUM TIMEPIECES',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.softUiTextColor.withOpacity(0.4),
+                    letterSpacing: 4,
+                  ),
+                ),
+                const SizedBox(height: 80),
+
+                // Custom Neumorphic Progress Indicator
+                _buildNeumorphicLoader(),
+              ],
+            ),
+          ),
+          // Version info at bottom
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'v1.0.4 Premium Edition',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.softUiTextColor.withOpacity(0.2),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRippleCircle(double delay, double size) {
+    final value = (_rippleController.value + delay) % 1.0;
+    return Opacity(
+      opacity: (1.0 - value).clamp(0.0, 1.0),
+      child: Container(
+        width: size * (1.0 + value * 0.2),
+        height: size * (1.0 + value * 0.2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppTheme.softUiBackground,
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.softUiShadowDark.withOpacity(0.3 * (1.0 - value)),
+              offset: Offset(8 * (1.0 - value), 8 * (1.0 - value)),
+              blurRadius: 16 * (1.0 - value),
+            ),
+            BoxShadow(
+              color:
+                  AppTheme.softUiShadowLight.withOpacity(0.3 * (1.0 - value)),
+              offset: Offset(-8 * (1.0 - value), -8 * (1.0 - value)),
+              blurRadius: 16 * (1.0 - value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNeumorphicLoader() {
+    return Container(
+      width: 200,
+      height: 10,
+      padding: const EdgeInsets.all(2),
+      child: NeumorphicContainer(
+        isConcave: true,
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
           children: [
-            Icon(
-              Icons.watch,
-              size: 100,
-              color: AppTheme.secondaryColor,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'WatchHub',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Premium Timepieces',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-              ),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            AnimatedBuilder(
+              animation: _rippleController,
+              builder: (context, child) {
+                return FractionallySizedBox(
+                  widthFactor: (_rippleController.value * 0.8) +
+                      0.1, // Simulates loading
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.primaryColor, Color(0xFF64B5F6)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(2, 0),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
