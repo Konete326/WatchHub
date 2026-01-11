@@ -17,9 +17,44 @@ import '../models/order_item.dart';
 import 'cloudinary_service.dart';
 import 'package:intl/intl.dart';
 import 'notification_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'dart:typed_data';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<String> _uploadToFirebase(dynamic file, String folder) async {
+    try {
+      Uint8List fileBytes;
+      String fileName;
+
+      if (file is XFile) {
+        fileBytes = await file.readAsBytes();
+        fileName = path.basename(file.path);
+      } else {
+        fileBytes = await (file as dynamic).readAsBytes();
+        fileName = path.basename((file as dynamic).path);
+      }
+
+      final uniqueName = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      final ref = _storage.ref().child(folder).child(uniqueName);
+
+      final uploadTask = ref.putData(
+        fileBytes,
+        SettableMetadata(
+          contentType:
+              'image/${path.extension(fileName).replaceFirst('.', '')}',
+        ),
+      );
+      final snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Error uploading to Firebase Storage: $e');
+    }
+  }
 
   // Brand Management
   Future<List<Brand>> getAllBrands() async {
@@ -34,7 +69,7 @@ class AdminService {
   }) async {
     String? logoUrl;
     if (logoFile != null) {
-      logoUrl = await CloudinaryService.uploadImage(logoFile, folder: 'brands');
+      logoUrl = await _uploadToFirebase(logoFile, 'brand_logos');
     }
 
     final docRef = await _firestore.collection('brands').add({
@@ -59,11 +94,7 @@ class AdminService {
     if (description != null) updates['description'] = description;
 
     if (logoFile != null) {
-      updates['logoUrl'] = await CloudinaryService.uploadImage(
-        logoFile,
-        folder: 'brands',
-        publicId: 'brands/$id',
-      );
+      updates['logoUrl'] = await _uploadToFirebase(logoFile, 'brand_logos');
     }
 
     await _firestore.collection('brands').doc(id).update(updates);

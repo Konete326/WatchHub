@@ -113,6 +113,31 @@ class WatchCard extends StatelessWidget {
                       ),
                     ),
 
+                    // Quick View Button
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: NeumorphicButton(
+                        shape: BoxShape.circle,
+                        padding: const EdgeInsets.all(8),
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          if (watch.images.isNotEmpty) {
+                            showQuickView(
+                              context,
+                              watch.images.first,
+                              'watch_${watch.id}_home',
+                            );
+                          }
+                        },
+                        child: const Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: AppTheme.softUiTextColor,
+                        ),
+                      ),
+                    ),
+
                     // Sale Badge (Custom Neumorphic Style)
                     if (watch.isOnSale)
                       Positioned(

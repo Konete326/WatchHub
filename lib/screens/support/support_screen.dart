@@ -9,8 +9,8 @@ class SupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const kBackgroundColor = Color(0xFFE0E5EC);
-    const kTextColor = Color(0xFF4A5568);
+    const kBackgroundColor = AppTheme.softUiBackground;
+    const kTextColor = AppTheme.softUiTextColor;
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
@@ -100,7 +100,7 @@ class SupportScreen extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    const kTextColor = Color(0xFF4A5568);
+    const kTextColor = AppTheme.softUiTextColor;
 
     return _NeumorphicButton(
       onTap: onTap,
@@ -181,11 +181,10 @@ class _NeumorphicContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const baseColor = Color(0xFFE0E5EC);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: baseColor,
+        color: AppTheme.softUiBackground,
         shape: shape,
         borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
         boxShadow: isConcave
@@ -203,11 +202,11 @@ class _NeumorphicContainer extends StatelessWidget {
               ]
             : [
                 const BoxShadow(
-                    color: Color(0xFFA3B1C6),
+                    color: AppTheme.softUiShadowDark,
                     offset: Offset(6, 6),
                     blurRadius: 16),
                 const BoxShadow(
-                    color: Color(0xFFFFFFFF),
+                    color: AppTheme.softUiShadowLight,
                     offset: Offset(-6, -6),
                     blurRadius: 16),
               ],
@@ -250,7 +249,7 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
         duration: const Duration(milliseconds: 100),
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E5EC),
+          color: AppTheme.softUiBackground,
           shape: widget.shape,
           borderRadius:
               widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
@@ -269,11 +268,11 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
                 ]
               : [
                   const BoxShadow(
-                      color: Color(0xFFA3B1C6),
+                      color: AppTheme.softUiShadowDark,
                       offset: Offset(4, 4),
                       blurRadius: 10),
                   const BoxShadow(
-                      color: Color(0xFFFFFFFF),
+                      color: AppTheme.softUiShadowLight,
                       offset: Offset(-4, -4),
                       blurRadius: 10),
                 ],

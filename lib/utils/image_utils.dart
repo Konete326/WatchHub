@@ -35,11 +35,11 @@ class ImageUtils {
               right: 20,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 20),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),

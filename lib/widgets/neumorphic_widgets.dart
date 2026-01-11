@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/theme.dart';
 
 class NeumorphicContainer extends StatelessWidget {
@@ -45,13 +46,13 @@ class NeumorphicContainer extends StatelessWidget {
             : [
                 const BoxShadow(
                   color: AppTheme.softUiShadowDark,
-                  offset: Offset(6, 6),
-                  blurRadius: 16,
+                  offset: Offset(3, 3),
+                  blurRadius: 8,
                 ),
                 const BoxShadow(
                   color: AppTheme.softUiShadowLight,
-                  offset: Offset(-6, -6),
-                  blurRadius: 16,
+                  offset: Offset(-3, -3),
+                  blurRadius: 8,
                 ),
               ],
       ),
@@ -122,13 +123,13 @@ class _NeumorphicButtonState extends State<NeumorphicButton> {
               : [
                   const BoxShadow(
                     color: AppTheme.softUiShadowDark,
-                    offset: Offset(4, 4),
-                    blurRadius: 10,
+                    offset: Offset(2, 2), // Reduced offset
+                    blurRadius: 5, // Reduced blur
                   ),
                   const BoxShadow(
                     color: AppTheme.softUiShadowLight,
-                    offset: Offset(-4, -4),
-                    blurRadius: 10,
+                    offset: Offset(-2, -2), // Reduced offset
+                    blurRadius: 5, // Reduced blur
                   ),
                 ],
         ),
@@ -308,4 +309,75 @@ class NeumorphicPill extends StatelessWidget {
       child: child,
     );
   }
+}
+
+void showQuickView(BuildContext context, String imageUrl, String tag) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'QuickView',
+    barrierColor: Colors.black.withOpacity(0.8),
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Hero(
+                    tag: tag,
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white,
+                        size: 50,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    padding: const EdgeInsets.all(8),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      return ScaleTransition(
+        scale: CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+        ),
+        child: FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
+      );
+    },
+  );
 }

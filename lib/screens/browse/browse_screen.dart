@@ -9,17 +9,22 @@ import '../../models/watch.dart';
 import '../product/product_detail_screen.dart';
 import '../wishlist/wishlist_screen.dart';
 import '../../utils/theme.dart';
+import '../../widgets/neumorphic_widgets.dart' show showQuickView;
 
 class BrowseScreen extends StatefulWidget {
   final String? initialCategory;
   final String? initialBrandId;
+  final bool initialOnlySale;
   final bool showBackButton;
+  final VoidCallback? onBack;
 
   const BrowseScreen({
     super.key,
     this.initialCategory,
     this.initialBrandId,
+    this.initialOnlySale = false,
     this.showBackButton = true,
+    this.onBack,
   });
 
   @override
@@ -29,16 +34,21 @@ class BrowseScreen extends StatefulWidget {
 class _BrowseScreenState extends State<BrowseScreen> {
   String? _selectedCategory;
   String? _selectedBrandId;
+  bool _onlySale = false;
+  double _minPrice = 0;
+  double _maxPrice = 50000;
+  String? _selectedStrapType; // 'belt' or 'chain'
+  bool _inStockOnly = false;
   String _sortBy = 'createdAt';
   String _sortOrder = 'desc';
   final ScrollController _scrollController = ScrollController();
-  bool _isSortMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
     _selectedBrandId = widget.initialBrandId;
+    _onlySale = widget.initialOnlySale;
     _fetchWatches();
     Future.microtask(() {
       final watchProvider = Provider.of<WatchProvider>(context, listen: false);
@@ -70,6 +80,11 @@ class _BrowseScreenState extends State<BrowseScreen> {
       refresh: !loadMore,
       category: _selectedCategory,
       brandId: _selectedBrandId,
+      onlySale: _onlySale,
+      minPrice: _minPrice,
+      maxPrice: _maxPrice == 50000 ? null : _maxPrice,
+      strapType: _selectedStrapType,
+      inStockOnly: _inStockOnly,
       sortBy: _sortBy,
       sortOrder: _sortOrder,
     );
@@ -77,8 +92,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const kBackgroundColor = Color(0xFFE0E5EC);
-    const kTextColor = Color(0xFF4A5568);
+    const kBackgroundColor = AppTheme.softUiBackground;
+    const kTextColor = AppTheme.softUiTextColor;
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
@@ -92,7 +107,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               children: [
                 if (widget.showBackButton)
                   _NeumorphicButton(
-                    onTap: () => Navigator.pop(context),
+                    onTap: widget.onBack ?? () => Navigator.pop(context),
                     padding: const EdgeInsets.all(10),
                     shape: BoxShape.circle,
                     child: const Icon(Icons.arrow_back, color: kTextColor),
@@ -109,20 +124,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   ),
                 ),
                 _NeumorphicButton(
-                  onTap: () =>
-                      setState(() => _isSortMenuOpen = !_isSortMenuOpen),
-                  padding: const EdgeInsets.all(10),
-                  shape: BoxShape.circle,
-                  child: Icon(Icons.sort,
-                      color:
-                          _isSortMenuOpen ? AppTheme.primaryColor : kTextColor),
-                ),
-                const SizedBox(width: 12),
-                _NeumorphicButton(
                   onTap: () => _showFilters(),
                   padding: const EdgeInsets.all(10),
                   shape: BoxShape.circle,
-                  child: const Icon(Icons.filter_list, color: kTextColor),
+                  child: const Icon(Icons.tune, color: kTextColor),
                 ),
                 const SizedBox(width: 12),
                 Consumer<WishlistProvider>(
@@ -250,6 +255,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       setState(() {
                         _selectedCategory = null;
                         _selectedBrandId = null;
+                        _onlySale = false;
+                        _minPrice = 0;
+                        _maxPrice = 50000;
+                        _selectedStrapType = null;
+                        _inStockOnly = false;
+                        _sortBy = 'createdAt';
+                        _sortOrder = 'desc';
                       });
                       _fetchWatches();
                     },
@@ -294,39 +306,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
               },
             ),
           ),
-          if (_isSortMenuOpen)
-            Positioned(
-              top: 0,
-              right: 24,
-              child: _NeumorphicSortMenu(
-                currentSortBy: _sortBy,
-                currentSortOrder: _sortOrder,
-                onSelected: (value) {
-                  setState(() {
-                    _isSortMenuOpen = false;
-                    switch (value) {
-                      case 'price_asc':
-                        _sortBy = 'price';
-                        _sortOrder = 'asc';
-                        break;
-                      case 'price_desc':
-                        _sortBy = 'price';
-                        _sortOrder = 'desc';
-                        break;
-                      case 'popularity':
-                        _sortBy = 'popularity';
-                        _sortOrder = 'desc';
-                        break;
-                      case 'newest':
-                        _sortBy = 'createdAt';
-                        _sortOrder = 'desc';
-                        break;
-                    }
-                  });
-                  _fetchWatches();
-                },
-              ),
-            ),
         ],
       ),
     );
@@ -369,7 +348,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               onTap: onAction,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               borderRadius: BorderRadius.circular(15),
-              child: const Text('Reset Filters',
+              child: const Text('Clear All Filters',
                   style: TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold)),
@@ -392,6 +371,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             const kTextColor = Color(0xFF4A5568);
 
             return Container(
+              height: MediaQuery.of(context).size.height * 0.85,
               decoration: const BoxDecoration(
                 color: kBackgroundColor,
                 borderRadius: BorderRadius.only(
@@ -399,132 +379,352 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   topRight: Radius.circular(40),
                 ),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Handle
                   Center(
                     child: Container(
                       width: 50,
                       height: 5,
-                      margin: const EdgeInsets.only(bottom: 32),
+                      margin: const EdgeInsets.only(top: 12, bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
-                  const Text(
-                    'Filters',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: kTextColor,
+
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Search Options',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: kTextColor,
+                          ),
+                        ),
+                        _NeumorphicButton(
+                          onTap: () {
+                            setModalState(() {
+                              _selectedCategory = null;
+                              _selectedBrandId = null;
+                              _onlySale = false;
+                              _minPrice = 0;
+                              _maxPrice = 50000;
+                              _selectedStrapType = null;
+                              _inStockOnly = false;
+                              _sortBy = 'createdAt';
+                              _sortOrder = 'desc';
+                            });
+                          },
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          borderRadius: BorderRadius.circular(12),
+                          child: const Text(
+                            'Clear All',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Category',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: kTextColor),
-                  ),
-                  const SizedBox(height: 16),
-                  Consumer<WatchProvider>(
-                    builder: (context, watchProvider, child) {
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+
+                  const SizedBox(height: 24),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _NeumorphicFilterChip(
-                            label: 'All',
-                            isSelected: _selectedCategory == null,
-                            onTap: () {
-                              setModalState(() => _selectedCategory = null);
-                              setState(() => _selectedCategory = null);
+                          // Sort Section
+                          const Text(
+                            'Sort By',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: kTextColor),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _buildFilterChip(
+                                label: 'Newest',
+                                isSelected: _sortBy == 'createdAt',
+                                onTap: () {
+                                  setModalState(() {
+                                    _sortBy = 'createdAt';
+                                    _sortOrder = 'desc';
+                                  });
+                                },
+                              ),
+                              _buildFilterChip(
+                                label: 'Price: Low to High',
+                                isSelected:
+                                    _sortBy == 'price' && _sortOrder == 'asc',
+                                onTap: () {
+                                  setModalState(() {
+                                    _sortBy = 'price';
+                                    _sortOrder = 'asc';
+                                  });
+                                },
+                              ),
+                              _buildFilterChip(
+                                label: 'Price: High to Low',
+                                isSelected:
+                                    _sortBy == 'price' && _sortOrder == 'desc',
+                                onTap: () {
+                                  setModalState(() {
+                                    _sortBy = 'price';
+                                    _sortOrder = 'desc';
+                                  });
+                                },
+                              ),
+                              _buildFilterChip(
+                                label: 'Popularity',
+                                isSelected: _sortBy == 'popularity',
+                                onTap: () {
+                                  setModalState(() {
+                                    _sortBy = 'popularity';
+                                    _sortOrder = 'desc';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Price Range Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Price Range',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: kTextColor),
+                              ),
+                              Consumer<SettingsProvider>(
+                                builder: (context, settings, child) {
+                                  return Text(
+                                    '${settings.formatPrice(_minPrice)} - ${_maxPrice >= 50000 ? settings.formatPrice(_maxPrice) + '+' : settings.formatPrice(_maxPrice)}',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.primaryColor,
+                                        fontWeight: FontWeight.bold),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          RangeSlider(
+                            values: RangeValues(_minPrice, _maxPrice),
+                            min: 0,
+                            max: 50000,
+                            divisions: 50,
+                            activeColor: AppTheme.primaryColor,
+                            inactiveColor: Colors.black12,
+                            onChanged: (values) {
+                              setModalState(() {
+                                _minPrice = values.start;
+                                _maxPrice = values.end;
+                              });
                             },
                           ),
-                          ...watchProvider.categories.map((category) {
-                            return _NeumorphicFilterChip(
-                              label: category.name,
-                              isSelected: _selectedCategory == category.name,
-                              onTap: () {
-                                setModalState(() => _selectedCategory =
-                                    _selectedCategory == category.name
-                                        ? null
-                                        : category.name);
-                                setState(() => _selectedCategory =
-                                    _selectedCategory == category.name
-                                        ? null
-                                        : category.name);
-                              },
-                            );
-                          }).toList(),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Brand',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: kTextColor),
-                  ),
-                  const SizedBox(height: 16),
-                  Consumer<WatchProvider>(
-                    builder: (context, watchProvider, child) {
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          _NeumorphicFilterChip(
-                            label: 'All',
-                            isSelected: _selectedBrandId == null,
-                            onTap: () {
-                              setModalState(() => _selectedBrandId = null);
-                              setState(() => _selectedBrandId = null);
+
+                          const SizedBox(height: 32),
+
+                          // Strap Type Section
+                          const Text(
+                            'Strap Type',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: kTextColor),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              _buildFilterChip(
+                                label: 'Leather / Belt',
+                                isSelected: _selectedStrapType == 'belt',
+                                onTap: () {
+                                  setModalState(() {
+                                    _selectedStrapType =
+                                        _selectedStrapType == 'belt'
+                                            ? null
+                                            : 'belt';
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildFilterChip(
+                                label: 'Steel / Chain',
+                                isSelected: _selectedStrapType == 'chain',
+                                onTap: () {
+                                  setModalState(() {
+                                    _selectedStrapType =
+                                        _selectedStrapType == 'chain'
+                                            ? null
+                                            : 'chain';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Availability Section
+                          const Text(
+                            'Availability',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: kTextColor),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              _buildToggleItem(
+                                label: 'On Sale',
+                                value: _onlySale,
+                                onChanged: (val) {
+                                  setModalState(() => _onlySale = val);
+                                },
+                              ),
+                              const SizedBox(width: 24),
+                              _buildToggleItem(
+                                label: 'In Stock Only',
+                                value: _inStockOnly,
+                                onChanged: (val) {
+                                  setModalState(() => _inStockOnly = val);
+                                },
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Category Section
+                          const Text(
+                            'Category',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: kTextColor),
+                          ),
+                          const SizedBox(height: 16),
+                          Consumer<WatchProvider>(
+                            builder: (context, watchProvider, child) {
+                              return Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  _buildFilterChip(
+                                    label: 'All',
+                                    isSelected: _selectedCategory == null,
+                                    onTap: () => setModalState(
+                                        () => _selectedCategory = null),
+                                  ),
+                                  ...watchProvider.categories.map((category) {
+                                    return _buildFilterChip(
+                                      label: category.name,
+                                      isSelected:
+                                          _selectedCategory == category.name,
+                                      onTap: () {
+                                        setModalState(() => _selectedCategory =
+                                            _selectedCategory == category.name
+                                                ? null
+                                                : category.name);
+                                      },
+                                    );
+                                  }).toList(),
+                                ],
+                              );
                             },
                           ),
-                          ...watchProvider.brands.map((brand) {
-                            return _NeumorphicFilterChip(
-                              label: brand.name,
-                              isSelected: _selectedBrandId == brand.id,
-                              onTap: () {
-                                setModalState(() => _selectedBrandId =
-                                    _selectedBrandId == brand.id
-                                        ? null
-                                        : brand.id);
-                                setState(() => _selectedBrandId =
-                                    _selectedBrandId == brand.id
-                                        ? null
-                                        : brand.id);
-                              },
-                            );
-                          }).toList(),
+
+                          const SizedBox(height: 32),
+
+                          // Brand Section
+                          const Text(
+                            'Brand',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: kTextColor),
+                          ),
+                          const SizedBox(height: 16),
+                          Consumer<WatchProvider>(
+                            builder: (context, watchProvider, child) {
+                              return Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  _buildFilterChip(
+                                    label: 'All',
+                                    isSelected: _selectedBrandId == null,
+                                    onTap: () => setModalState(
+                                        () => _selectedBrandId = null),
+                                  ),
+                                  ...watchProvider.brands.map((brand) {
+                                    return _buildFilterChip(
+                                      label: brand.name,
+                                      isSelected: _selectedBrandId == brand.id,
+                                      onTap: () {
+                                        setModalState(() => _selectedBrandId =
+                                            _selectedBrandId == brand.id
+                                                ? null
+                                                : brand.id);
+                                      },
+                                    );
+                                  }).toList(),
+                                ],
+                              );
+                            },
+                          ),
                         ],
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 48),
-                  _NeumorphicButton(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _fetchWatches();
-                    },
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    borderRadius: BorderRadius.circular(20),
-                    child: const Center(
-                      child: Text(
-                        'Apply Filters',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
-                          letterSpacing: 0.5,
+
+                  // Footer / Apply Button
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: _NeumorphicButton(
+                      onTap: () {
+                        setState(() {
+                          // Already updated in setModalState but ensuring global state
+                        });
+                        Navigator.pop(context);
+                        _fetchWatches();
+                      },
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      borderRadius: BorderRadius.circular(20),
+                      child: const Center(
+                        child: Text(
+                          'Apply Filters',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -535,6 +735,53 @@ class _BrowseScreenState extends State<BrowseScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return _NeumorphicFilterChip(
+      label: label,
+      isSelected: isSelected,
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildToggleItem({
+    required String label,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
+    const kTextColor = Color(0xFF4A5568);
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _NeumorphicContainer(
+            shape: BoxShape.circle,
+            padding: const EdgeInsets.all(6),
+            child: Icon(
+              value ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 20,
+              color:
+                  value ? AppTheme.primaryColor : kTextColor.withOpacity(0.4),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: kTextColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -557,11 +804,10 @@ class _NeumorphicContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const baseColor = Color(0xFFE0E5EC);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: baseColor,
+        color: AppTheme.softUiBackground,
         shape: shape,
         borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
         boxShadow: isConcave
@@ -579,13 +825,13 @@ class _NeumorphicContainer extends StatelessWidget {
               ]
             : [
                 const BoxShadow(
-                    color: Color(0xFFA3B1C6),
-                    offset: Offset(6, 6),
-                    blurRadius: 16),
+                    color: AppTheme.softUiShadowDark,
+                    offset: Offset(3, 3),
+                    blurRadius: 8),
                 const BoxShadow(
-                    color: Color(0xFFFFFFFF),
-                    offset: Offset(-6, -6),
-                    blurRadius: 16),
+                    color: AppTheme.softUiShadowLight,
+                    offset: Offset(-3, -3),
+                    blurRadius: 8),
               ],
       ),
       child: child,
@@ -626,7 +872,7 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
         duration: const Duration(milliseconds: 100),
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E5EC),
+          color: AppTheme.softUiBackground,
           shape: widget.shape,
           borderRadius:
               widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
@@ -643,13 +889,13 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
                 ]
               : [
                   const BoxShadow(
-                      color: Color(0xFFA3B1C6),
-                      offset: Offset(4, 4),
-                      blurRadius: 10),
+                      color: AppTheme.softUiShadowDark,
+                      offset: Offset(2, 2),
+                      blurRadius: 5),
                   const BoxShadow(
-                      color: Color(0xFFFFFFFF),
-                      offset: Offset(-4, -4),
-                      blurRadius: 10),
+                      color: AppTheme.softUiShadowLight,
+                      offset: Offset(-2, -2),
+                      blurRadius: 5),
                 ],
         ),
         child: widget.child,
@@ -709,66 +955,6 @@ class _NeumorphicFilterChip extends StatelessWidget {
             color: isSelected ? AppTheme.primaryColor : const Color(0xFF4A5568),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NeumorphicSortMenu extends StatelessWidget {
-  final String currentSortBy;
-  final String currentSortOrder;
-  final Function(String) onSelected;
-
-  const _NeumorphicSortMenu({
-    required this.currentSortBy,
-    required this.currentSortOrder,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    String activeKey = '';
-    if (currentSortBy == 'createdAt')
-      activeKey = 'newest';
-    else if (currentSortBy == 'popularity')
-      activeKey = 'popularity';
-    else
-      activeKey = '$currentSortBy\_$currentSortOrder';
-
-    return _NeumorphicContainer(
-      padding: const EdgeInsets.all(12),
-      borderRadius: BorderRadius.circular(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildItem('newest', 'Newest', activeKey == 'newest'),
-          _buildItem(
-              'price_asc', 'Price: Low to High', activeKey == 'price_asc'),
-          _buildItem(
-              'price_desc', 'Price: High to Low', activeKey == 'price_desc'),
-          _buildItem('popularity', 'Most Popular', activeKey == 'popularity'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItem(String value, String label, bool isActive) {
-    return GestureDetector(
-      onTap: () => onSelected(value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.black.withOpacity(0.02) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? AppTheme.primaryColor : const Color(0xFF4A5568),
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
@@ -837,6 +1023,56 @@ class _NeumorphicWatchCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                    if (!watch.isInStock)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4A5568).withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'SOLD OUT',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: _NeumorphicButton(
+                        shape: BoxShape.circle,
+                        padding: const EdgeInsets.all(6),
+                        onTap: () {
+                          if (watch.images.isNotEmpty) {
+                            showQuickView(
+                              context,
+                              watch.images.first,
+                              'watch_${watch.id}',
+                            );
+                          }
+                        },
+                        child: Icon(
+                          Icons.visibility_outlined,
+                          size: 14,
+                          color: kTextColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -909,8 +1145,8 @@ class _NeumorphicProductShimmer extends StatelessWidget {
               isConcave: true,
               borderRadius: BorderRadius.circular(20),
               child: Shimmer.fromColors(
-                baseColor: const Color(0xFFE0E5EC),
-                highlightColor: const Color(0xFFF0F5FC),
+                baseColor: AppTheme.softUiShadowDark.withOpacity(0.5),
+                highlightColor: AppTheme.softUiBackground,
                 child: Container(color: Colors.white),
               ),
             ),

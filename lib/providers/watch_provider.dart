@@ -113,6 +113,9 @@ class WatchProvider with ChangeNotifier {
     String? category,
     double? minPrice,
     double? maxPrice,
+    bool onlySale = false,
+    String? strapType,
+    bool inStockOnly = false,
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
   }) async {
@@ -139,6 +142,9 @@ class WatchProvider with ChangeNotifier {
             category: category,
             minPrice: minPrice,
             maxPrice: maxPrice,
+            onlySale: onlySale,
+            strapType: strapType,
+            inStockOnly: inStockOnly,
             sortBy: sortBy,
             sortOrder: sortOrder,
           );
@@ -157,6 +163,9 @@ class WatchProvider with ChangeNotifier {
       category: category,
       minPrice: minPrice,
       maxPrice: maxPrice,
+      onlySale: onlySale,
+      strapType: strapType,
+      inStockOnly: inStockOnly,
       sortBy: sortBy,
       sortOrder: sortOrder,
     );
@@ -169,6 +178,9 @@ class WatchProvider with ChangeNotifier {
     String? category,
     double? minPrice,
     double? maxPrice,
+    bool onlySale = false,
+    String? strapType,
+    bool inStockOnly = false,
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
   }) async {
@@ -190,6 +202,9 @@ class WatchProvider with ChangeNotifier {
         'category': category,
         'minPrice': minPrice,
         'maxPrice': maxPrice,
+        'onlySale': onlySale,
+        'strapType': strapType,
+        'inStockOnly': inStockOnly,
         'sortBy': sortBy,
         'sortOrder': sortOrder,
       };
@@ -201,6 +216,9 @@ class WatchProvider with ChangeNotifier {
         category: category,
         minPrice: minPrice,
         maxPrice: maxPrice,
+        onlySale: onlySale,
+        strapType: strapType,
+        inStockOnly: inStockOnly,
         sortBy: sortBy,
         sortOrder: sortOrder,
       );

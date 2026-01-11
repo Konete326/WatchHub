@@ -25,13 +25,6 @@ class _MainNavigationState extends State<MainNavigation> {
   static const Color navBlueLight = Color(0xFF4D76FF);
   static const Color navBlueDark = Color(0xFF1A3EBF);
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const BrowseScreen(showBackButton: false),
-    const CartScreen(showBackButton: false),
-    const ProfileScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -45,6 +38,22 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      const HomeScreen(),
+      BrowseScreen(
+        showBackButton: _currentIndex != 0,
+        onBack: () => setState(() => _currentIndex = 0),
+      ),
+      CartScreen(
+        showBackButton: _currentIndex != 0,
+        onBack: () => setState(() => _currentIndex = 0),
+      ),
+      ProfileScreen(
+        showBackButton: _currentIndex != 0,
+        onBack: () => setState(() => _currentIndex = 0),
+      ),
+    ];
+
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
@@ -60,7 +69,7 @@ class _MainNavigationState extends State<MainNavigation> {
         backgroundColor: AppTheme.softUiBackground,
         body: IndexedStack(
           index: _currentIndex,
-          children: _screens,
+          children: screens,
         ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),

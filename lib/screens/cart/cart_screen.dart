@@ -7,10 +7,12 @@ import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../../widgets/empty_state.dart';
 import '../checkout/address_selection_screen.dart';
+import '../../utils/image_utils.dart';
 
 class CartScreen extends StatefulWidget {
   final bool showBackButton;
-  const CartScreen({super.key, this.showBackButton = true});
+  final VoidCallback? onBack;
+  const CartScreen({super.key, this.showBackButton = true, this.onBack});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -18,10 +20,10 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   // Neumorphic Design Constants
-  static const Color kBackgroundColor = Color(0xFFE0E5EC);
-  static const Color kShadowDark = Color(0xFFA3B1C6);
-  static const Color kShadowLight = Color(0xFFFFFFFF);
-  static const Color kTextColor = Color(0xFF4A5568);
+  static const Color kBackgroundColor = AppTheme.softUiBackground;
+  static const Color kShadowDark = AppTheme.softUiShadowDark;
+  static const Color kShadowLight = AppTheme.softUiShadowLight;
+  static const Color kTextColor = AppTheme.softUiTextColor;
   static const Color kPrimaryColor = AppTheme.primaryColor;
   static const Color kRedColor = Color(0xFFEF5350);
 
@@ -45,9 +47,10 @@ class _CartScreenState extends State<CartScreen> {
             color: kBackgroundColor,
             child: Row(
               children: [
-                if (widget.showBackButton && Navigator.canPop(context))
+                if (widget.showBackButton &&
+                    (widget.onBack != null || Navigator.canPop(context)))
                   _NeumorphicButton(
-                    onTap: () => Navigator.pop(context),
+                    onTap: widget.onBack ?? () => Navigator.pop(context),
                     padding: const EdgeInsets.all(10),
                     shape: BoxShape.circle,
                     child: const Icon(Icons.arrow_back, color: kTextColor),
@@ -221,41 +224,54 @@ class _CartScreenState extends State<CartScreen> {
 
                             // 2. Product Image
                             // Using a white container to ensure image pops against the grey background
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                                border:
-                                    Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(13),
-                                child: watch.images.isNotEmpty
-                                    ? CachedNetworkImage(
-                                        imageUrl: watch.images.first,
-                                        fit: BoxFit
-                                            .contain, // Contain ensures standard watch faces show fully
-                                        placeholder: (context, url) =>
-                                            Shimmer.fromColors(
-                                          baseColor: Colors.grey[300]!,
-                                          highlightColor: Colors.grey[100]!,
-                                          child: Container(color: Colors.white),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            const Icon(Icons.broken_image,
-                                                color: Colors.grey),
-                                      )
-                                    : const Icon(Icons.watch,
-                                        color: Colors.grey, size: 40),
+                            GestureDetector(
+                              onTap: () {
+                                if (watch.images.isNotEmpty) {
+                                  ImageUtils.showFullScreenImage(
+                                      context, watch.images.first);
+                                }
+                              },
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 4,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(13),
+                                  child: watch.images.isNotEmpty
+                                      ? Hero(
+                                          tag: 'cart_image_${item.id}',
+                                          child: CachedNetworkImage(
+                                            imageUrl: watch.images.first,
+                                            fit: BoxFit
+                                                .contain, // Contain ensures standard watch faces show fully
+                                            placeholder: (context, url) =>
+                                                Shimmer.fromColors(
+                                              baseColor: Colors.grey[300]!,
+                                              highlightColor: Colors.grey[100]!,
+                                              child: Container(
+                                                  color: Colors.white),
+                                            ),
+                                            errorWidget: (context, url,
+                                                    error) =>
+                                                const Icon(Icons.broken_image,
+                                                    color: Colors.grey),
+                                          ),
+                                        )
+                                      : const Icon(Icons.watch,
+                                          color: Colors.grey, size: 40),
+                                ),
                               ),
                             ),
 

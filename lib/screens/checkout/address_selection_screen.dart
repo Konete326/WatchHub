@@ -18,10 +18,10 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
   String? _selectedAddressId;
 
   // Neumorphic Design Constants
-  static const Color kBackgroundColor = Color(0xFFE0E5EC);
-  static const Color kShadowDark = Color(0xFFA3B1C6);
-  static const Color kShadowLight = Color(0xFFFFFFFF);
-  static const Color kTextColor = Color(0xFF4A5568);
+  static const Color kBackgroundColor = AppTheme.softUiBackground;
+  static const Color kShadowDark = AppTheme.softUiShadowDark;
+  static const Color kShadowLight = AppTheme.softUiShadowLight;
+  static const Color kTextColor = AppTheme.softUiTextColor;
   static const Color kPrimaryColor = AppTheme.primaryColor;
 
   @override
@@ -302,17 +302,17 @@ class _NeumorphicContainer extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFFE0E5EC),
+        color: AppTheme.softUiBackground,
         shape: shape,
         borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
         boxShadow: const [
           BoxShadow(
-            color: Color(0xFFA3B1C6),
+            color: AppTheme.softUiShadowDark,
             offset: Offset(6, 6),
             blurRadius: 16,
           ),
           BoxShadow(
-            color: Color(0xFFFFFFFF),
+            color: AppTheme.softUiShadowLight,
             offset: Offset(-6, -6),
             blurRadius: 16,
           ),
@@ -342,18 +342,18 @@ class _NeumorphicIndicatorContainer extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFFE0E5EC),
+        color: AppTheme.softUiBackground,
         borderRadius: borderRadius,
         boxShadow: isSelected
             ? [] // Concave/Pressed simulation (simplified for basic flutter)
             : [
                 const BoxShadow(
-                  color: Color(0xFFA3B1C6),
+                  color: AppTheme.softUiShadowDark,
                   offset: Offset(6, 6),
                   blurRadius: 16,
                 ),
                 const BoxShadow(
-                  color: Color(0xFFFFFFFF),
+                  color: AppTheme.softUiShadowLight,
                   offset: Offset(-6, -6),
                   blurRadius: 16,
                 ),
@@ -401,7 +401,7 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
         duration: const Duration(milliseconds: 100),
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E5EC),
+          color: AppTheme.softUiBackground,
           shape: widget.shape,
           borderRadius:
               widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
@@ -409,12 +409,12 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
               ? []
               : [
                   const BoxShadow(
-                    color: Color(0xFFA3B1C6),
+                    color: AppTheme.softUiShadowDark,
                     offset: Offset(6, 6),
                     blurRadius: 16,
                   ),
                   const BoxShadow(
-                    color: Color(0xFFFFFFFF),
+                    color: AppTheme.softUiShadowLight,
                     offset: Offset(-6, -6),
                     blurRadius: 16,
                   ),
@@ -442,7 +442,7 @@ class _NeumorphicConcave extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFFE0E5EC),
+        color: AppTheme.softUiBackground,
         shape: shape,
         border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
         boxShadow: [
@@ -469,17 +469,17 @@ class _NeumorphicRadio extends StatelessWidget {
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color: const Color(0xFFE0E5EC),
+        color: AppTheme.softUiBackground,
         shape: BoxShape.circle,
         boxShadow: isSelected
             ? [
                 const BoxShadow(
-                  color: Color(0xFFA3B1C6),
+                  color: AppTheme.softUiShadowDark,
                   offset: Offset(2, 2),
                   blurRadius: 4,
                 ),
                 const BoxShadow(
-                  color: Color(0xFFFFFFFF),
+                  color: AppTheme.softUiShadowLight,
                   offset: Offset(-2, -2),
                   blurRadius: 4,
                 ),
