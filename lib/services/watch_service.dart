@@ -71,6 +71,9 @@ class WatchService {
     String? category,
     double? minPrice,
     double? maxPrice,
+    bool onlySale = false,
+    String? strapType, // 'belt' or 'chain'
+    bool inStockOnly = false,
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
   }) async {
@@ -87,20 +90,38 @@ class WatchService {
       if (categoryTrimmed != null)
         query = query.where('category', isEqualTo: categoryTrimmed);
 
-      if (minPrice != null)
-        query = query.where('price', isGreaterThanOrEqualTo: minPrice);
-      if (maxPrice != null)
-        query = query.where('price', isLessThanOrEqualTo: maxPrice);
+      if (strapType == 'belt') {
+        query = query.where('hasBeltOption', isEqualTo: true);
+      } else if (strapType == 'chain') {
+        query = query.where('hasChainOption', isEqualTo: true);
+      }
 
       query = query.orderBy(sortBy, descending: sortOrder == 'desc');
 
-      final aggregateQuery = await query.count().get();
-      final totalCount = aggregateQuery.count ?? 0;
-
-      final snapshot = await query.limit(page * limit).get();
+      final snapshot = await query
+          .limit(200)
+          .get(); // Fetch a larger set to filter client-side
 
       var allWatches =
           snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+
+      // Client-side Price Filtering
+      if (minPrice != null) {
+        allWatches = allWatches.where((w) => w.price >= minPrice).toList();
+      }
+      if (maxPrice != null) {
+        allWatches = allWatches.where((w) => w.price <= maxPrice).toList();
+      }
+
+      // Client-side Sale Filtering
+      if (onlySale) {
+        allWatches = allWatches.where((w) => w.isOnSale).toList();
+      }
+
+      // Client-side Availability Filtering
+      if (inStockOnly) {
+        allWatches = allWatches.where((w) => w.isInStock).toList();
+      }
 
       // Client-side Search Filtering
       if (searchTrimmed != null && searchTrimmed.isNotEmpty) {
@@ -111,6 +132,8 @@ class WatchService {
                 w.category.toLowerCase().contains(searchLower))
             .toList();
       }
+
+      final totalCount = allWatches.length;
 
       final startIndex = (page - 1) * limit;
       final paginatedWatches = allWatches.length > startIndex
@@ -161,6 +184,17 @@ class WatchService {
       }
       if (maxPrice != null) {
         allWatches = allWatches.where((w) => w.price <= maxPrice).toList();
+      }
+      if (onlySale) {
+        allWatches = allWatches.where((w) => w.isOnSale).toList();
+      }
+      if (strapType == 'belt') {
+        allWatches = allWatches.where((w) => w.hasBeltOption).toList();
+      } else if (strapType == 'chain') {
+        allWatches = allWatches.where((w) => w.hasChainOption).toList();
+      }
+      if (inStockOnly) {
+        allWatches = allWatches.where((w) => w.isInStock).toList();
       }
 
       final startIndex = (page - 1) * limit;

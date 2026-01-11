@@ -13,7 +13,14 @@ import 'edit_profile_screen.dart';
 import '../notifications/notifications_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool showBackButton;
+  final VoidCallback? onBack;
+
+  const ProfileScreen({
+    super.key,
+    this.showBackButton = true,
+    this.onBack,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -21,10 +28,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Neumorphic Design Constants
-  static const Color kBackgroundColor = Color(0xFFE0E5EC);
-  static const Color kShadowDark = Color(0xFFA3B1C6);
-  static const Color kShadowLight = Color(0xFFFFFFFF);
-  static const Color kTextColor = Color(0xFF4A5568);
+  static const Color kBackgroundColor = AppTheme.softUiBackground;
+  static const Color kTextColor = AppTheme.softUiTextColor;
 
   @override
   void initState() {
@@ -80,9 +85,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: kBackgroundColor,
             child: Row(
               children: [
-                if (Navigator.canPop(context))
+                if (widget.showBackButton)
                   _NeumorphicButton(
-                    onTap: () => Navigator.pop(context),
+                    onTap: widget.onBack ??
+                        () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                        },
                     padding: const EdgeInsets.all(10),
                     shape: BoxShape.circle,
                     child: const Icon(Icons.arrow_back, color: kTextColor),
@@ -101,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                // Spacer to balance the centered title
+                // Left balanced spacer
                 const SizedBox(width: 44),
               ],
             ),
@@ -338,7 +348,7 @@ class _NeumorphicContainer extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: _ProfileScreenState.kBackgroundColor,
+        color: AppTheme.softUiBackground,
         shape: shape,
         borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
         boxShadow: pressed
@@ -346,12 +356,12 @@ class _NeumorphicContainer extends StatelessWidget {
             ? [] // No outer shadow creates a "flat" or "pressed" interaction relative to elevated
             : [
                 const BoxShadow(
-                  color: _ProfileScreenState.kShadowDark,
+                  color: AppTheme.softUiShadowDark,
                   offset: Offset(6, 6),
                   blurRadius: 16,
                 ),
                 const BoxShadow(
-                  color: _ProfileScreenState.kShadowLight,
+                  color: AppTheme.softUiShadowLight,
                   offset: Offset(-6, -6),
                   blurRadius: 16,
                 ),
@@ -395,7 +405,7 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
         duration: const Duration(milliseconds: 100),
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: _ProfileScreenState.kBackgroundColor,
+          color: AppTheme.softUiBackground,
           shape: widget.shape,
           borderRadius:
               widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
@@ -403,12 +413,12 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
               ? [] // Pressed state (flat)
               : [
                   const BoxShadow(
-                    color: _ProfileScreenState.kShadowDark,
+                    color: AppTheme.softUiShadowDark,
                     offset: Offset(6, 6),
                     blurRadius: 16,
                   ),
                   const BoxShadow(
-                    color: _ProfileScreenState.kShadowLight,
+                    color: AppTheme.softUiShadowLight,
                     offset: Offset(-6, -6),
                     blurRadius: 16,
                   ),

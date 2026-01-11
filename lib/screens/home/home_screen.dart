@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../providers/watch_provider.dart';
 import '../../widgets/watch_card.dart';
 import '../../utils/theme.dart';
@@ -353,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(
-          height: 120,
+          height: 120, // Adjusted height to accommodate labels
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -363,34 +365,62 @@ class _HomeScreenState extends State<HomeScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     NeumorphicButton(
                       shape: BoxShape.circle,
-                      padding: const EdgeInsets.all(12),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              BrowseScreen(initialBrandId: brand.id),
-                        ),
-                      ),
+                      padding: const EdgeInsets.all(8),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                BrowseScreen(initialBrandId: brand.id),
+                          ),
+                        );
+                      },
                       child: Container(
-                        width: 45,
-                        height: 45,
-                        child: brand.logoUrl != null
-                            ? CachedNetworkImage(
-                                imageUrl: brand.logoUrl!,
-                                fit: BoxFit.contain,
-                              )
-                            : const Icon(Icons.watch, color: Colors.grey),
+                        width: 55,
+                        height: 55,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child:
+                              brand.logoUrl != null && brand.logoUrl!.isNotEmpty
+                                  ? CachedNetworkImage(
+                                      imageUrl: brand.logoUrl!,
+                                      fit: BoxFit.contain,
+                                      placeholder: (context, url) =>
+                                          Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: Container(color: Colors.white),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          const Icon(Icons.watch,
+                                              color: Colors.grey, size: 25),
+                                    )
+                                  : const Icon(Icons.watch,
+                                      color: Colors.grey, size: 25),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      brand.name,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.softUiTextColor,
+                    SizedBox(
+                      width: 75,
+                      child: Text(
+                        brand.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.softUiTextColor,
+                          letterSpacing: 0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -410,14 +440,11 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(25),
         padding: EdgeInsets.zero,
         onTap: () {
-          if (promotion.link != null) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    ProductDetailScreen(watchId: promotion.link!),
-              ),
-            );
-          }
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const BrowseScreen(initialOnlySale: true),
+            ),
+          );
         },
         child: Container(
           height: 180,

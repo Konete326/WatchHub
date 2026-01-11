@@ -88,7 +88,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                         width: 100,
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
+                          shape: BoxShape.circle,
                           image: selectedImage != null
                               ? null
                               : (brand?.logoUrl != null &&
@@ -101,7 +101,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                         ),
                         child: selectedImage != null
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(50),
                                 child: FutureBuilder<Uint8List>(
                                   future: selectedImage!.readAsBytes(),
                                   builder: (context, snapshot) {
@@ -121,7 +121,7 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
                               )
                             : (brand?.logoUrl == null ||
                                     brand!.logoUrl!.isEmpty)
-                                ? const Icon(Icons.add_a_photo,
+                                ? const Icon(Icons.business,
                                     size: 40, color: Colors.grey)
                                 : null,
                       ),
@@ -290,12 +290,23 @@ class _ManageBrandsScreenState extends State<ManageBrandsScreen> {
               return Card(
                 child: ListTile(
                   leading: brand.logoUrl != null && brand.logoUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: brand.logoUrl!,
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.contain)
-                      : const Icon(Icons.business),
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(25),
+                          child: CachedNetworkImage(
+                              imageUrl: brand.logoUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) =>
+                                  const CircularProgressIndicator(
+                                      strokeWidth: 1),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.business)),
+                        )
+                      : const CircleAvatar(
+                          backgroundColor: Colors.grey,
+                          child: Icon(Icons.business, color: Colors.white),
+                        ),
                   title: Text(brand.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: brand.description != null

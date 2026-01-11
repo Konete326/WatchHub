@@ -14,9 +14,9 @@ class AppTheme {
   static const Color textSecondaryColor = Color(0xFF757575);
 
   // Soft UI Palette
-  static const Color softUiBackground = Color(0xFFE0E5EC);
+  static const Color softUiBackground = Color(0xFFD1D9E6);
   static const Color softUiTextColor = Color(0xFF4A5568);
-  static const Color softUiShadowDark = Color(0xFFA3B1C6);
+  static const Color softUiShadowDark = Color(0xFFB8C2CC);
   static const Color softUiShadowLight = Color(0xFFFFFFFF);
 
   // Theme
