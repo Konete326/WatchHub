@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/review_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/watch_provider.dart';
@@ -354,7 +355,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
     final isOwnReview = currentUserId != null && review.userId == currentUserId;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 24),
       child: _NeumorphicContainer(
         padding: const EdgeInsets.all(20),
         borderRadius: BorderRadius.circular(25),
@@ -370,7 +371,9 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     radius: 20,
                     backgroundColor: Colors.transparent,
                     child: Text(
-                      review.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
+                      review.user != null && review.user!.name.isNotEmpty
+                          ? review.user!.name[0].toUpperCase()
+                          : 'U',
                       style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold),
@@ -382,19 +385,79 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(review.user?.name ?? 'Anonymous',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: kTextColor)),
-                      RatingBarIndicator(
-                        rating: review.rating.toDouble(),
-                        itemBuilder: (context, index) =>
-                            const Icon(Icons.star, color: Colors.amber),
-                        itemCount: 5,
-                        itemSize: 14,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(review.user?.name ?? 'Anonymous',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: kTextColor)),
+                          ),
+                          if (review.tags?.contains('verified') ?? false) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.successColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.verified,
+                                      size: 10, color: AppTheme.successColor),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    'Verified',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.successColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          RatingBarIndicator(
+                            rating: review.rating.toDouble(),
+                            itemBuilder: (context, index) =>
+                                const Icon(Icons.star, color: Colors.amber),
+                            itemCount: 5,
+                            itemSize: 14,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            review.sentimentLabel,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: review.sentimentScore != null &&
+                                      review.sentimentScore! > 0.2
+                                  ? Colors.green
+                                  : (review.sentimentScore != null &&
+                                          review.sentimentScore! < -0.2
+                                      ? Colors.red
+                                      : Colors.grey),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
+                if (review.isFeatured)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(Icons.star_rounded,
+                        color: Colors.orange, size: 24),
+                  ),
                 if (isOwnReview)
                   _NeumorphicButton(
                     onTap: () => _showReviewOptions(review, provider),
@@ -417,8 +480,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   itemCount: review.images.length,
                   itemBuilder: (context, index) => Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: _NeumorphicContainer(
-                      isConcave: true,
+                    child: _NeumorphicIndicatorContainer(
+                      isSelected: false,
                       borderRadius: BorderRadius.circular(12),
                       padding: const EdgeInsets.all(4),
                       child: ClipRRect(
@@ -431,6 +494,55 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                         ),
                       ),
                     ),
+                  ),
+                ),
+              ),
+            if (review.adminReply != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: _NeumorphicContainer(
+                  isConcave: true,
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: BorderRadius.circular(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.storefront_rounded,
+                              size: 16, color: AppTheme.primaryColor),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Response from WatchHub',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        review.adminReply!,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: kTextColor,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      if (review.adminReplyAt != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            dateFormat.format(review.adminReplyAt!),
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: kTextColor.withOpacity(0.4)),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),

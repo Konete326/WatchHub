@@ -267,6 +267,48 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
+  Future<void> clearAllNotifications() async {
+    if (uid == null) return;
+
+    try {
+      final batch = _firestore.batch();
+
+      // 1. Delete all user notifications
+      final userNotifs = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('notifications')
+          .get();
+
+      for (var doc in userNotifs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 2. Dismiss all current announcements
+      for (var notification in _notifications) {
+        final isAnnouncement =
+            !userNotifs.docs.any((d) => d.id == notification.id);
+        if (isAnnouncement &&
+            !_dismissedAnnouncementIds.contains(notification.id)) {
+          final dismissRef = _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('dismissed_announcements')
+              .doc(notification.id);
+          batch.set(dismissRef, {'dismissedAt': FieldValue.serverTimestamp()});
+          _dismissedAnnouncementIds.add(notification.id);
+        }
+      }
+
+      await batch.commit();
+      _notifications = [];
+      _unreadCount = 0;
+      notifyListeners();
+    } catch (e) {
+      print('Error clearing all notifications: $e');
+    }
+  }
+
   // Method to add notification manually
   Future<void> addNotification({
     required String title,

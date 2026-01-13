@@ -14,6 +14,7 @@ import 'order_confirmation_screen.dart';
 import 'stripe_web_payment_dialog.dart';
 import '../../widgets/checkout_progress_bar.dart';
 import '../../widgets/neumorphic_widgets.dart';
+import '../../utils/error_handler.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String addressId;
@@ -159,7 +160,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar(e.toString().replaceAll('Exception: ', ''), isError: true);
+      _showSnackBar(FirebaseErrorHandler.getMessage(e), isError: true);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

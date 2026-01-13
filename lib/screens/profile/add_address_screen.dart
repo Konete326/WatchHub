@@ -125,12 +125,31 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildInputField(
+                      _buildAutocompleteField(
                         controller: _addressLineController,
                         label: 'Street Address',
                         icon: Icons.map_outlined,
+                        suggestions: [
+                          '123 Rolex Way, Geneva, CH',
+                          '456 Patek Philippe Plaza, London, UK',
+                          '789 Audemars Piguet Ave, Le Brassus, CH',
+                          '101 Vacheron Constantin Ct, Plan-les-Ouates, CH',
+                          '202 Cartier Blvd, Paris, FR',
+                          '303 Hublot St, Nyon, CH',
+                          '404 Omega Lane, Biel/Bienne, CH',
+                        ],
                         validator: (value) =>
                             Validators.required(value, 'Address'),
+                        onSelected: (selection) {
+                          final parts = selection.split(', ');
+                          if (parts.length >= 2) {
+                            _addressLineController.text = parts[0];
+                            _cityController.text = parts[1];
+                          }
+                          if (parts.length >= 3) {
+                            _countryController.text = parts[2];
+                          }
+                        },
                       ),
                       const SizedBox(height: 24),
                       Row(
@@ -190,12 +209,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                         validator: Validators.phone,
                       ),
                       const SizedBox(height: 40),
-
-                      // Neumorphic Toggle for Default Address
                       _buildDefaultToggle(),
-
                       const SizedBox(height: 48),
-
                       NeumorphicButton(
                         onTap: _isLoading ? () {} : _saveAddress,
                         isPressed: _isLoading,
@@ -231,6 +246,110 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAutocompleteField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required List<String> suggestions,
+    String? Function(String?)? validator,
+    required Function(String) onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.softUiTextColor,
+            ),
+          ),
+        ),
+        NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Autocomplete<String>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text == '')
+                return const Iterable<String>.empty();
+              return suggestions.where((String option) => option
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase()));
+            },
+            onSelected: onSelected,
+            fieldViewBuilder:
+                (context, textController, focusNode, onFieldSubmitted) {
+              // Initial sync
+              if (textController.text.isEmpty && controller.text.isNotEmpty) {
+                textController.text = controller.text;
+              }
+              textController
+                  .addListener(() => controller.text = textController.text);
+              return TextFormField(
+                controller: textController,
+                focusNode: focusNode,
+                validator: validator,
+                style: const TextStyle(
+                    color: AppTheme.softUiTextColor,
+                    fontWeight: FontWeight.w600),
+                cursorColor: AppTheme.primaryColor,
+                decoration: InputDecoration(
+                  icon: Icon(icon,
+                      color: AppTheme.softUiTextColor.withOpacity(0.7),
+                      size: 20),
+                  border: InputBorder.none,
+                  hintText: 'Enter $label',
+                  hintStyle: TextStyle(
+                      color: AppTheme.softUiTextColor.withOpacity(0.4),
+                      fontSize: 14),
+                  errorStyle:
+                      const TextStyle(height: 0, color: Colors.transparent),
+                ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width - 48,
+                    margin: const EdgeInsets.only(top: 8),
+                    child: NeumorphicContainer(
+                      borderRadius: BorderRadius.circular(15),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String option = options.elementAt(index);
+                          return InkWell(
+                            onTap: () => onSelected(option),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(option,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.softUiTextColor)),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -294,7 +413,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         color: Colors.transparent,
         child: Row(
           children: [
-            // Custom Neumorphic Toggle
             SizedBox(
               width: 60,
               height: 32,
@@ -336,7 +454,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Set as Default',
                   style: TextStyle(
                     fontSize: 16,

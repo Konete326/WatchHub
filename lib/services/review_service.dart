@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' hide User;
 import '../models/review.dart';
 import '../models/user.dart';
 import 'cloudinary_service.dart';
+import 'package:flutter/foundation.dart';
 
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -25,6 +26,7 @@ class ReviewService {
     int limit = 10,
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
+    bool approvedOnly = true,
   }) async {
     try {
       final reviews = <Review>[];
@@ -36,15 +38,17 @@ class ReviewService {
         '5': 0
       };
 
-      // Get all reviews for this watch (we'll sort client-side to avoid index issues)
-      final allReviewsSnapshot = await _firestore
-          .collection('reviews')
-          .where('watchId', isEqualTo: watchId)
-          .get();
+      Query query =
+          _firestore.collection('reviews').where('watchId', isEqualTo: watchId);
+      if (approvedOnly) {
+        query = query.where('status', isEqualTo: 'approved');
+      }
 
-      // Calculate rating distribution
+      final allReviewsSnapshot = await query.get();
+
       for (var doc in allReviewsSnapshot.docs) {
-        final rating = doc.data()['rating'] as int?;
+        final data = doc.data() as Map<String, dynamic>?;
+        final rating = (data?['rating'] as num?)?.toInt();
         if (rating != null && rating >= 1 && rating <= 5) {
           final ratingKey = rating.toString();
           ratingDistribution[ratingKey] =
@@ -52,75 +56,62 @@ class ReviewService {
         }
       }
 
-      // Process all documents and sort client-side
-      final allDocs = <DocumentSnapshot>[];
-      for (var doc in allReviewsSnapshot.docs) {
-        allDocs.add(doc);
-      }
+      final allDocs = allReviewsSnapshot.docs.toList();
 
-      // Sort documents client-side
       allDocs.sort((a, b) {
-        final aData = a.data() as Map<String, dynamic>? ?? {};
-        final bData = b.data() as Map<String, dynamic>? ?? {};
+        final aData = a.data() as Map<String, dynamic>?;
+        final bData = b.data() as Map<String, dynamic>?;
+
+        // Featured reviews always come first
+        final aFeat = aData?['isFeatured'] == true;
+        final bFeat = bData?['isFeatured'] == true;
+        if (aFeat != bFeat) return aFeat ? -1 : 1;
 
         if (sortBy == 'rating') {
-          final aRating = aData['rating'] as int? ?? 0;
-          final bRating = bData['rating'] as int? ?? 0;
+          final aRating = (aData?['rating'] as num?)?.toInt() ?? 0;
+          final bRating = (bData?['rating'] as num?)?.toInt() ?? 0;
           return sortOrder == 'desc'
               ? bRating.compareTo(aRating)
               : aRating.compareTo(bRating);
-        } else if (sortBy == 'createdAt') {
+        } else {
           final aTime =
-              (aData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+              (aData?['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
           final bTime =
-              (bData['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+              (bData?['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
           return sortOrder == 'desc'
               ? bTime.compareTo(aTime)
               : aTime.compareTo(bTime);
         }
-        return 0;
       });
 
-      // Paginate
       final startIndex = (page - 1) * limit;
       final paginatedDocs = allDocs.length > startIndex
           ? allDocs.sublist(
               startIndex, (startIndex + limit).clamp(0, allDocs.length))
           : [];
 
-      // Fetch user data for each review
       for (var doc in paginatedDocs) {
         try {
           final review = Review.fromFirestore(doc);
           User? user;
-
-          // Try to fetch user data, but don't fail if user doesn't exist
           try {
             final userDoc =
                 await _firestore.collection('users').doc(review.userId).get();
-            if (userDoc.exists) {
-              user = User.fromFirestore(userDoc);
-            }
+            if (userDoc.exists) user = User.fromFirestore(userDoc);
           } catch (e) {
-            print('Error fetching user for review ${review.id}: $e');
-            // Continue without user data
+            debugPrint('Error fetching user for review ${review.id}: $e');
           }
 
-          reviews.add(Review(
-            id: review.id,
-            userId: review.userId,
-            watchId: review.watchId,
-            rating: review.rating,
-            comment: review.comment,
-            images: review.images,
-            helpfulCount: review.helpfulCount,
-            createdAt: review.createdAt,
-            user: user,
-          ));
+          reviews.add(Review.fromJson({
+            ...review.toJson(),
+            'id': review.id,
+            'user': user?.toJson(),
+            'createdAt': review.createdAt.toIso8601String(),
+            if (review.adminReplyAt != null)
+              'adminReplyAt': review.adminReplyAt!.toIso8601String(),
+          }));
         } catch (e) {
-          print('Error processing review document ${doc.id}: $e');
-          // Skip this review and continue
-          continue;
+          debugPrint('Error processing review doc: $e');
         }
       }
 
@@ -135,10 +126,46 @@ class ReviewService {
         },
       };
     } catch (e) {
-      print('Error in getWatchReviews: $e');
-      print('Stack trace: ${StackTrace.current}');
       rethrow;
     }
+  }
+
+  String? _checkAutoFlag(String comment, int rating) {
+    final forbiddenKeywords = ['scam', 'fake', 'worst', 'stolen', 'garbage'];
+    final lowerComment = comment.toLowerCase();
+
+    for (var keyword in forbiddenKeywords) {
+      if (lowerComment.contains(keyword)) {
+        return 'Keyword Match: $keyword';
+      }
+    }
+
+    if (rating == 1 && comment.length < 10) {
+      return 'Potential Spam: Short 1-star review';
+    }
+
+    return null;
+  }
+
+  double _calculateSentiment(String comment) {
+    final positive = [
+      'great',
+      'excellent',
+      'amazing',
+      'beautiful',
+      'quality',
+      'perfect'
+    ];
+    final negative = ['bad', 'poor', 'slow', 'broken', 'plastic', 'ugly'];
+
+    int score = 0;
+    final words = comment.toLowerCase().split(' ');
+    for (var word in words) {
+      if (positive.contains(word)) score++;
+      if (negative.contains(word)) score--;
+    }
+
+    return (score / (words.length + 1)).clamp(-1.0, 1.0);
   }
 
   Future<Review> createReview(Review review, {List<XFile>? images}) async {
@@ -154,6 +181,10 @@ class ReviewService {
         imageUrls.add(url);
       }
     }
+
+    final flagReason = _checkAutoFlag(review.comment, review.rating);
+    final sentiment = _calculateSentiment(review.comment);
+    final status = flagReason != null ? 'flagged' : 'pending';
 
     await _firestore.runTransaction((transaction) async {
       final watchDoc = await transaction.get(watchRef);
@@ -175,36 +206,40 @@ class ReviewService {
         'images': imageUrls,
         'helpfulCount': 0,
         'createdAt': FieldValue.serverTimestamp(),
+        'status': status,
+        'flagReason': flagReason,
+        'sentimentScore': sentiment,
+        'isFeatured': false,
+        'tags': [
+          if (imageUrls.isNotEmpty) 'photo',
+          'verified',
+        ],
       });
 
-      transaction.update(watchRef, {
-        'averageRating': newRating,
-        'reviewCount': newCount,
-      });
+      if (status == 'approved') {
+        // If we change it to auto-approve in future
+        transaction.update(watchRef, {
+          'averageRating': newRating,
+          'reviewCount': newCount,
+        });
+      }
     });
 
-    // Fetch the actual review document to get the server timestamp
+    // Fetch the actual review document
     final doc = await reviewRef.get();
     if (doc.exists) {
       final reviewFromDoc = Review.fromFirestore(doc);
-      // Fetch user data for the review
       final userDoc =
           await _firestore.collection('users').doc(reviewFromDoc.userId).get();
       User? user;
-      if (userDoc.exists) {
-        user = User.fromFirestore(userDoc);
-      }
-      return Review(
-        id: reviewFromDoc.id,
-        userId: reviewFromDoc.userId,
-        watchId: reviewFromDoc.watchId,
-        rating: reviewFromDoc.rating,
-        comment: reviewFromDoc.comment,
-        images: reviewFromDoc.images,
-        helpfulCount: reviewFromDoc.helpfulCount,
-        createdAt: reviewFromDoc.createdAt,
-        user: user,
-      );
+      if (userDoc.exists) user = User.fromFirestore(userDoc);
+
+      return Review.fromJson({
+        ...reviewFromDoc.toJson(),
+        'id': reviewFromDoc.id,
+        'user': user?.toJson(),
+        'createdAt': reviewFromDoc.createdAt.toIso8601String(),
+      });
     }
 
     // Fallback if document doesn't exist (shouldn't happen)
@@ -212,7 +247,10 @@ class ReviewService {
   }
 
   Future<Review> updateReview(String id,
-      {int? rating, String? comment, List<XFile>? images}) async {
+      {int? rating,
+      String? comment,
+      List<XFile>? images,
+      String? status}) async {
     if (uid == null) throw Exception('User not logged in');
 
     final reviewRef = _firestore.collection('reviews').doc(id);
@@ -220,12 +258,15 @@ class ReviewService {
     if (!reviewDoc.exists) throw Exception('Review not found');
 
     final reviewData = reviewDoc.data()!;
+    final oldRating = (reviewData['rating'] as num).toInt();
+    final oldStatus = reviewData['status'] as String;
+
     final updates = <String, dynamic>{};
     if (rating != null) updates['rating'] = rating;
     if (comment != null) updates['comment'] = comment;
+    if (status != null) updates['status'] = status;
 
     if (images != null) {
-      // For simplicity, we'll replace images. In a real app, we might want to manage individual images.
       List<String> imageUrls = [];
       for (int i = 0; i < images.length; i++) {
         final url = await _uploadImage(id, images[i], i);
@@ -234,23 +275,42 @@ class ReviewService {
       updates['images'] = imageUrls;
     }
 
-    if (rating != null && rating != reviewData['rating']) {
-      // Need to update watch average rating
+    // Update watch average rating only if status is or becomes 'approved'
+    if ((rating != null && rating != oldRating) ||
+        (status != null && status != oldStatus)) {
       await _firestore.runTransaction((transaction) async {
         final watchRef =
             _firestore.collection('watches').doc(reviewData['watchId']);
         final watchDoc = await transaction.get(watchRef);
 
         final watchData = watchDoc.data()!;
-        final currentRating = (watchData['averageRating'] ?? 0.0).toDouble();
-        final currentCount = watchData['reviewCount'] ?? 0;
+        double totalRating = (watchData['averageRating'] ?? 0.0).toDouble() *
+            (watchData['reviewCount'] ?? 0);
+        int totalCount = watchData['reviewCount'] ?? 0;
 
-        final newRating =
-            ((currentRating * currentCount) - reviewData['rating'] + rating) /
-                currentCount;
+        // Remove old rating if it was approved
+        if (oldStatus == 'approved') {
+          totalRating -= oldRating;
+          totalCount -= 1;
+        }
+
+        // Add new rating if it is now approved
+        final newStatus = status ?? oldStatus;
+        final newRatingValue = rating ?? oldRating;
+
+        if (newStatus == 'approved') {
+          totalRating += newRatingValue;
+          totalCount += 1;
+        }
+
+        final newAverageRating =
+            totalCount > 0 ? totalRating / totalCount : 0.0;
 
         transaction.update(reviewRef, updates);
-        transaction.update(watchRef, {'averageRating': newRating});
+        transaction.update(watchRef, {
+          'averageRating': newAverageRating,
+          'reviewCount': totalCount,
+        });
       });
     } else {
       await reviewRef.update(updates);
@@ -258,6 +318,16 @@ class ReviewService {
 
     final updatedDoc = await reviewRef.get();
     return Review.fromFirestore(updatedDoc);
+  }
+
+  Future<void> approveReview(String id, {bool isFeatured = false}) async {
+    await updateReview(id, status: 'approved');
+    if (isFeatured) {
+      await _firestore
+          .collection('reviews')
+          .doc(id)
+          .update({'isFeatured': true});
+    }
   }
 
   Future<void> deleteReview(String id) async {
@@ -268,29 +338,34 @@ class ReviewService {
     if (!reviewDoc.exists) throw Exception('Review not found');
 
     final reviewData = reviewDoc.data()!;
+    final status = reviewData['status'] as String;
+    final rating = (reviewData['rating'] as num).toInt();
 
     await _firestore.runTransaction((transaction) async {
-      final watchRef =
-          _firestore.collection('watches').doc(reviewData['watchId']);
-      final watchDoc = await transaction.get(watchRef);
+      if (status == 'approved') {
+        final watchRef =
+            _firestore.collection('watches').doc(reviewData['watchId']);
+        final watchDoc = await transaction.get(watchRef);
 
-      final watchData = watchDoc.data()!;
-      final currentRating = (watchData['averageRating'] ?? 0.0).toDouble();
-      final currentCount = watchData['reviewCount'] ?? 0;
+        final watchData = watchDoc.data()!;
+        double totalRating = (watchData['averageRating'] ?? 0.0).toDouble() *
+            (watchData['reviewCount'] ?? 0);
+        int totalCount = watchData['reviewCount'] ?? 0;
 
-      if (currentCount > 1) {
-        final newCount = currentCount - 1;
-        final newRating =
-            ((currentRating * currentCount) - reviewData['rating']) / newCount;
-        transaction.update(watchRef, {
-          'averageRating': newRating,
-          'reviewCount': newCount,
-        });
-      } else {
-        transaction.update(watchRef, {
-          'averageRating': 0.0,
-          'reviewCount': 0,
-        });
+        if (totalCount > 1) {
+          totalCount -= 1;
+          totalRating -= rating;
+          final newRating = totalRating / totalCount;
+          transaction.update(watchRef, {
+            'averageRating': newRating,
+            'reviewCount': totalCount,
+          });
+        } else {
+          transaction.update(watchRef, {
+            'averageRating': 0.0,
+            'reviewCount': 0,
+          });
+        }
       }
 
       transaction.delete(reviewRef);
@@ -344,7 +419,7 @@ class ReviewService {
 
       return false;
     } catch (e) {
-      print('Error checking if user can review: $e');
+      debugPrint('Error checking if user can review: $e');
       return false;
     }
   }

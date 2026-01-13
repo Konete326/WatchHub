@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
@@ -61,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.softUiBackground,
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -89,22 +90,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 48),
 
                   // Header Text
-                  const Text(
+                  Text(
                     'Welcome Back',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.softUiTextColor,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Login to your exclusive account',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: AppTheme.softUiTextColor.withOpacity(0.6),
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondaryColor,
                     ),
                   ),
                   const SizedBox(height: 56),
@@ -154,12 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'Login',
-                                  style: TextStyle(
+                                  style: GoogleFonts.inter(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: Colors.white,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                         ),
@@ -207,12 +210,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               const Icon(Icons.g_mobiledata),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
+                        Text(
                           'Continue with Google',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.softUiTextColor,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimaryColor,
                           ),
                         ),
                       ],
@@ -224,9 +227,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Don't have an account? ",
-                        style: TextStyle(color: AppTheme.softUiTextColor),
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: AppTheme.textSecondaryColor,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -236,11 +242,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           'Register',
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
+                          style: GoogleFonts.inter(
+                            color: AppTheme.goldColor,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

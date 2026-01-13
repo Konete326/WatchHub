@@ -37,29 +37,68 @@ class WatchService {
     }
   }
 
-  Future<List<HomeBanner>> getBanners() async {
+  Future<List<HomeBanner>> getBanners(
+      {String? userSegment, String? deviceType}) async {
     try {
-      // Get all banners, filter by isActive if it exists, otherwise include all
+      final now = DateTime.now();
       final snapshot = await _firestore
           .collection('banners')
-          .orderBy('createdAt', descending: true)
+          .where('isActive', isEqualTo: true)
           .get();
 
-      // Filter banners: include if isActive is true or if isActive field doesn't exist
       final banners = snapshot.docs
-          .where((doc) {
-            final data = doc.data();
-            final isActive = data['isActive'];
-            // Include if isActive is true, or if isActive field doesn't exist (backward compatibility)
-            return isActive == null || isActive == true;
-          })
           .map((doc) => HomeBanner.fromFirestore(doc))
-          .toList();
+          .where((banner) {
+        // Check Scheduling
+        if (banner.startDate != null && now.isBefore(banner.startDate!))
+          return false;
+        if (banner.endDate != null && now.isAfter(banner.endDate!))
+          return false;
+
+        // Check Segments
+        if (banner.allowedSegments != null &&
+            banner.allowedSegments!.isNotEmpty) {
+          if (userSegment == null ||
+              !banner.allowedSegments!.contains(userSegment.toUpperCase())) {
+            return false;
+          }
+        }
+
+        // Check Device
+        if (deviceType != null && banner.targetDevices != null) {
+          if (!banner.targetDevices!.contains(deviceType)) return false;
+        }
+
+        return true;
+      }).toList();
+
+      // Sort by createdAt descending (client-side since we filtered)
+      banners.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return banners;
     } catch (e) {
       print('Error fetching banners: $e');
       return [];
+    }
+  }
+
+  Future<void> trackBannerImpression(String bannerId) async {
+    try {
+      await _firestore.collection('banners').doc(bannerId).update({
+        'impressions': FieldValue.increment(1),
+      });
+    } catch (e) {
+      print('Error tracking impression: $e');
+    }
+  }
+
+  Future<void> trackBannerClick(String bannerId) async {
+    try {
+      await _firestore.collection('banners').doc(bannerId).update({
+        'clicks': FieldValue.increment(1),
+      });
+    } catch (e) {
+      print('Error tracking click: $e');
     }
   }
 
@@ -260,6 +299,61 @@ class WatchService {
         print('Error fetching watches fallback: $e2');
         return [];
       }
+    }
+  }
+
+  Future<List<Watch>> getNewArrivals({int limit = 10}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('watches')
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    } catch (e) {
+      print('Error fetching new arrivals: $e');
+      return [];
+    }
+  }
+
+  Future<List<Watch>> getLimitedEditions({int limit = 10}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('watches')
+          .where('isLimitedEdition', isEqualTo: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    } catch (e) {
+      print('Error fetching limited editions: $e');
+      // Fallback: popularity > 80
+      final snapshot = await _firestore
+          .collection('watches')
+          .orderBy('popularity', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+    }
+  }
+
+  Future<List<Watch>> getBudgetWatches(
+      {required double maxPrice, int limit = 10}) async {
+    try {
+      // Use client-side filtering for price if index is missing or just fetch all
+      // Actually standard where for price should work if index exists
+      final snapshot = await _firestore
+          .collection('watches')
+          .where('price', isLessThanOrEqualTo: maxPrice)
+          .limit(limit)
+          .get();
+
+      var watches =
+          snapshot.docs.map((doc) => Watch.fromFirestore(doc)).toList();
+      watches.sort((a, b) => a.price.compareTo(b.price));
+      return watches;
+    } catch (e) {
+      print('Error fetching budget watches: $e');
+      return [];
     }
   }
 

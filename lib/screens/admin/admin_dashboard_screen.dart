@@ -7,18 +7,13 @@ import '../../providers/admin_provider.dart';
 import 'manage_products_screen.dart';
 import 'manage_orders_screen.dart';
 import 'manage_users_screen.dart';
-import 'manage_reviews_screen.dart';
-import 'manage_faqs_screen.dart';
-import 'manage_tickets_screen.dart';
-import 'manage_banners_screen.dart';
-import 'shipping_settings_screen.dart';
-import 'manage_coupons_screen.dart';
-import 'manage_promotion_screen.dart';
 import 'manage_brands_screen.dart';
 import 'manage_categories_screen.dart';
+import 'manage_reviews_screen.dart';
+import 'manage_banners_screen.dart';
 import 'send_notification_screen.dart';
-import '../../widgets/admin/admin_drawer.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/admin/admin_layout.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -31,7 +26,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Use WidgetsBinding to ensure build is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<AdminProvider>(context, listen: false)
@@ -42,12 +36,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-      ),
-      drawer: const AdminDrawer(),
-      body: Consumer<AdminProvider>(
+    return AdminLayout(
+      title: 'Admin Dashboard',
+      currentRoute: '/admin',
+      child: Consumer<AdminProvider>(
         builder: (context, adminProvider, child) {
           if (adminProvider.isLoading && adminProvider.dashboardStats == null) {
             return const Center(child: CircularProgressIndicator());
@@ -57,375 +49,223 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onRefresh: () => adminProvider.fetchDashboardStats(),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats Cards
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header & Period Toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildStatCard(
-                          context,
-                          icon: Icons.people,
-                          title: 'Total Users',
-                          value: adminProvider.totalUsers.toString(),
-                          color: Colors.blue,
-                        ),
-                        _buildStatCard(
-                          context,
-                          icon: Icons.shopping_bag,
-                          title: 'Total Orders',
-                          value: adminProvider.totalOrders.toString(),
-                          color: Colors.green,
-                        ),
-                        _buildStatCard(
-                          context,
-                          icon: Icons.watch,
-                          title: 'Total Watches',
-                          value: adminProvider.totalWatches.toString(),
-                          color: Colors.orange,
-                        ),
-                        _buildStatCard(
-                          context,
-                          icon: Icons.attach_money,
-                          title: 'Total Revenue',
-                          value: NumberFormat.currency(
-                                  symbol: '\$', decimalDigits: 0)
-                              .format(adminProvider.totalRevenue),
-                          color: Colors.purple,
-                        ),
+                        const Text('Overview',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        _buildPeriodToggle(adminProvider),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 24),
 
-                  // Low Stock Alert
-                  if (adminProvider.lowStockWatches.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Card(
-                        color: Colors.orange[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.warning,
-                                      color: Colors.orange[700]),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Low Stock Alert',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange[700],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${adminProvider.lowStockWatches.length} watch(es) have low stock (≤5 units)',
-                                style: TextStyle(color: Colors.orange[700]),
-                              ),
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: () => _showLowStockDialog(
-                                      context, adminProvider.lowStockWatches),
-                                  icon: const Icon(Icons.inventory),
-                                  label: const Text('Resolve'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.orange[700],
-                                    backgroundColor:
-                                        Colors.white.withOpacity(0.5),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  // Sales Trend Graph
-                  _buildSectionHeader('Weekly Sales Trend'),
-                  _buildSalesChart(adminProvider.salesTrend),
-
-                  const SizedBox(height: 16),
-
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Selling Products
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionHeader('Top Selling'),
-                            _buildTopSellingList(adminProvider.topSelling),
-                          ],
-                        ),
-                      ),
-                      // Category Revenue Pie Chart
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionHeader('Categories'),
-                            _buildCategoryPieChart(
-                                adminProvider.categoryRevenue),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Recent Activity
-                  _buildSectionHeader('Recent Activity'),
-                  _buildActivityFeed(adminProvider.recentActivity),
-
-                  const SizedBox(height: 16),
-
-                  // Management Cards
-                  _buildSectionHeader('Quick Actions'),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Consumer<AuthProvider>(
-                      builder: (context, auth, child) {
-                        final user = auth.user!;
+                    // KPI Grid
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        int crossAxisCount = constraints.maxWidth > 1400
+                            ? 4
+                            : (constraints.maxWidth > 900
+                                ? 3
+                                : (constraints.maxWidth > 600 ? 2 : 1));
                         return GridView.count(
-                          crossAxisCount: 2,
+                          crossAxisCount: crossAxisCount,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 1.6,
                           children: [
-                            if (user.canManageProducts)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.watch,
-                                title: 'Manage Products',
-                                subtitle: 'Add, edit, or remove watches',
-                                color: Colors.blue,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageProductsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageBrands)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.business,
-                                title: 'Manage Brands',
-                                subtitle: 'Add and edit watch brands',
-                                color: Colors.indigo,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageBrandsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageCategories)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.category,
-                                title: 'Manage Categories',
-                                subtitle: 'Organize watches by types',
-                                color: Colors.teal,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageCategoriesScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageOrders)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.shopping_bag,
-                                title: 'Manage Orders',
-                                subtitle: 'View and update order status',
-                                color: Colors.green,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageOrdersScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageUsers)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.people,
-                                title: 'Manage Users',
-                                subtitle: 'View and manage users',
-                                color: Colors.orange,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageUsersScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            _buildDashboardCard(
+                            _buildStatCard(
                               context,
-                              icon: Icons.star,
-                              title: 'Manage Reviews',
-                              subtitle: 'Moderate user reviews',
-                              color: Colors.amber,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ManageReviewsScreen(),
-                                  ),
-                                );
-                              },
+                              icon: Icons.payments_outlined,
+                              title: 'Total Revenue',
+                              value: NumberFormat.compactCurrency(
+                                      symbol: '\$', decimalDigits: 2)
+                                  .format(adminProvider.totalRevenue),
+                              color: Colors.green,
+                              onTap: () {},
+                              subtitle: 'in selected period',
                             ),
-                            if (user.canManageFAQs)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.help_outline,
-                                title: 'Manage FAQs',
-                                subtitle: 'Add and edit FAQs',
-                                color: Colors.purple,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageFAQsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageTickets)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.support_agent,
-                                title: 'Support Tickets',
-                                subtitle: 'Handle customer support',
-                                color: Colors.red,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageTicketsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageBanners)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.image,
-                                title: 'Manage Banners',
-                                subtitle: 'Home screen sliders',
-                                color: Colors.cyan,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageBannersScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageSettings)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.local_shipping,
-                                title: 'Shipping Settings',
-                                subtitle: 'Delivery charges & rules',
-                                color: Colors.amber,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ShippingSettingsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManageCoupons)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.confirmation_number,
-                                title: 'Coupons',
-                                subtitle: 'Manage discount codes',
-                                color: Colors.purple,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManageCouponsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            if (user.canManagePromotions)
-                              _buildDashboardCard(
-                                context,
-                                icon: Icons.campaign,
-                                title: 'Sale Highlights',
-                                subtitle: 'Promotional ads on home',
-                                color: Colors.deepOrange,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManagePromotionScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            _buildDashboardCard(
+                            _buildStatCard(
                               context,
-                              icon: Icons.notifications_active,
-                              title: 'Broadcast',
-                              subtitle: 'Send push notification',
-                              color: Colors.redAccent,
-                              onTap: () {
-                                Navigator.of(context).push(
+                              icon: Icons.shopping_bag_outlined,
+                              title: 'Orders',
+                              value: adminProvider.totalOrders.toString(),
+                              color: Colors.blue,
+                              onTap: () => Navigator.push(
+                                  context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SendNotificationScreen(),
-                                  ),
-                                );
-                              },
+                                      builder: (_) =>
+                                          const ManageOrdersScreen())),
+                            ),
+                            _buildStatCard(
+                              context,
+                              icon: Icons.attach_money_rounded,
+                              title: 'AOV',
+                              value: NumberFormat.currency(symbol: '\$')
+                                  .format(adminProvider.aov),
+                              color: Colors.orange,
+                              onTap: () {},
+                              subtitle: 'Avg. Order Value',
+                            ),
+                            _buildStatCard(
+                              context,
+                              icon: Icons.person_add_alt_1_outlined,
+                              title: 'Conversion',
+                              value:
+                                  '${adminProvider.conversionRate.toStringAsFixed(1)}%',
+                              color: Colors.purple,
+                              onTap: () {},
+                              subtitle: 'User -> Buyer',
+                            ),
+                            _buildStatCard(
+                              context,
+                              icon: Icons.repeat_rounded,
+                              title: 'Returning Rate',
+                              value:
+                                  '${adminProvider.returningRate.toStringAsFixed(1)}%',
+                              color: Colors.teal,
+                              onTap: () {},
+                              subtitle: 'Repeat Buyers',
+                            ),
+                            _buildStatCard(
+                              context,
+                              icon: Icons.people_outline_rounded,
+                              title: 'Total Users',
+                              value: adminProvider.totalUsers.toString(),
+                              color: Colors.indigo,
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ManageUsersScreen())),
+                              subtitle: 'Lifetime Value',
                             ),
                           ],
                         );
                       },
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 32),
+
+                    // Low Stock Alert
+                    if (adminProvider.lowStockWatches.isNotEmpty) ...[
+                      _buildAlertSection(adminProvider),
+                      const SizedBox(height: 32),
+                    ],
+
+                    // Charts Section 1: Trend & Category
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        bool isWide = constraints.maxWidth > 900;
+                        return Column(
+                          children: [
+                            if (isWide)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildSalesColumn(adminProvider),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    flex: 2,
+                                    child: _buildCategoryColumn(adminProvider),
+                                  ),
+                                ],
+                              )
+                            else ...[
+                              _buildSalesColumn(adminProvider),
+                              const SizedBox(height: 32),
+                              _buildCategoryColumn(adminProvider),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Charts Section 2: Brands & Payment Methods
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        bool isWide = constraints.maxWidth > 900;
+                        return Column(
+                          children: [
+                            if (isWide)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildBrandColumn(adminProvider),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    flex: 2,
+                                    child: _buildPaymentMethodColumn(
+                                        adminProvider),
+                                  ),
+                                ],
+                              )
+                            else ...[
+                              _buildBrandColumn(adminProvider),
+                              const SizedBox(height: 32),
+                              _buildPaymentMethodColumn(adminProvider),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Top Selling & Activity
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        bool isWide = constraints.maxWidth > 900;
+                        return Column(
+                          children: [
+                            if (isWide)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child:
+                                        _buildTopSellingColumn(adminProvider),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildActivityColumn(adminProvider),
+                                  ),
+                                ],
+                              )
+                            else ...[
+                              _buildTopSellingColumn(adminProvider),
+                              const SizedBox(height: 32),
+                              _buildActivityColumn(adminProvider),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 40),
+                    _buildSectionHeader('Quick Management'),
+                    const SizedBox(height: 16),
+                    _buildManagementGrid(),
+                  ],
+                ),
               ),
             ),
           );
@@ -434,100 +274,114 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[600],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+  Widget _buildAlertSection(AdminProvider adminProvider) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.shade200),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: Colors.amber.shade100, shape: BoxShape.circle),
+            child:
+                Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Low Stock Warning',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber.shade900,
+                        fontSize: 16)),
+                Text(
+                    '${adminProvider.lowStockWatches.length} items are running low on stock.',
+                    style: TextStyle(color: Colors.amber.shade800)),
+              ],
             ),
-            const SizedBox(height: 2),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                _showLowStockDialog(context, adminProvider.lowStockWatches),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber.shade900,
+                foregroundColor: Colors.white),
+            child: const Text('Review Stock'),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDashboardCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color.withOpacity(0.7), color],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+  Widget _buildStatCard(BuildContext context,
+      {required IconData icon,
+      required String title,
+      required String value,
+      required Color color,
+      required VoidCallback onTap,
+      String? subtitle}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: color.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Icon(icon, color: color, size: 22),
+                    ),
+                    if (subtitle != null)
+                      Text(subtitle,
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade400,
+                              fontWeight: FontWeight.w500)),
+                  ],
+                ),
+                const Spacer(),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5)),
+                const SizedBox(height: 4),
+                Text(title,
+                    style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500)),
+              ],
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 48, color: Colors.white),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
           ),
         ),
       ),
@@ -535,109 +389,69 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+    return Text(title,
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold));
   }
 
   Widget _buildSalesChart(Map<String, double> salesTrend) {
-    if (salesTrend.isEmpty) {
-      return const SizedBox(
-        height: 200,
-        child: Center(child: Text('No sales data available')),
-      );
-    }
+    if (salesTrend.isEmpty)
+      return const Card(
+          child: SizedBox(height: 350, child: Center(child: Text('No data'))));
 
-    final dates = salesTrend.keys.toList();
-    dates.sort();
+    final dates = salesTrend.keys.toList()..sort();
     final values = dates.map((d) => salesTrend[d]!).toList();
-
-    double maxValue =
-        values.isEmpty ? 100 : values.reduce((a, b) => a > b ? a : b);
-    if (maxValue == 0) maxValue = 100;
-
-    // Add margin to max value for better visualization
-    maxValue = maxValue * 1.2;
+    double maxVal =
+        (values.isEmpty ? 100 : values.reduce((a, b) => a > b ? a : b)) * 1.2;
+    if (maxVal == 0) maxVal = 100;
 
     return Container(
-      height: 250,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.fromLTRB(16, 24, 24, 8), // Added right padding
+      height: 350,
+      padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20)
         ],
       ),
       child: LineChart(
         LineChartData(
-          minY: 0,
-          maxY: maxValue,
           gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: maxValue / 5,
-            getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: Colors.grey[200],
-                strokeWidth: 1,
-              );
-            },
-          ),
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: maxVal / 5,
+              getDrawingHorizontalLine: (v) =>
+                  FlLine(color: Colors.grey.shade100, strokeWidth: 1)),
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    NumberFormat.compact().format(value),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 10,
-                    ),
-                  );
-                },
-              ),
-            ),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 50,
+                    getTitlesWidget: (v, m) => Text(
+                        '\$${NumberFormat.compact().format(v)}',
+                        style: TextStyle(
+                            color: Colors.grey.shade400, fontSize: 10)))),
+            bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (v, m) {
+                      int i = v.toInt();
+                      if (i >= 0 && i < dates.length)
+                        return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                                DateFormat('E')
+                                    .format(DateTime.parse(dates[i])),
+                                style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 10)));
+                      return const SizedBox.shrink();
+                    })),
             rightTitles:
                 const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  int index = value.toInt();
-                  if (index >= 0 && index < dates.length) {
-                    final date = DateTime.parse(dates[index]);
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        DateFormat('E').format(date),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 10,
-                        ),
-                      ),
-                    );
-                  }
-                  return const Text('');
-                },
-              ),
-            ),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
@@ -645,193 +459,372 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               spots: List.generate(
                   values.length, (i) => FlSpot(i.toDouble(), values[i])),
               isCurved: true,
-              color: Colors.blue,
+              color: Colors.blue.shade600,
               barWidth: 4,
               isStrokeCapRound: true,
-              dotData: const FlDotData(show: true),
+              dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (s, p, b, i) => FlDotCirclePainter(
+                      radius: 4,
+                      color: Colors.white,
+                      strokeWidth: 3,
+                      strokeColor: Colors.blue.shade600)),
               belowBarData: BarAreaData(
-                show: true,
-                color: Colors.blue.withOpacity(0.1),
-              ),
+                  show: true,
+                  gradient: LinearGradient(colors: [
+                    Colors.blue.shade600.withOpacity(0.15),
+                    Colors.blue.shade600.withOpacity(0.0)
+                  ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
             ),
           ],
-          lineTouchData: LineTouchData(
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipItems: (touchedSpots) {
-                return touchedSpots.map((spot) {
-                  return LineTooltipItem(
-                    '\$${spot.y.toStringAsFixed(2)}',
-                    const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  );
-                }).toList();
-              },
-            ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSalesColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Revenue Performance'),
+        const SizedBox(height: 16),
+        _buildSalesChart(adminProvider.salesTrend),
+      ],
+    );
+  }
+
+  Widget _buildCategoryColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Category Distribution'),
+        const SizedBox(height: 16),
+        _buildCategoryPieChart(adminProvider.categoryRevenue),
+      ],
+    );
+  }
+
+  Widget _buildTopSellingColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Top Selling Products'),
+        const SizedBox(height: 16),
+        _buildTopSellingList(adminProvider.topSelling),
+      ],
+    );
+  }
+
+  Widget _buildActivityColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Recent Activity'),
+        const SizedBox(height: 16),
+        _buildActivityFeed(adminProvider.recentActivity),
+      ],
+    );
+  }
+
+  Widget _buildCategoryPieChart(Map<String, double> categoryRevenue) {
+    if (categoryRevenue.isEmpty)
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.pie_chart_outline_rounded,
+                  size: 48, color: Colors.grey.shade300),
+              const SizedBox(height: 12),
+              Text('No data available',
+                  style: TextStyle(color: Colors.grey.shade500)),
+            ],
           ),
         ),
+      );
+    final colors = [
+      Colors.blue,
+      Colors.teal,
+      Colors.orange,
+      Colors.purple,
+      Colors.pink
+    ];
+    int i = 0;
+    final sections = categoryRevenue.entries
+        .map((e) => PieChartSectionData(
+            value: e.value,
+            color: colors[i++ % colors.length],
+            radius: 40,
+            showTitle: false))
+        .toList();
+
+    return Container(
+      height: 350,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20)
+        ],
+      ),
+      child: Column(
+        children: [
+          Expanded(
+              child: PieChart(PieChartData(
+                  sections: sections,
+                  sectionsSpace: 4,
+                  centerSpaceRadius: 60))),
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: categoryRevenue.keys.take(5).map((cat) {
+              final color = colors[
+                  categoryRevenue.keys.toList().indexOf(cat) % colors.length];
+              return Row(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                    width: 8,
+                    height: 8,
+                    decoration:
+                        BoxDecoration(color: color, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(cat,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                )
+              ]);
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTopSellingList(List<dynamic> topSelling) {
-    if (topSelling.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text('No products sold yet'),
-      );
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: topSelling.length,
-      itemBuilder: (context, index) {
-        final watch = topSelling[index];
-        return ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: watch.images.isNotEmpty
-                ? Image.network(watch.images[0], fit: BoxFit.cover)
-                : const Icon(Icons.watch),
-          ),
-          title: Text(
-            watch.name,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Text(
-            '${watch.popularity} orders',
-            style: const TextStyle(fontSize: 10),
-          ),
-          trailing: Text(
-            '\$${watch.price.toInt()}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryPieChart(Map<String, double> categoryRevenue) {
-    if (categoryRevenue.isEmpty) {
-      return const SizedBox(
+    if (topSelling.isEmpty)
+      return Container(
         height: 150,
-        child: Center(child: Text('No data')),
-      );
-    }
-
-    final List<Color> colors = [
-      Colors.blue,
-      Colors.purple,
-      Colors.orange,
-      Colors.teal,
-      Colors.pink,
-    ];
-
-    int colorIndex = 0;
-    final sections = categoryRevenue.entries.map((e) {
-      final color = colors[colorIndex % colors.length];
-      colorIndex++;
-      return PieChartSectionData(
-        value: e.value,
-        title: '',
-        radius: 40,
-        color: color,
-      );
-    }).toList();
-
-    return Column(
-      children: [
-        SizedBox(
-          height: 150,
-          child: PieChart(
-            PieChartData(
-              sections: sections,
-              sectionsSpace: 2,
-              centerSpaceRadius: 30,
-            ),
-          ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100),
         ),
-        const SizedBox(height: 8),
-        ...categoryRevenue.keys.take(3).map((cat) {
-          final index = categoryRevenue.keys.toList().indexOf(cat);
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  color: colors[index % colors.length],
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    cat,
-                    style: const TextStyle(fontSize: 10),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildActivityFeed(List<Map<String, dynamic>> activities) {
-    if (activities.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text('No recent activity'),
+        child: Center(
+          child: Text('No sales data yet',
+              style: TextStyle(color: Colors.grey.shade500)),
+        ),
       );
-    }
-
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: ListView.separated(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100)),
+      child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: activities.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemCount: topSelling.length,
         itemBuilder: (context, index) {
-          final activity = activities[index];
-          final type = activity['type'];
-          final time = activity['time'] as DateTime;
-
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  type == 'order' ? Colors.green[50] : Colors.blue[50],
-              child: Icon(
-                type == 'order' ? Icons.shopping_cart : Icons.person_add,
-                color: type == 'order' ? Colors.green : Colors.blue,
-                size: 20,
-              ),
-            ),
-            title: Text(
-              activity['title'],
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              activity['subtitle'],
-              style: const TextStyle(fontSize: 11),
-            ),
-            trailing: Text(
-              DateFormat('HH:mm').format(time),
-              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+          final watch = topSelling[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                        width: 48,
+                        height: 48,
+                        color: Colors.grey[100],
+                        child: watch.images.isNotEmpty
+                            ? Image.network(watch.images[0], fit: BoxFit.cover)
+                            : const Icon(Icons.watch))),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(watch.name,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      Text('${watch.popularity} orders',
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.grey[500])),
+                    ],
+                  ),
+                ),
+                Text('\$${watch.price.toInt()}',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue)),
+              ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildActivityFeed(List<Map<String, dynamic>> activities) {
+    if (activities.isEmpty)
+      return Container(
+        height: 150,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Center(
+          child: Text('No recent activity',
+              style: TextStyle(color: Colors.grey.shade500)),
+        ),
+      );
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100)),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: activities.length,
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: Colors.grey.shade50),
+        itemBuilder: (context, index) {
+          final a = activities[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Row(
+              children: [
+                CircleAvatar(
+                    radius: 18,
+                    backgroundColor: a['type'] == 'order'
+                        ? Colors.green.shade50
+                        : Colors.blue.shade50,
+                    child: Icon(
+                        a['type'] == 'order'
+                            ? Icons.shopping_basket_outlined
+                            : Icons.person_outline,
+                        size: 18,
+                        color:
+                            a['type'] == 'order' ? Colors.green : Colors.blue)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(a['title'],
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      Text(a['subtitle'],
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(DateFormat('HH:mm').format(a['time'] as DateTime),
+                    style: TextStyle(fontSize: 10, color: Colors.grey[400])),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildManagementGrid() {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        final user = auth.user!;
+        final actions = [
+          if (user.canManageProducts)
+            _ActionItem(Icons.inventory_2_outlined, 'Products',
+                'Inventory & Price', Colors.blue, const ManageProductsScreen()),
+          if (user.canManageOrders)
+            _ActionItem(Icons.local_shipping_outlined, 'Orders',
+                'Tracking & Status', Colors.green, const ManageOrdersScreen()),
+          if (user.canManageUsers)
+            _ActionItem(Icons.group_outlined, 'Users', 'Roles & Access',
+                Colors.orange, const ManageUsersScreen()),
+          if (user.canManageCategories)
+            _ActionItem(Icons.category_outlined, 'Categories', 'Taxonomy',
+                Colors.teal, const ManageCategoriesScreen()),
+          if (user.canManageBrands)
+            _ActionItem(Icons.diamond_outlined, 'Brands', 'Manufacturer list',
+                Colors.indigo, const ManageBrandsScreen()),
+          _ActionItem(Icons.star_outline_rounded, 'Reviews', 'User Feedback',
+              Colors.amber, const ManageReviewsScreen()),
+          if (user.canManageBanners)
+            _ActionItem(Icons.view_carousel_outlined, 'Banners', 'Marketing',
+                Colors.cyan, const ManageBannersScreen()),
+          _ActionItem(Icons.notifications_none_rounded, 'Broadcast',
+              'Push Alerts', Colors.redAccent, const SendNotificationScreen()),
+        ];
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 250,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.1),
+          itemCount: actions.length,
+          itemBuilder: (context, index) {
+            final item = actions[index];
+            return Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: Colors.grey.shade100)),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => item.screen)),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(item.icon, size: 32, color: item.color),
+                      const SizedBox(height: 12),
+                      Text(item.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(item.subtitle,
+                          style: TextStyle(
+                              color: Colors.grey.shade500, fontSize: 11),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -840,81 +833,173 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Low Stock Items'),
+        title: const Text('Resolve Low Stock'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: SizedBox(
-          width: double.maxFinite,
+          width: 500,
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: lowStockWatches.length,
             itemBuilder: (context, index) {
               final watch = lowStockWatches[index];
-              final TextEditingController controller =
+              final controller =
                   TextEditingController(text: watch.stock.toString());
-
               return ListTile(
-                title: Text(watch.name),
-                subtitle: Text('Current Stock: ${watch.stock}'),
+                title: Text(watch.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('Current: ${watch.stock} units'),
                 trailing: SizedBox(
-                  width: 100,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
+                    width: 80,
+                    child: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
                             isDense: true,
-                            contentPadding: EdgeInsets.all(8),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () async {
-                          final newStock = int.tryParse(controller.text);
-                          if (newStock != null) {
-                            final success = await Provider.of<AdminProvider>(
-                                    context,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8))),
+                        onSubmitted: (v) async {
+                          final n = int.tryParse(v);
+                          if (n != null)
+                            await Provider.of<AdminProvider>(context,
                                     listen: false)
-                                .updateWatchStock(watch.id, newStock);
-
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success
-                                      ? 'Stock updated for ${watch.name}'
-                                      : 'Failed to update stock'),
-                                  backgroundColor:
-                                      success ? Colors.green : Colors.red,
-                                ),
-                              );
-                              if (success) {
-                                Navigator.pop(
-                                    context); // Close dialog to refresh or keep open?
-                                // Better to keep open but state needs update.
-                                // Since provider updates, if we use consumer here or just rely on parent rebuild..
-                                // Actually Dialog needs to rebuild to show new stock.
-                                // For simplicity, let's close it or maybe just clear focus.
-                              }
-                            }
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                                .updateWatchStock(watch.id, n);
+                        })),
               );
             },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
+
+  Widget _buildPeriodToggle(AdminProvider provider) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: ['day', 'week', 'month'].map((p) {
+          bool isSelected = provider.period == p;
+          return GestureDetector(
+            onTap: () => provider.setPeriod(p),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.black : Colors.transparent,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Text(
+                p[0].toUpperCase() + p.substring(1),
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildBrandColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Sales by Brand'),
+        const SizedBox(height: 16),
+        _buildBarChart(adminProvider.brandSales),
+      ],
+    );
+  }
+
+  Widget _buildPaymentMethodColumn(AdminProvider adminProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Payment Channels'),
+        const SizedBox(height: 16),
+        _buildCategoryPieChart(adminProvider.paymentMethodStats),
+      ],
+    );
+  }
+
+  Widget _buildBarChart(Map<String, double> data) {
+    if (data.isEmpty)
+      return Container(
+          height: 200, child: const Center(child: Text('No Data')));
+
+    final entries = data.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topEntries = entries.take(7).toList();
+
+    return Container(
+      height: 350,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: BarChart(
+        BarChartData(
+          gridData: FlGridData(show: false),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    getTitlesWidget: (v, m) {
+                      if (v.toInt() >= 0 && v.toInt() < topEntries.length) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            topEntries[v.toInt()].key.length > 6
+                                ? topEntries[v.toInt()].key.substring(0, 6) +
+                                    '..'
+                                : topEntries[v.toInt()].key,
+                            style: const TextStyle(fontSize: 10),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    })),
+          ),
+          borderData: FlBorderData(show: false),
+          barGroups: List.generate(topEntries.length, (index) {
+            return BarChartGroupData(
+              x: index,
+              barRods: [
+                BarChartRodData(
+                  toY: topEntries[index].value,
+                  color: Colors.indigoAccent,
+                  width: 16,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final Widget screen;
+  const _ActionItem(
+      this.icon, this.title, this.subtitle, this.color, this.screen);
 }

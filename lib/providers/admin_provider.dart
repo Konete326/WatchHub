@@ -15,6 +15,7 @@ class AdminProvider with ChangeNotifier {
 
   // Dashboard Stats
   Map<String, dynamic>? _dashboardStats;
+  String _period = 'week';
   List<Order> _recentOrders = [];
   List<Watch> _lowStockWatches = [];
   List<HomeBanner> _banners = [];
@@ -27,6 +28,7 @@ class AdminProvider with ChangeNotifier {
   String? _errorMessage;
 
   Map<String, dynamic>? get dashboardStats => _dashboardStats;
+  String get period => _period;
   List<Order> get recentOrders => _recentOrders;
   List<Watch> get lowStockWatches => _lowStockWatches;
   List<HomeBanner> get banners => _banners;
@@ -37,6 +39,13 @@ class AdminProvider with ChangeNotifier {
   PromotionBanner? get promotionHighlight => _promotionHighlight;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  void setPeriod(String newPeriod) {
+    if (_period != newPeriod) {
+      _period = newPeriod;
+      fetchDashboardStats();
+    }
+  }
 
   // Getters for stats
   int get totalUsers {
@@ -66,11 +75,24 @@ class AdminProvider with ChangeNotifier {
   double get totalRevenue {
     final value = _dashboardStats?['totalRevenue'];
     if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      return double.tryParse(value) ?? 0.0;
-    }
+    return (value as num).toDouble();
+  }
+
+  double get aov {
+    final value = _dashboardStats?['aov'];
+    if (value == null) return 0.0;
+    return (value as num).toDouble();
+  }
+
+  double get conversionRate {
+    final value = _dashboardStats?['conversion'];
+    if (value == null) return 0.0;
+    return (value as num).toDouble();
+  }
+
+  double get returningRate {
+    final value = _dashboardStats?['returningRate'];
+    if (value == null) return 0.0;
     return (value as num).toDouble();
   }
 
@@ -92,6 +114,18 @@ class AdminProvider with ChangeNotifier {
     return Map<String, double>.from(revenue);
   }
 
+  Map<String, double> get brandSales {
+    final revenue = _dashboardStats?['brandRevenue'];
+    if (revenue == null) return {};
+    return Map<String, double>.from(revenue);
+  }
+
+  Map<String, double> get paymentMethodStats {
+    final stats = _dashboardStats?['paymentMethodStats'];
+    if (stats == null) return {};
+    return Map<String, double>.from(stats);
+  }
+
   List<Map<String, dynamic>> get recentActivity {
     final activity = _dashboardStats?['recentActivity'];
     if (activity == null) return [];
@@ -104,19 +138,17 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await _adminService.getDashboardStats();
+      final data = await _adminService.getDashboardStats(period: _period);
       _dashboardStats = data;
 
-      // Extract low stock watches from the fetched watches in stats
+      // Extract low stock watches
       final allWatches = data['allWatches'] as List<Watch>? ?? [];
-      if (allWatches.isEmpty) {
-        // Fallback if not provided in data (though it should be)
-        _lowStockWatches = [];
-      } else {
+      if (allWatches.isNotEmpty) {
         _lowStockWatches = allWatches.where((w) => w.isLowStock).toList();
+      } else {
+        _lowStockWatches = [];
       }
 
-      // Recent orders are already used in activity, but we can store them if needed
       _recentOrders = [];
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
@@ -146,6 +178,12 @@ class AdminProvider with ChangeNotifier {
     String? title,
     String? subtitle,
     String? link,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? allowedSegments,
+    List<String>? targetDevices,
+    String? abTestId,
+    String? version,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -156,7 +194,30 @@ class AdminProvider with ChangeNotifier {
         title: title,
         subtitle: subtitle,
         link: link,
+        startDate: startDate,
+        endDate: endDate,
+        allowedSegments: allowedSegments,
+        targetDevices: targetDevices,
+        abTestId: abTestId,
+        version: version,
       );
+      await fetchAllBanners();
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateBanner(String id, Map<String, dynamic> data) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _adminService.updateBanner(id, data);
       await fetchAllBanners();
       return true;
     } catch (e) {
@@ -238,6 +299,23 @@ class AdminProvider with ChangeNotifier {
     try {
       final newCoupon = await _adminService.createCoupon(coupon);
       _coupons.insert(0, newCoupon);
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateCoupon(String id, Map<String, dynamic> data) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _adminService.updateCoupon(id, data);
+      await fetchAllCoupons();
       return true;
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);

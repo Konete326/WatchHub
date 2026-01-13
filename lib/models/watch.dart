@@ -53,6 +53,15 @@ class Watch {
   final String? strapColor; // Color in hex format (selected by user)
   final List<WatchVariant>? variants; // Main color variants
   final String? selectedProductColor; // Selected main color (name)
+  final String status; // 'DRAFT', 'PUBLISHED', 'SCHEDULED'
+  final DateTime? publishAt;
+  final DateTime? unpublishAt;
+  final String? seoTitle;
+  final String? seoDescription;
+  final String? slug;
+  final String? videoUrl;
+  final bool isFeatured;
+  final bool isLimitedEdition;
 
   Watch({
     required this.id,
@@ -78,6 +87,15 @@ class Watch {
     this.strapColor,
     this.variants,
     this.selectedProductColor,
+    this.isFeatured = false,
+    this.isLimitedEdition = false,
+    this.status = 'PUBLISHED', // Default to published for existing items
+    this.publishAt,
+    this.unpublishAt,
+    this.seoTitle,
+    this.seoDescription,
+    this.slug,
+    this.videoUrl,
   });
 
   factory Watch.fromJson(Map<String, dynamic> json) {
@@ -112,6 +130,8 @@ class Watch {
               .toList()
           : null,
       selectedProductColor: json['selectedProductColor'] as String?,
+      isFeatured: json['isFeatured'] as bool? ?? false,
+      isLimitedEdition: json['isLimitedEdition'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
@@ -120,6 +140,21 @@ class Watch {
       brand: json['brand'] != null
           ? Brand.fromJson(json['brand'] as Map<String, dynamic>)
           : null,
+      status: json['status'] as String? ?? 'PUBLISHED',
+      publishAt: json['publishAt'] != null
+          ? (json['publishAt'] is Timestamp
+              ? (json['publishAt'] as Timestamp).toDate()
+              : DateTime.parse(json['publishAt'] as String))
+          : null,
+      unpublishAt: json['unpublishAt'] != null
+          ? (json['unpublishAt'] is Timestamp
+              ? (json['unpublishAt'] as Timestamp).toDate()
+              : DateTime.parse(json['unpublishAt'] as String))
+          : null,
+      seoTitle: json['seoTitle'] as String?,
+      seoDescription: json['seoDescription'] as String?,
+      slug: json['slug'] as String?,
+      videoUrl: json['videoUrl'] as String?,
     );
   }
 
@@ -155,7 +190,16 @@ class Watch {
               .toList()
           : null,
       selectedProductColor: data['selectedProductColor'] as String?,
+      isFeatured: data['isFeatured'] as bool? ?? false,
+      isLimitedEdition: data['isLimitedEdition'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      status: data['status'] ?? 'PUBLISHED',
+      publishAt: (data['publishAt'] as Timestamp?)?.toDate(),
+      unpublishAt: (data['unpublishAt'] as Timestamp?)?.toDate(),
+      seoTitle: data['seoTitle'],
+      seoDescription: data['seoDescription'],
+      slug: data['slug'],
+      videoUrl: data['videoUrl'],
     );
   }
 
@@ -181,7 +225,16 @@ class Watch {
       'strapColor': strapColor,
       'variants': variants?.map((v) => v.toJson()).toList(),
       'selectedProductColor': selectedProductColor,
+      'isFeatured': isFeatured,
+      'isLimitedEdition': isLimitedEdition,
       'createdAt': createdAt,
+      'status': status,
+      'publishAt': publishAt,
+      'unpublishAt': unpublishAt,
+      'seoTitle': seoTitle,
+      'seoDescription': seoDescription,
+      'slug': slug,
+      'videoUrl': videoUrl,
     };
   }
 
@@ -218,6 +271,15 @@ class Watch {
     String? strapColor,
     List<WatchVariant>? variants,
     String? selectedProductColor,
+    bool? isFeatured,
+    bool? isLimitedEdition,
+    String? status,
+    DateTime? publishAt,
+    DateTime? unpublishAt,
+    String? seoTitle,
+    String? seoDescription,
+    String? slug,
+    String? videoUrl,
   }) {
     return Watch(
       id: id ?? this.id,
@@ -243,6 +305,15 @@ class Watch {
       strapColor: strapColor ?? this.strapColor,
       variants: variants ?? this.variants,
       selectedProductColor: selectedProductColor ?? this.selectedProductColor,
+      isFeatured: isFeatured ?? this.isFeatured,
+      isLimitedEdition: isLimitedEdition ?? this.isLimitedEdition,
+      status: status ?? this.status,
+      publishAt: publishAt ?? this.publishAt,
+      unpublishAt: unpublishAt ?? this.unpublishAt,
+      seoTitle: seoTitle ?? this.seoTitle,
+      seoDescription: seoDescription ?? this.seoDescription,
+      slug: slug ?? this.slug,
+      videoUrl: videoUrl ?? this.videoUrl,
     );
   }
 }

@@ -4,9 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/admin_service.dart';
 import '../../models/watch.dart';
 import 'add_edit_product_screen.dart';
-import '../../widgets/empty_state.dart';
-
-import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/admin/admin_layout.dart';
 
 class ManageProductsScreen extends StatefulWidget {
   const ManageProductsScreen({super.key});
@@ -20,7 +18,10 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<Watch> _watches = [];
+  final Set<String> _selectedIds = {};
+  bool _isBulkMode = false;
   bool _isLoading = false;
+  // ignore: unused_field
   String? _errorMessage;
   int _currentPage = 1;
   int _totalPages = 1;
@@ -44,18 +45,23 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     if (_isLoading) return;
 
     if (refresh) {
-      setState(() {
-        _currentPage = 1;
-        _watches = [];
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage = 1;
+          _watches = [];
+          _selectedIds.clear();
+        });
+      }
       page = 1;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _currentPage = page;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _currentPage = page;
+      });
+    }
 
     try {
       final result = await _adminService.getAllWatches(
@@ -87,52 +93,11 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
           _errorMessage = 'Failed to load watches: ${e.toString()}';
           _isLoading = false;
         });
-        print('Error loading watches: $e');
       }
     }
   }
 
-  Future<void> _deleteWatch(String id, String name) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "$name"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() => _isLoading = true);
-      try {
-        await _adminService.deleteWatch(id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Product deleted successfully')),
-          );
-          _loadWatches(page: _currentPage, search: _searchQuery);
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to delete product: ${e.toString()}')),
-          );
-        }
-      }
-    }
-  }
+  // Removed duplicate _bulkDelete
 
   void _onSearch(String query) {
     setState(() {
@@ -146,253 +111,354 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     final currencyFormat =
         NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Products'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.of(context)
-                  .push(
-                MaterialPageRoute(
-                  builder: (context) => const AddEditProductScreen(),
-                ),
-              )
-                  .then((_) {
-                _loadWatches(page: _currentPage, search: _searchQuery);
-              });
-            },
-            tooltip: 'Add Product',
+    return AdminLayout(
+      title: 'Manage Products',
+      currentRoute: '/admin/products',
+      actions: [
+        if (_selectedIds.isNotEmpty) ...[
+          // Bulk Actions Menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.flash_on_rounded, color: Colors.blue),
+            tooltip: 'Bulk Actions',
+            onSelected: (value) => _performBulkAction(value),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                  value: 'publish',
+                  child: Row(children: [
+                    Icon(Icons.public, size: 18),
+                    SizedBox(width: 8),
+                    Text('Publish Selected')
+                  ])),
+              const PopupMenuItem(
+                  value: 'unpublish',
+                  child: Row(children: [
+                    Icon(Icons.public_off, size: 18),
+                    SizedBox(width: 8),
+                    Text('Unpublish Selected')
+                  ])),
+              const PopupMenuItem(
+                  value: 'stock_add',
+                  child: Row(children: [
+                    Icon(Icons.add, size: 18),
+                    SizedBox(width: 8),
+                    Text('Add Stock (+10)')
+                  ])),
+              const PopupMenuItem(
+                  value: 'stock_reduce',
+                  child: Row(children: [
+                    Icon(Icons.remove, size: 18),
+                    SizedBox(width: 8),
+                    Text('Reduce Stock (-10)')
+                  ])),
+              const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(children: [
+                    Icon(Icons.delete, color: Colors.red, size: 18),
+                    SizedBox(width: 8),
+                    Text('Delete Selected', style: TextStyle(color: Colors.red))
+                  ])),
+            ],
           ),
         ],
-      ),
-      drawer: const AdminDrawer(),
-      body: Column(
+        IconButton(
+          icon: const Icon(Icons.add_rounded),
+          onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AddEditProductScreen()))
+              .then((_) => _loadWatches(refresh: true)),
+          tooltip: 'Add Product',
+        ),
+      ],
+      child: Column(
         children: [
+          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search watches...',
-                prefixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    _onSearch(_searchController.text);
-                  },
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search products by name, SKU...',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearch('');
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ),
+                    onSubmitted: _onSearch,
+                    onChanged: (v) => setState(() {}),
+                  ),
                 ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearch('');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onSubmitted: _onSearch,
-              onChanged: (value) {
-                setState(() {}); // Rebuild to update suffixIcon visibility
-                if (value.isEmpty) {
-                  _onSearch('');
-                }
-              },
+                const SizedBox(width: 12),
+                _buildActionMenu(),
+              ],
             ),
           ),
-          if (!_isLoading && _watches.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Found $_total watch${_total != 1 ? 'es' : ''}',
-                  style: TextStyle(color: Colors.grey[600]),
+
+          // Count & Bulk Mode Toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Found $_total products',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
                 ),
-              ),
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    _isBulkMode = !_isBulkMode;
+                    if (!_isBulkMode) _selectedIds.clear();
+                  }),
+                  icon: Icon(
+                      _isBulkMode
+                          ? Icons.check_box_rounded
+                          : Icons.check_box_outline_blank_rounded,
+                      size: 18),
+                  label: Text(_isBulkMode ? 'Disable Select' : 'Enable Select'),
+                ),
+              ],
             ),
+          ),
+
           Expanded(
             child: _isLoading && _watches.isEmpty
                 ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
+                : _watches.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline,
-                                size: 64, color: Colors.grey[400]),
-                            const SizedBox(height: 16),
-                            Text(
-                              _errorMessage!,
-                              style: TextStyle(color: Colors.grey[600]),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _loadWatches(
-                                  page: _currentPage, search: _searchQuery),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _watches.isEmpty
-                        ? EmptyState(
-                            icon: Icons.inventory_2_outlined,
-                            title: 'No watches found',
-                            message: _searchQuery != null
-                                ? 'No products match your search "$_searchQuery".'
-                                : 'You haven\'t added any products yet to your inventory.',
-                            actionLabel: 'Add Product',
-                            onActionPressed: () async {
-                              final result = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AddEditProductScreen(),
-                                ),
-                              );
-                              if (result == true) {
-                                _loadWatches(
-                                    page: 1,
-                                    search: _searchQuery,
-                                    refresh: true);
-                              }
-                            },
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () => _loadWatches(
-                                page: _currentPage, search: _searchQuery),
-                            child: ListView.builder(
-                              itemCount: _watches.length,
-                              padding: const EdgeInsets.all(16),
-                              itemBuilder: (context, index) {
-                                final watch = _watches[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.all(8),
-                                    leading: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
+                        child: Text(_searchQuery != null
+                            ? 'No matches found'
+                            : 'No products available'))
+                    : RefreshIndicator(
+                        onRefresh: () => _loadWatches(
+                            page: _currentPage, search: _searchQuery),
+                        child: ListView.builder(
+                          itemCount: _watches.length,
+                          padding: const EdgeInsets.all(16),
+                          itemBuilder: (context, index) {
+                            final watch = _watches[index];
+                            bool isSelected = _selectedIds.contains(watch.id);
+
+                            return Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                    color: isSelected
+                                        ? Colors.blue
+                                        : Colors.grey.shade200,
+                                    width: isSelected ? 2 : 1),
+                              ),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: ListTile(
+                                leading: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (_isBulkMode)
+                                      Checkbox(
+                                        value: isSelected,
+                                        onChanged: (v) {
+                                          setState(() {
+                                            if (v == true) {
+                                              _selectedIds.add(watch.id);
+                                            } else {
+                                              _selectedIds.remove(watch.id);
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
                                       child: watch.images.isNotEmpty
                                           ? CachedNetworkImage(
                                               imageUrl: watch.images.first,
-                                              width: 60,
-                                              height: 60,
+                                              width: 50,
+                                              height: 50,
                                               fit: BoxFit.cover,
-                                              placeholder: (context, url) =>
-                                                  Container(
-                                                color: Colors.grey[200],
-                                                child: const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                          strokeWidth: 2),
-                                                ),
-                                              ),
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      Container(
-                                                color: Colors.grey[300],
-                                                child: const Icon(Icons.error),
-                                              ),
                                             )
                                           : Container(
-                                              width: 60,
-                                              height: 60,
-                                              color: Colors.grey[200],
-                                              child: const Icon(Icons.image),
-                                            ),
+                                              width: 50,
+                                              height: 50,
+                                              color: Colors.grey.shade100),
                                     ),
-                                    title: Text(
-                                      watch.name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('SKU: ${watch.sku}'),
-                                        Text(
-                                            'Price: ${currencyFormat.format(watch.price)}'),
-                                        Text('Stock: ${watch.stock}',
+                                  ],
+                                ),
+                                title: Row(
+                                  children: [
+                                    Text(watch.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    if (watch.status != 'PUBLISHED')
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                            color: Colors.orange.shade100,
+                                            borderRadius:
+                                                BorderRadius.circular(4)),
+                                        child: Text(watch.status,
                                             style: TextStyle(
-                                              color: watch.stock <= 5
-                                                  ? Colors.red
-                                                  : Colors.grey[600],
-                                              fontWeight: watch.stock <= 5
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            )),
-                                      ],
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () async {
-                                            final result =
-                                                await Navigator.of(context)
-                                                    .push(
+                                                fontSize: 10,
+                                                color: Colors.orange.shade800,
+                                                fontWeight: FontWeight.bold)),
+                                      )
+                                  ],
+                                ),
+                                subtitle: Text(
+                                    'Stock: ${watch.stock} | ${currencyFormat.format(watch.price)}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: () => Navigator.push(
+                                              context,
                                               MaterialPageRoute(
-                                                builder: (context) =>
-                                                    AddEditProductScreen(
-                                                        watch: watch),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              _loadWatches(
-                                                  page: _currentPage,
-                                                  search: _searchQuery);
-                                            }
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete,
-                                              color: Colors.red),
-                                          onPressed: () => _deleteWatch(
-                                              watch.id, watch.name),
-                                        ),
-                                      ],
+                                                  builder: (_) =>
+                                                      AddEditProductScreen(
+                                                          watch: watch)))
+                                          .then((_) => _loadWatches()),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
           ),
-          if (_totalPages > 1)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () => _loadWatches(
-                            page: _currentPage - 1, search: _searchQuery)
-                        : null,
-                  ),
-                  Text('Page $_currentPage of $_totalPages'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage < _totalPages
-                        ? () => _loadWatches(
-                            page: _currentPage + 1, search: _searchQuery)
-                        : null,
-                  ),
-                ],
-              ),
-            ),
+          _buildPagination(),
         ],
       ),
     );
+  }
+
+  Widget _buildActionMenu() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert_rounded),
+      onSelected: (value) {
+        if (value == 'export') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Exporting to Excel...')));
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'export', child: Text('Export to Excel')),
+        const PopupMenuItem(value: 'import', child: Text('Bulk Import (CSV)')),
+      ],
+    );
+  }
+
+  Widget _buildPagination() {
+    if (_totalPages <= 1) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade100))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left_rounded),
+            onPressed: _currentPage > 1
+                ? () =>
+                    _loadWatches(page: _currentPage - 1, search: _searchQuery)
+                : null,
+          ),
+          Text('Page $_currentPage of $_totalPages'),
+          IconButton(
+            icon: const Icon(Icons.chevron_right_rounded),
+            onPressed: _currentPage < _totalPages
+                ? () =>
+                    _loadWatches(page: _currentPage + 1, search: _searchQuery)
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performBulkAction(String action) async {
+    setState(() => _isLoading = true);
+    try {
+      if (action == 'delete') {
+        await _bulkDelete();
+      } else if (action == 'publish') {
+        await _adminService
+            .bulkUpdateProducts(_selectedIds.toList(), {'status': 'PUBLISHED'});
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Products Published')));
+      } else if (action == 'unpublish') {
+        await _adminService
+            .bulkUpdateProducts(_selectedIds.toList(), {'status': 'DRAFT'});
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Products Unpublished')));
+      } else if (action == 'stock_add') {
+        await _adminService.bulkUpdateStock(_selectedIds.toList(), 10);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Stock Increased')));
+      } else if (action == 'stock_reduce') {
+        await _adminService.bulkUpdateStock(_selectedIds.toList(), -10);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Stock Reduced')));
+      }
+      _loadWatches(refresh: true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Action failed: $e')));
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _bulkDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bulk Delete'),
+        content: Text(
+            'Are you sure you want to delete ${_selectedIds.length} products?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _adminService.deleteMultipleWatches(_selectedIds.toList());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected products deleted')),
+        );
+      }
+    }
   }
 }

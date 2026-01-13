@@ -10,6 +10,7 @@ import '../../models/watch.dart';
 import '../../models/brand.dart';
 import '../../models/category.dart' as model;
 import '../../utils/validators.dart';
+import 'package:intl/intl.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Watch? watch;
@@ -49,6 +50,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   bool _hasBeltOption = false;
   bool _hasChainOption = false;
 
+  final _seoTitleController = TextEditingController();
+  final _seoDescriptionController = TextEditingController();
+  final _slugController = TextEditingController();
+  final _videoUrlController = TextEditingController();
+
+  String _status = 'PUBLISHED';
+  DateTime? _publishAt;
+  DateTime? _unpublishAt;
+
+  // Variants State
+  List<WatchVariant> _variants = [];
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +92,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
       _hasBeltOption = widget.watch!.hasBeltOption;
       _hasChainOption = widget.watch!.hasChainOption;
+
+      // Load New Fields
+      _status = widget.watch!.status;
+      _publishAt = widget.watch!.publishAt;
+      _unpublishAt = widget.watch!.unpublishAt;
+      _seoTitleController.text = widget.watch!.seoTitle ?? '';
+      _seoDescriptionController.text = widget.watch!.seoDescription ?? '';
+      _slugController.text = widget.watch!.slug ?? '';
+      _videoUrlController.text = widget.watch!.videoUrl ?? '';
+      if (widget.watch!.variants != null) {
+        _variants = List.from(widget.watch!.variants!);
+      }
     }
   }
 
@@ -94,6 +119,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _waterResistanceController.dispose();
     _diameterController.dispose();
     _discountController.dispose();
+    _seoTitleController.dispose();
+    _seoDescriptionController.dispose();
+    _slugController.dispose();
+    _videoUrlController.dispose();
     super.dispose();
   }
 
@@ -290,6 +319,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
           hasBeltOption: _hasBeltOption,
           hasChainOption: _hasChainOption,
+          status: _status,
+          publishAt: _publishAt,
+          unpublishAt: _unpublishAt,
+          seoTitle: _seoTitleController.text.isEmpty
+              ? null
+              : _seoTitleController.text,
+          seoDescription: _seoDescriptionController.text.isEmpty
+              ? null
+              : _seoDescriptionController.text,
+          slug: _slugController.text.isEmpty ? null : _slugController.text,
+          videoUrl: _videoUrlController.text.isEmpty
+              ? null
+              : _videoUrlController.text,
+          variants: _variants.isNotEmpty ? _variants : null,
         );
       } else {
         await _adminService.createWatch(
@@ -309,6 +352,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
           hasBeltOption: _hasBeltOption,
           hasChainOption: _hasChainOption,
+          status: _status,
+          publishAt: _publishAt,
+          unpublishAt: _unpublishAt,
+          seoTitle: _seoTitleController.text.isEmpty
+              ? null
+              : _seoTitleController.text,
+          seoDescription: _seoDescriptionController.text.isEmpty
+              ? null
+              : _seoDescriptionController.text,
+          slug: _slugController.text.isEmpty ? null : _slugController.text,
+          videoUrl: _videoUrlController.text.isEmpty
+              ? null
+              : _videoUrlController.text,
+          variants: _variants.isNotEmpty ? _variants : null,
         );
       }
 
@@ -500,21 +557,36 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Name *',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: _nameController.text.isNotEmpty &&
+                              Validators.required(
+                                      _nameController.text, 'Name') ==
+                                  null
+                          ? const Icon(Icons.check_circle_outline_rounded,
+                              color: Colors.green)
+                          : null,
                     ),
+                    onChanged: (v) => setState(() {}),
                     validator: (value) => Validators.required(value, 'Name'),
                   ),
                   const SizedBox(height: 16),
 
                   TextFormField(
                     controller: _skuController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'SKU / Model Number *',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       helperText: 'Unique identifier for inventory management',
+                      suffixIcon: _skuController.text.isNotEmpty &&
+                              Validators.required(_skuController.text, 'SKU') ==
+                                  null
+                          ? const Icon(Icons.check_circle_outline_rounded,
+                              color: Colors.green)
+                          : null,
                     ),
+                    onChanged: (v) => setState(() {}),
                     validator: (value) => Validators.required(value, 'SKU'),
                   ),
                   const SizedBox(height: 16),
@@ -536,10 +608,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _priceController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Price *',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: _priceController.text.isNotEmpty &&
+                                    Validators.price(_priceController.text) ==
+                                        null
+                                ? const Icon(Icons.check_circle_outline_rounded,
+                                    color: Colors.green)
+                                : null,
                           ),
+                          onChanged: (v) => setState(() {}),
                           keyboardType: TextInputType.number,
                           validator: Validators.price,
                         ),
@@ -548,10 +627,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _stockController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Stock *',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: _stockController.text.isNotEmpty &&
+                                    Validators.stock(_stockController.text) ==
+                                        null
+                                ? const Icon(Icons.check_circle_outline_rounded,
+                                    color: Colors.green)
+                                : null,
                           ),
+                          onChanged: (v) => setState(() {}),
                           keyboardType: TextInputType.number,
                           validator: Validators.stock,
                         ),
@@ -691,6 +777,119 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Color Variants Section
+                  _buildVariantsSection(),
+                  const SizedBox(height: 24),
+
+                  // Video URL Section
+                  const Text(
+                    'Media',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _videoUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Product Video URL (YouTube/Vimeo)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.video_library),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // SEO Section
+                  ExpansionTile(
+                    title: const Text('SEO & Search',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    initiallyExpanded: false,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _slugController,
+                              decoration: const InputDecoration(
+                                labelText: 'URL Slug',
+                                helperText: 'unique-product-url',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _seoTitleController,
+                              decoration: const InputDecoration(
+                                labelText: 'SEO Title',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _seoDescriptionController,
+                              decoration: const InputDecoration(
+                                labelText: 'Meta Description',
+                                border: OutlineInputBorder(),
+                              ),
+                              maxLines: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Publishing Schedule Section
+                  ExpansionTile(
+                    title: const Text('Publishing Schedule',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    initiallyExpanded: true,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              value: _status,
+                              decoration: const InputDecoration(
+                                labelText: 'Status',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: ['DRAFT', 'PUBLISHED', 'SCHEDULED']
+                                  .map((s) => DropdownMenuItem(
+                                      value: s, child: Text(s)))
+                                  .toList(),
+                              onChanged: (v) => setState(() => _status = v!),
+                            ),
+                            if (_status == 'SCHEDULED') ...[
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildDatePicker(
+                                      'Publish Date',
+                                      _publishAt,
+                                      (d) => setState(() => _publishAt = d),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _buildDatePicker(
+                                      'Unpublish Date',
+                                      _unpublishAt,
+                                      (d) => setState(() => _unpublishAt = d),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ]
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
@@ -706,9 +905,140 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             ? 'Update Product'
                             : 'Create Product'),
                   ),
+                  const SizedBox(height: 50),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildVariantsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Color Variants',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        ..._variants.asMap().entries.map((e) {
+          int idx = e.key;
+          WatchVariant v = e.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: _parseColor(v.colorHex),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(v.colorName),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20),
+                  onPressed: () => setState(() => _variants.removeAt(idx)),
+                ),
+              ],
+            ),
+          );
+        }),
+        TextButton.icon(
+          icon: const Icon(Icons.add),
+          label: const Text('Add Color Variant'),
+          onPressed: _showAddVariantDialog,
+        ),
+      ],
+    );
+  }
+
+  Color _parseColor(String hex) {
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xff')));
+    } catch (_) {
+      return Colors.grey;
+    }
+  }
+
+  Future<void> _showAddVariantDialog() async {
+    final nameCtrl = TextEditingController();
+    final hexCtrl = TextEditingController(text: '#000000');
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Variant'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                  labelText: 'Color Name (e.g. Royal Blue)'),
+            ),
+            TextField(
+              controller: hexCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Color Hex (e.g. #0000FF)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameCtrl.text.isNotEmpty && hexCtrl.text.isNotEmpty) {
+                setState(() {
+                  _variants.add(WatchVariant(
+                    colorName: nameCtrl.text,
+                    colorHex: hexCtrl.text,
+                  ));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatePicker(
+      String label, DateTime? date, Function(DateTime) onSelect) {
+    return InkWell(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          initialDate: date ?? DateTime.now(),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+        );
+        if (d != null) onSelect(d);
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        child: Text(
+          date != null
+              ? DateFormat('MMM dd, yyyy').format(date)
+              : 'Select Date',
+        ),
+      ),
     );
   }
 }

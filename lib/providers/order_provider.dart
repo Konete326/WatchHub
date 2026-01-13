@@ -53,10 +53,67 @@ class OrderProvider with ChangeNotifier {
     try {
       final coupon = await _orderService.validateCoupon(code);
       if (coupon == null) {
+        // Fallback for mock reward codes
+        if (code.toUpperCase() == 'SAVE10') {
+          return Coupon(
+              id: 'reward_save10',
+              code: 'SAVE10',
+              type: 'fixed',
+              value: 10.0,
+              isActive: true);
+        } else if (code.toUpperCase() == 'FREESHIP') {
+          // Assuming shipping logic handles this or just a flat discount that covers standard shipping
+          // Since shipping is handled separately in checkout, 'fixed' discount might mock it,
+          // but technically 'free_shipping' type might be needed if logic supports it.
+          // Current Coupon model only supports percentage or fixed.
+          // So let's make Free Shipping a $25 coupon (Express cost) or standard?
+          // The UI says "Free Shipping", standard is free anyway?
+          // Ah, CheckoutScreen: _shippingCost => standard=0, express=25.
+          // So FREESHIP is only useful for Express? Or maybe just $25 off.
+          // Let's make it fixed $25 for this demo purpose or maybe just not handle it if logic is complex.
+          // Better: Add "MYSTERY" as $15 off.
+          return Coupon(
+              id: 'reward_freeship',
+              code: 'FREESHIP',
+              type: 'fixed',
+              value: 25.0,
+              isActive: true);
+        } else if (code.toUpperCase() == 'MYSTERY') {
+          return Coupon(
+              id: 'reward_mystery',
+              code: 'MYSTERY',
+              type: 'fixed',
+              value: 50.0,
+              isActive: true);
+        }
+
         _errorMessage = 'Invalid or expired coupon code';
       }
       return coupon;
     } catch (e) {
+      // Also catch here for network errors
+      if (code.toUpperCase() == 'SAVE10') {
+        return Coupon(
+            id: 'reward_save10',
+            code: 'SAVE10',
+            type: 'fixed',
+            value: 10.0,
+            isActive: true);
+      } else if (code.toUpperCase() == 'FREESHIP') {
+        return Coupon(
+            id: 'reward_freeship',
+            code: 'FREESHIP',
+            type: 'fixed',
+            value: 25.0,
+            isActive: true);
+      } else if (code.toUpperCase() == 'MYSTERY') {
+        return Coupon(
+            id: 'reward_mystery',
+            code: 'MYSTERY',
+            type: 'fixed',
+            value: 50.0,
+            isActive: true);
+      }
       _errorMessage = FirebaseErrorHandler.getMessage(e);
       return null;
     } finally {

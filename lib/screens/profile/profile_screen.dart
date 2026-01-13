@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/theme.dart';
-
+import '../notifications/notifications_screen.dart';
 import '../orders/order_history_screen.dart';
 import '../profile/addresses_screen.dart';
 import '../support/support_screen.dart';
 import 'edit_profile_screen.dart';
-import '../notifications/notifications_screen.dart';
+import 'payment_methods_screen.dart';
+import 'rewards_screen.dart';
+import '../../widgets/neumorphic_widgets.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool showBackButton;
@@ -27,7 +31,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Neumorphic Design Constants
   static const Color kBackgroundColor = AppTheme.softUiBackground;
   static const Color kTextColor = AppTheme.softUiTextColor;
 
@@ -86,32 +89,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Row(
               children: [
                 if (widget.showBackButton)
-                  _NeumorphicButton(
+                  NeumorphicButtonSmall(
                     onTap: widget.onBack ??
                         () {
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           }
                         },
-                    padding: const EdgeInsets.all(10),
-                    shape: BoxShape.circle,
-                    child: const Icon(Icons.arrow_back, color: kTextColor),
+                    icon: Icons.arrow_back,
+                    tooltip: 'Back',
                   )
                 else
-                  const SizedBox(width: 44),
+                  const SizedBox(width: 48),
                 Expanded(
                   child: Center(
                     child: Text(
                       'Profile',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: kTextColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                          ),
+                      style: GoogleFonts.playfairDisplay(
+                        color: kTextColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
                     ),
                   ),
                 ),
-                // Left balanced spacer
                 const SizedBox(width: 44),
               ],
             ),
@@ -134,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Text('Could not load profile',
                       style: TextStyle(color: kTextColor)),
                   const SizedBox(height: 16),
-                  _NeumorphicButton(
+                  NeumorphicButton(
                     onTap: () => userProvider.fetchProfile(),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
@@ -156,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Stack(
                       children: [
-                        _NeumorphicContainer(
+                        NeumorphicContainer(
                           padding: const EdgeInsets.all(4),
                           shape: BoxShape.circle,
                           child: CircleAvatar(
@@ -167,7 +168,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 : null,
                             child: user.profileImage == null
                                 ? Text(
-                                    user.name.substring(0, 1).toUpperCase(),
+                                    user.name.isNotEmpty
+                                        ? user.name
+                                            .substring(0, 1)
+                                            .toUpperCase()
+                                        : '?',
                                     style: const TextStyle(
                                       fontSize: 40,
                                       fontWeight: FontWeight.bold,
@@ -193,64 +198,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: _NeumorphicButton(
+                          child: NeumorphicButtonSmall(
                             onTap: _pickAndUploadImage,
-                            padding: const EdgeInsets.all(8),
-                            shape: BoxShape.circle,
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 20,
-                              color: AppTheme.primaryColor,
-                            ),
+                            icon: Icons.camera_alt,
+                            iconSize: 20,
+                            padding: 12, // Ensure 44dp+ hit area
+                            tooltip: 'Change Profile Picture',
+                            iconColor: AppTheme.primaryColor,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     Text(
                       user.name,
-                      style: const TextStyle(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: kTextColor,
                       ),
                       maxLines: 1,
                     ),
-                    const SizedBox(height: 6),
                     Text(
                       user.email,
                       style: TextStyle(
                         fontSize: 14,
-                        color: kTextColor.withOpacity(0.7),
+                        color: kTextColor.withValues(alpha: 0.7),
                       ),
-                      maxLines: 1,
                     ),
-                    if (authProvider.isAdmin)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: _NeumorphicContainer(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          borderRadius: BorderRadius.circular(20),
-                          child: const Text(
-                            'ADMIN',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
+              _buildLoyaltyCard(user),
+              const SizedBox(height: 32),
 
-              // Menu Items
+              _buildSectionHeader('Account Settings'),
+              const SizedBox(height: 12),
               _NeumorphicMenuItem(
-                icon: Icons.edit,
+                icon: Icons.edit_outlined,
                 title: 'Edit Profile',
                 onTap: () => Navigator.push(
                     context,
@@ -260,14 +247,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               _NeumorphicMenuItem(
                 icon: Icons.location_on_outlined,
-                title: 'Addresses',
+                title: 'My Addresses',
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const AddressesScreen())),
               ),
               const SizedBox(height: 16),
               _NeumorphicMenuItem(
                 icon: Icons.shopping_bag_outlined,
-                title: 'Orders',
+                title: 'Order History',
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -275,7 +262,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 16),
               _NeumorphicMenuItem(
-                icon: Icons.notifications_none,
+                icon: Icons.credit_card_outlined,
+                title: 'Payment Methods',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const PaymentMethodsScreen())),
+              ),
+
+              const SizedBox(height: 32),
+              _buildSectionHeader('Personalization'),
+              const SizedBox(height: 12),
+              _NeumorphicMenuItem(
+                icon: Icons.straighten_outlined,
+                title: 'Saved Sizes & Preferences',
+                subtitle: user.savedStrapSize ?? 'Set your strap size',
+                onTap: _showSavedSizesDialog,
+              ),
+              const SizedBox(height: 16),
+              _NeumorphicMenuItem(
+                icon: Icons.card_giftcard_outlined,
+                title: 'Refer a Friend',
+                onTap: _showReferralDialog,
+              ),
+
+              const SizedBox(height: 32),
+              _buildSectionHeader('More'),
+              const SizedBox(height: 12),
+              _NeumorphicMenuItem(
+                icon: Icons.notifications_none_rounded,
                 title: 'Notifications',
                 onTap: () => Navigator.push(
                     context,
@@ -285,62 +300,273 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               _NeumorphicMenuItem(
                 icon: Icons.headset_mic_outlined,
-                title: 'Support',
+                title: 'Support Center',
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SupportScreen())),
               ),
               const SizedBox(height: 16),
               _NeumorphicMenuItem(
-                icon: Icons.logout,
+                icon: Icons.logout_rounded,
                 title: 'Logout',
-                textColor: const Color(0xFFEF5350), // Soft Red
-                iconColor: const Color(0xFFEF5350),
-                onTap: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Logout'),
-                      content: const Text('Are you sure you want to logout?'),
-                      actions: [
-                        TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel')),
-                        TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Logout')),
-                      ],
-                    ),
-                  );
-                  if (confirm == true && mounted) {
-                    await Provider.of<AuthProvider>(context, listen: false)
-                        .logout();
-                    if (mounted)
-                      Navigator.pushReplacementNamed(context, '/login');
-                  }
-                },
+                textColor: AppTheme.errorColor,
+                iconColor: AppTheme.errorColor,
+                onTap: () => _handleLogout(authProvider),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 120),
             ],
           );
         },
       ),
     );
   }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          color: kTextColor.withValues(alpha: 0.4),
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoyaltyCard(user) {
+    final int points = user.loyaltyPoints;
+    final String tier = user.loyaltyTier;
+
+    return _NeumorphicIndicatorContainer(
+      isSelected: true,
+      borderRadius: BorderRadius.circular(25),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.stars_rounded,
+                        color: AppTheme.goldColor, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$tier Member',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: kTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$points Points available',
+                  style: TextStyle(
+                      fontSize: 14, color: kTextColor.withValues(alpha: 0.6)),
+                ),
+                const SizedBox(height: 16),
+                NeumorphicButton(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const RewardsScreen())),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  borderRadius: BorderRadius.circular(10),
+                  child: const Text(
+                    'Redeem Points',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 70,
+                height: 70,
+                child: CircularProgressIndicator(
+                  value: (points % 1000) / 1000,
+                  strokeWidth: 6,
+                  backgroundColor: kBackgroundColor,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppTheme.goldColor),
+                ),
+              ),
+              Column(
+                children: [
+                  Text(
+                    '${((points % 1000) / 10).toInt()}%',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: kTextColor),
+                  ),
+                  const Text('to next',
+                      style: TextStyle(fontSize: 8, color: kTextColor)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSavedSizesDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: kBackgroundColor,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Select Strap Size',
+                style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: kTextColor)),
+            const SizedBox(height: 8),
+            const Text(
+                'We will use this to recommend watches that fit you perfectly.'),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                'Small (150-165mm)',
+                'Medium (170-185mm)',
+                'Large (190-205mm)'
+              ].map((size) {
+                return NeumorphicButton(
+                  onTap: () async {
+                    final success =
+                        await Provider.of<UserProvider>(context, listen: false)
+                            .updateSavedSize(size);
+                    if (mounted) Navigator.pop(context);
+                    if (success && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Saved strap size updated to $size')));
+                    }
+                  },
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  borderRadius: BorderRadius.circular(15),
+                  child: Text(size,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReferralDialog() {
+    final String referralCode =
+        Provider.of<UserProvider>(context, listen: false).user?.referralCode ??
+            'WATCHHUB50';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: kBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: Text('Refer a Friend',
+            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+                'Share your code and you both get \$50 credit on your next purchase!'),
+            const SizedBox(height: 24),
+            NeumorphicContainer(
+              isConcave: true,
+              padding: const EdgeInsets.all(16),
+              borderRadius: BorderRadius.circular(15),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      referralCode.isEmpty ? 'WATCHHUB50' : referralCode,
+                      style: GoogleFonts.inter(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: referralCode));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Code copied!')));
+                    },
+                    icon: const Icon(Icons.copy),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleLogout(AuthProvider authProvider) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Logout')),
+        ],
+      ),
+    );
+    if (confirm == true && mounted) {
+      await authProvider.logout();
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
 }
 
-class _NeumorphicContainer extends StatelessWidget {
+class _NeumorphicIndicatorContainer extends StatelessWidget {
   final Widget child;
+  final bool isSelected;
   final EdgeInsetsGeometry padding;
-  final BorderRadiusGeometry? borderRadius;
-  final BoxShape shape;
-  final bool pressed;
+  final BorderRadiusGeometry borderRadius;
 
-  const _NeumorphicContainer({
+  const _NeumorphicIndicatorContainer({
     required this.child,
-    this.padding = EdgeInsets.zero,
-    this.borderRadius,
-    this.shape = BoxShape.rectangle,
-    this.pressed = false,
+    required this.isSelected,
+    required this.padding,
+    required this.borderRadius,
   });
 
   @override
@@ -349,83 +575,19 @@ class _NeumorphicContainer extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: AppTheme.softUiBackground,
-        shape: shape,
-        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
-        boxShadow: pressed
-            // Concave/Pressed effect (Inner shadow simulation or effectively flat/inset look)
-            ? [] // No outer shadow creates a "flat" or "pressed" interaction relative to elevated
-            : [
-                const BoxShadow(
-                  color: AppTheme.softUiShadowDark,
-                  offset: Offset(6, 6),
-                  blurRadius: 16,
-                ),
-                const BoxShadow(
-                  color: AppTheme.softUiShadowLight,
-                  offset: Offset(-6, -6),
-                  blurRadius: 16,
-                ),
-              ],
+        borderRadius: borderRadius,
+        boxShadow: [
+          const BoxShadow(
+              color: AppTheme.softUiShadowDark,
+              offset: Offset(4, 4),
+              blurRadius: 10),
+          const BoxShadow(
+              color: AppTheme.softUiShadowLight,
+              offset: Offset(-4, -4),
+              blurRadius: 10),
+        ],
       ),
       child: child,
-    );
-  }
-}
-
-class _NeumorphicButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  final EdgeInsetsGeometry padding;
-  final BorderRadiusGeometry? borderRadius;
-  final BoxShape shape;
-
-  const _NeumorphicButton({
-    required this.child,
-    required this.onTap,
-    this.padding = EdgeInsets.zero,
-    this.borderRadius,
-    this.shape = BoxShape.rectangle,
-  });
-
-  @override
-  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
-}
-
-class _NeumorphicButtonState extends State<_NeumorphicButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
-      onTap: widget.onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: widget.padding,
-        decoration: BoxDecoration(
-          color: AppTheme.softUiBackground,
-          shape: widget.shape,
-          borderRadius:
-              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
-          boxShadow: _isPressed
-              ? [] // Pressed state (flat)
-              : [
-                  const BoxShadow(
-                    color: AppTheme.softUiShadowDark,
-                    offset: Offset(6, 6),
-                    blurRadius: 16,
-                  ),
-                  const BoxShadow(
-                    color: AppTheme.softUiShadowLight,
-                    offset: Offset(-6, -6),
-                    blurRadius: 16,
-                  ),
-                ],
-        ),
-        child: widget.child,
-      ),
     );
   }
 }
@@ -433,6 +595,7 @@ class _NeumorphicButtonState extends State<_NeumorphicButton> {
 class _NeumorphicMenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
   final Color? iconColor;
   final Color? textColor;
@@ -440,6 +603,7 @@ class _NeumorphicMenuItem extends StatelessWidget {
   const _NeumorphicMenuItem({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.onTap,
     this.iconColor,
     this.textColor,
@@ -447,7 +611,7 @@ class _NeumorphicMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _NeumorphicButton(
+    return NeumorphicButton(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       borderRadius: BorderRadius.circular(20),
@@ -455,21 +619,31 @@ class _NeumorphicMenuItem extends StatelessWidget {
         children: [
           Icon(icon,
               color:
-                  iconColor ?? _ProfileScreenState.kTextColor.withOpacity(0.8),
+                  iconColor ?? AppTheme.softUiTextColor.withValues(alpha: 0.8),
               size: 22),
           const SizedBox(width: 20),
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: textColor ?? _ProfileScreenState.kTextColor,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: textColor ?? AppTheme.softUiTextColor)),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(subtitle!,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              AppTheme.softUiTextColor.withValues(alpha: 0.5))),
+                ],
+              ],
             ),
           ),
           Icon(Icons.chevron_right,
-              color: _ProfileScreenState.kTextColor.withOpacity(0.4), size: 20),
+              color: AppTheme.softUiTextColor.withValues(alpha: 0.4), size: 20),
         ],
       ),
     );

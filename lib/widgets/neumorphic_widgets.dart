@@ -31,13 +31,13 @@ class NeumorphicContainer extends StatelessWidget {
         boxShadow: isConcave
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withOpacity(0.06),
                   offset: const Offset(4, 4),
                   blurRadius: 4,
                   spreadRadius: 1,
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.8),
+                  color: AppTheme.softUiShadowLight.withOpacity(0.8),
                   offset: const Offset(-4, -4),
                   blurRadius: 4,
                   spreadRadius: 1,
@@ -108,13 +108,13 @@ class _NeumorphicButtonState extends State<NeumorphicButton> {
           boxShadow: effectivePressed
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withOpacity(0.06),
                     offset: const Offset(2, 2),
                     blurRadius: 2,
                     spreadRadius: 1,
                   ),
                   const BoxShadow(
-                    color: Colors.white,
+                    color: AppTheme.softUiShadowLight,
                     offset: Offset(-2, -2),
                     blurRadius: 2,
                     spreadRadius: 1,
@@ -135,6 +135,73 @@ class _NeumorphicButtonState extends State<NeumorphicButton> {
         ),
         child: widget.child,
       ),
+    );
+  }
+}
+
+class NeumorphicButtonSmall extends StatelessWidget {
+  final VoidCallback onTap;
+  final IconData icon;
+  final String? tooltip;
+  final Color? iconColor;
+  final double iconSize;
+  final double padding;
+
+  const NeumorphicButtonSmall({
+    super.key,
+    required this.onTap,
+    required this.icon,
+    this.tooltip,
+    this.iconColor,
+    this.iconSize = 20,
+    this.padding = 12, // Increased for 44dp+ hit area
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.all(padding),
+        decoration: const BoxDecoration(
+          color: AppTheme.softUiBackground,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.softUiShadowDark,
+              offset: Offset(2, 2),
+              blurRadius: 4,
+            ),
+            BoxShadow(
+              color: AppTheme.softUiShadowLight,
+              offset: Offset(-2, -2),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: iconColor ?? AppTheme.softUiTextColor,
+          size: iconSize,
+        ),
+      ),
+    );
+
+    if (tooltip != null) {
+      return Tooltip(
+        message: tooltip!,
+        child: Semantics(
+          label: tooltip,
+          button: true,
+          child: button,
+        ),
+      );
+    }
+
+    return Semantics(
+      button: true,
+      child: button,
     );
   }
 }
@@ -380,4 +447,49 @@ void showQuickView(BuildContext context, String imageUrl, String tag) {
       );
     },
   );
+}
+
+class NeumorphicTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData? icon;
+  final bool obscureText;
+  final TextInputType keyboardType;
+  final int? maxLines;
+
+  const NeumorphicTextField({
+    super.key,
+    required this.controller,
+    required this.hintText,
+    this.icon,
+    this.obscureText = false,
+    this.keyboardType = TextInputType.text,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NeumorphicContainer(
+      isConcave: true,
+      borderRadius: BorderRadius.circular(15),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(color: AppTheme.softUiTextColor),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle:
+              TextStyle(color: AppTheme.softUiTextColor.withOpacity(0.3)),
+          border: InputBorder.none,
+          icon: icon != null
+              ? Icon(icon,
+                  color: AppTheme.softUiTextColor.withOpacity(0.5), size: 18)
+              : null,
+        ),
+      ),
+    );
+  }
 }

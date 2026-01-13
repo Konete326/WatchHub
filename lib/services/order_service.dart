@@ -63,17 +63,19 @@ class OrderService {
     }
   }
 
-  Future<Coupon?> validateCoupon(String code) async {
+  Future<Coupon?> validateCoupon(String code,
+      {double? amount, String? userSegment}) async {
     try {
       final snapshot = await _firestore
           .collection('coupons')
           .where('code', isEqualTo: code)
-          .where('isActive', isEqualTo: true)
-          .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        return Coupon.fromFirestore(snapshot.docs.first);
+        final coupon = Coupon.fromFirestore(snapshot.docs.first);
+        if (coupon.isValid(amount ?? 0, userSegment: userSegment)) {
+          return coupon;
+        }
       }
       return null;
     } catch (e) {
@@ -81,18 +83,20 @@ class OrderService {
     }
   }
 
-  Future<List<Coupon>> getAvailableCoupons() async {
+  Future<List<Coupon>> getAvailableCoupons({String? userSegment}) async {
     try {
       final snapshot = await _firestore
           .collection('coupons')
           .where('isActive', isEqualTo: true)
           .get();
 
-      return snapshot.docs.map((doc) => Coupon.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => Coupon.fromFirestore(doc))
+          .where((c) => c.isValid(0, userSegment: userSegment))
+          .toList();
     } catch (e) {
-      // Log the error or handle it appropriately
       print('Error fetching available coupons: $e');
-      return []; // Return an empty list on error
+      return [];
     }
   }
 
@@ -103,12 +107,16 @@ class OrderService {
     List<String>? cartItemIds,
     String paymentMethod = 'card',
     String? couponId,
-    Map<String, Map<String, String?>>?
-        strapSelections, // cartItemId -> {strapType, strapColor}
+    Map<String, Map<String, String?>>? strapSelections,
   }) async {
     if (uid == null) throw Exception('User not logged in');
 
     return await _firestore.runTransaction((transaction) async {
+      // 0. Get User Segment for Coupon Validation
+      final userRef = _firestore.collection('users').doc(uid);
+      final userDoc = await transaction.get(userRef);
+      final userSegment = userDoc.data()?['rfmSummary'];
+
       // 1. Get Cart Items
       final cartQuery =
           _firestore.collection('users').doc(uid).collection('cart');
@@ -116,7 +124,7 @@ class OrderService {
 
       if (cartSnapshot.docs.isEmpty) throw Exception('Cart is empty');
 
-      double totalAmount = 0;
+      double subtotal = 0;
       final orderItemsData = <Map<String, dynamic>>[];
       final watchesToUpdate = <DocumentReference, int>{};
 
@@ -137,18 +145,17 @@ class OrderService {
         if (stock < quantity)
           throw Exception('Not enough stock for ${watchData['name']}');
 
-        totalAmount += price * quantity;
-
-        // Get strap selections for this cart item
-        final strapSelection = strapSelections?[doc.id];
+        subtotal += price * quantity;
 
         orderItemsData.add({
           'watchId': data['watchId'],
           'quantity': quantity,
           'priceAtPurchase': price,
           'productColor': data['productColor'],
-          'strapType': strapSelection?['strapType'] ?? data['strapType'],
-          'strapColor': strapSelection?['strapColor'] ?? data['strapColor'],
+          'strapType':
+              strapSelections?[doc.id]?['strapType'] ?? data['strapType'],
+          'strapColor':
+              strapSelections?[doc.id]?['strapColor'] ?? data['strapColor'],
         });
 
         watchesToUpdate[watchRef] = stock - quantity;
@@ -156,17 +163,29 @@ class OrderService {
 
       if (orderItemsData.isEmpty) throw Exception('No selected items to order');
 
-      // 2. Add shipping cost
-      if (shippingCost != null) totalAmount += shippingCost;
-
-      // 3. Apply coupon if any (re-validate in transaction)
+      // 2. Apply coupon if any (re-validate in transaction)
+      double totalAmount = subtotal + (shippingCost ?? 0.0);
       if (couponId != null) {
         final couponRef = _firestore.collection('coupons').doc(couponId);
         final couponDoc = await transaction.get(couponRef);
         if (couponDoc.exists) {
-          final couponData = couponDoc.data()!;
-          final discount = couponData['discountAmount'] ?? 0.0;
-          totalAmount -= discount;
+          final coupon = Coupon.fromFirestore(couponDoc);
+          if (coupon.isValid(subtotal, userSegment: userSegment)) {
+            final discount = coupon.calculateDiscount(subtotal);
+            totalAmount -= discount;
+
+            // Increment usage count and stats
+            transaction.update(couponRef, {
+              'usageCount': FieldValue.increment(1),
+              'stats.conversions': FieldValue.increment(1),
+            });
+          } else {
+            // Record failed attempt
+            transaction.update(couponRef, {
+              'stats.failed_attempts': FieldValue.increment(1),
+            });
+            throw Exception('Coupon no longer valid');
+          }
         }
       }
 
@@ -192,9 +211,13 @@ class OrderService {
         transaction.set(itemRef, item);
       }
 
-      // 6. Update Stocks
+      // 6. Update Stocks and Popularity
       watchesToUpdate.forEach((ref, newStock) {
-        transaction.update(ref, {'stock': newStock});
+        transaction.update(ref, {
+          'stock': newStock,
+          'popularity': FieldValue.increment(1),
+          'salesCount': FieldValue.increment(1),
+        });
       });
 
       // 7. Clear ordered items from cart

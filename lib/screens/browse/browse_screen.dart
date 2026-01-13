@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/watch_provider.dart';
-import '../../providers/wishlist_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../models/watch.dart';
+import '../../providers/search_provider.dart';
 import '../product/product_detail_screen.dart';
 import '../wishlist/wishlist_screen.dart';
 import '../../utils/theme.dart';
-import '../../widgets/neumorphic_widgets.dart' show showQuickView;
+import '../../widgets/watch_card.dart';
+import '../../utils/haptics.dart';
+import '../../widgets/shimmer_loading.dart' show ShimmerWidget;
 
 class BrowseScreen extends StatefulWidget {
   final String? initialCategory;
   final String? initialBrandId;
   final bool initialOnlySale;
+  final double? initialMaxPrice;
+  final String? initialStrapType;
+  final String? initialSearch;
   final bool showBackButton;
   final VoidCallback? onBack;
 
@@ -23,6 +27,9 @@ class BrowseScreen extends StatefulWidget {
     this.initialCategory,
     this.initialBrandId,
     this.initialOnlySale = false,
+    this.initialMaxPrice,
+    this.initialStrapType,
+    this.initialSearch,
     this.showBackButton = true,
     this.onBack,
   });
@@ -42,6 +49,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String _sortBy = 'createdAt';
   String _sortOrder = 'desc';
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchFocused = false;
 
   @override
   void initState() {
@@ -49,6 +59,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
     _selectedCategory = widget.initialCategory;
     _selectedBrandId = widget.initialBrandId;
     _onlySale = widget.initialOnlySale;
+    if (widget.initialMaxPrice != null) {
+      _maxPrice = widget.initialMaxPrice!;
+    }
+    _selectedStrapType = widget.initialStrapType;
+    if (widget.initialSearch != null) {
+      _searchController.text = widget.initialSearch!;
+    }
     _fetchWatches();
     Future.microtask(() {
       final watchProvider = Provider.of<WatchProvider>(context, listen: false);
@@ -56,11 +73,18 @@ class _BrowseScreenState extends State<BrowseScreen> {
       watchProvider.fetchCategories();
     });
     _scrollController.addListener(_onScroll);
+    _searchFocusNode.addListener(() {
+      setState(() {
+        _isSearchFocused = _searchFocusNode.hasFocus;
+      });
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -78,11 +102,14 @@ class _BrowseScreenState extends State<BrowseScreen> {
     final watchProvider = Provider.of<WatchProvider>(context, listen: false);
     await watchProvider.fetchWatches(
       refresh: !loadMore,
+      search: _searchController.text.trim().isEmpty
+          ? null
+          : _searchController.text.trim(),
       category: _selectedCategory,
       brandId: _selectedBrandId,
       onlySale: _onlySale,
       minPrice: _minPrice,
-      maxPrice: _maxPrice == 50000 ? null : _maxPrice,
+      maxPrice: _maxPrice >= 50000 ? null : _maxPrice,
       strapType: _selectedStrapType,
       inStockOnly: _inStockOnly,
       sortBy: _sortBy,
@@ -93,220 +120,417 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     const kBackgroundColor = AppTheme.softUiBackground;
-    const kTextColor = AppTheme.softUiTextColor;
+    final watchProvider = Provider.of<WatchProvider>(context);
+    final searchProvider = Provider.of<SearchProvider>(context);
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: SafeArea(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            color: kBackgroundColor,
-            child: Row(
-              children: [
-                if (widget.showBackButton)
-                  _NeumorphicButton(
-                    onTap: widget.onBack ?? () => Navigator.pop(context),
-                    padding: const EdgeInsets.all(10),
-                    shape: BoxShape.circle,
-                    child: const Icon(Icons.arrow_back, color: kTextColor),
-                  ),
-                if (widget.showBackButton) const SizedBox(width: 16),
-                const Expanded(
-                  child: Text(
-                    'Browse',
-                    style: TextStyle(
-                      color: kTextColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                ),
-                _NeumorphicButton(
-                  onTap: () => _showFilters(),
-                  padding: const EdgeInsets.all(10),
-                  shape: BoxShape.circle,
-                  child: const Icon(Icons.tune, color: kTextColor),
-                ),
-                const SizedBox(width: 12),
-                Consumer<WishlistProvider>(
-                  builder: (context, wishlistProvider, child) {
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        _NeumorphicButton(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (context) => const WishlistScreen()),
-                            );
-                          },
-                          padding: const EdgeInsets.all(10),
-                          shape: BoxShape.circle,
-                          child: const Icon(Icons.favorite_border,
-                              color: kTextColor),
-                        ),
-                        if (wishlistProvider.itemCount > 0)
-                          Positioned(
-                            top: -2,
-                            right: -2,
-                            child: _NeumorphicContainer(
-                              isConcave: true,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: () => _fetchWatches(),
+              color: AppTheme.primaryColor,
+              backgroundColor: Colors.white,
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // App Bar
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+                      child: Row(
+                        children: [
+                          if (widget.showBackButton)
+                            _NeumorphicButton(
+                              onTap:
+                                  widget.onBack ?? () => Navigator.pop(context),
+                              padding: const EdgeInsets.all(10),
                               shape: BoxShape.circle,
-                              padding: const EdgeInsets.all(2),
-                              child: Container(
-                                width: 18,
-                                height: 18,
-                                decoration: const BoxDecoration(
-                                  color: Colors.redAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${wishlistProvider.itemCount}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                              child: const Icon(Icons.arrow_back,
+                                  color: AppTheme.softUiTextColor),
+                            ),
+                          if (widget.showBackButton) const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'Discover',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimaryColor,
                               ),
                             ),
                           ),
-                      ],
-                    );
-                  },
-                ),
-              ],
+                          _NeumorphicButton(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const WishlistScreen()),
+                              );
+                            },
+                            padding: const EdgeInsets.all(10),
+                            shape: BoxShape.circle,
+                            child: const Icon(Icons.favorite_border,
+                                color: AppTheme.softUiTextColor),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Sticky Search & Filter Bar
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickySearchDelegate(
+                      child: Container(
+                        color: kBackgroundColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildSearchBar(),
+                            ),
+                            const SizedBox(width: 12),
+                            _NeumorphicButton(
+                              onTap: () => _showFilters(),
+                              padding: const EdgeInsets.all(12),
+                              borderRadius: BorderRadius.circular(15),
+                              child: Icon(
+                                Icons.tune_rounded,
+                                color: (_selectedCategory != null ||
+                                        _selectedBrandId != null ||
+                                        _onlySale)
+                                    ? AppTheme.goldColor
+                                    : AppTheme.softUiTextColor,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _NeumorphicButton(
+                              onTap: () {
+                                HapticHelper.light();
+                                searchProvider.toggleViewMode();
+                              },
+                              padding: const EdgeInsets.all(12),
+                              borderRadius: BorderRadius.circular(15),
+                              child: Icon(
+                                searchProvider.isGridView
+                                    ? Icons.view_list_rounded
+                                    : Icons.grid_view_rounded,
+                                color: AppTheme.softUiTextColor,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Content
+                  if (watchProvider.isLoading && watchProvider.watches.isEmpty)
+                    _buildSliverLoading(searchProvider.isGridView)
+                  else if (watchProvider.watches.isEmpty)
+                    SliverFillRemaining(
+                      child: _buildEmptyState(
+                        icon: Icons.search_off_rounded,
+                        title: 'No timepieces found',
+                        message:
+                            'We couldn\'t find any watches matching your criteria. Try adjusting your filters.',
+                        onAction: () {
+                          setState(() {
+                            _selectedCategory = null;
+                            _selectedBrandId = null;
+                            _onlySale = false;
+                            _minPrice = 0;
+                            _maxPrice = 50000;
+                            _searchController.clear();
+                          });
+                          _fetchWatches();
+                        },
+                      ),
+                    )
+                  else
+                    _buildSliverProductList(
+                        watchProvider, searchProvider.isGridView),
+
+                  // Load More Indicator Shimmer
+                  if (watchProvider.isLoadingMore)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                        child: searchProvider.isGridView
+                            ? Row(
+                                children: const [
+                                  Expanded(child: _NeumorphicProductShimmer()),
+                                  SizedBox(width: 16),
+                                  Expanded(child: _NeumorphicProductShimmer()),
+                                ],
+                              )
+                            : const _NeumorphicProductShimmer(),
+                      ),
+                    ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                ],
+              ),
             ),
-          ),
+
+            // Search Suggestions Overlay
+            if (_isSearchFocused) _buildSearchOverlay(context),
+          ],
         ),
       ),
-      body: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: () => _fetchWatches(),
-            color: AppTheme.primaryColor,
-            backgroundColor: kBackgroundColor,
-            child: Consumer<WatchProvider>(
-              builder: (context, watchProvider, child) {
-                if (watchProvider.isLoading && watchProvider.watches.isEmpty) {
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(24),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: 24,
-                      mainAxisSpacing: 24,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) =>
-                        const _NeumorphicProductShimmer(),
-                  );
-                }
+    );
+  }
 
-                if (watchProvider.errorMessage != null &&
-                    watchProvider.watches.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _NeumorphicContainer(
-                          shape: BoxShape.circle,
-                          padding: const EdgeInsets.all(30),
-                          isConcave: true,
-                          child: const Icon(Icons.error_outline,
-                              size: 64, color: Colors.redAccent),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          watchProvider.errorMessage!,
-                          style:
-                              const TextStyle(fontSize: 16, color: kTextColor),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        _NeumorphicButton(
-                          onTap: () => _fetchWatches(),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 16),
-                          borderRadius: BorderRadius.circular(15),
-                          child: const Text(
-                            'Retry',
-                            style: TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (watchProvider.watches.isEmpty) {
-                  return _buildEmptyState(
-                    icon: Icons.search_off_rounded,
-                    title: 'No watches found',
-                    message:
-                        'Try adjusting your filters or search terms to find what you\'re looking for.',
-                    onAction: () {
-                      setState(() {
-                        _selectedCategory = null;
-                        _selectedBrandId = null;
-                        _onlySale = false;
-                        _minPrice = 0;
-                        _maxPrice = 50000;
-                        _selectedStrapType = null;
-                        _inStockOnly = false;
-                        _sortBy = 'createdAt';
-                        _sortOrder = 'desc';
-                      });
-                      _fetchWatches();
-                    },
-                  );
-                }
-
-                return GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(24),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.65,
-                    crossAxisSpacing: 24,
-                    mainAxisSpacing: 24,
-                  ),
-                  itemCount: watchProvider.watches.length +
-                      (watchProvider.isLoadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index >= watchProvider.watches.length) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              AppTheme.primaryColor),
-                        ),
-                      );
-                    }
-
-                    final watch = watchProvider.watches[index];
-                    return _NeumorphicWatchCard(
-                      watch: watch,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ProductDetailScreen(watchId: watch.id),
-                          ),
-                        );
-                      },
-                    );
+  Widget _buildSearchBar() {
+    return _NeumorphicContainer(
+      isConcave: true,
+      borderRadius: BorderRadius.circular(15),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        onChanged: (val) {
+          // Could implement real-time search here with debounce
+        },
+        onSubmitted: (val) {
+          final searchProvider =
+              Provider.of<SearchProvider>(context, listen: false);
+          searchProvider.addRecentSearch(val);
+          _fetchWatches();
+        },
+        decoration: InputDecoration(
+          hintText: 'Search collection...',
+          hintStyle: GoogleFonts.inter(
+            color: AppTheme.textTertiaryColor,
+            fontSize: 14,
+          ),
+          border: InputBorder.none,
+          icon: const Icon(Icons.search_rounded,
+              color: AppTheme.textTertiaryColor, size: 20),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? GestureDetector(
+                  onTap: () {
+                    _searchController.clear();
+                    _fetchWatches();
                   },
-                );
-              },
+                  child: const Icon(Icons.close_rounded, size: 18),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchOverlay(BuildContext context) {
+    final searchProvider = Provider.of<SearchProvider>(context);
+
+    return GestureDetector(
+      onTap: () => _searchFocusNode.unfocus(),
+      child: Container(
+        color: Colors.black.withOpacity(0.4),
+        width: double.infinity,
+        height: double.infinity,
+        padding: const EdgeInsets.only(top: 130), // Below header
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10)),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Material(
+                  color: Colors.white,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.5),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (searchProvider.recentSearches.isNotEmpty) ...[
+                            _buildSearchSectionTitle('Recent Searches',
+                                onClear: () =>
+                                    searchProvider.clearRecentSearches()),
+                            ...searchProvider.recentSearches
+                                .map((term) => _buildSearchItem(term)),
+                            const Divider(height: 32),
+                          ],
+                          _buildSearchSectionTitle('Trending Terms'),
+                          ...searchProvider.trendingTerms.map((term) =>
+                              _buildSearchItem(term, isTrending: true)),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchSectionTitle(String title, {VoidCallback? onClear}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textTertiaryColor,
+              letterSpacing: 1.0,
             ),
           ),
+          if (onClear != null)
+            GestureDetector(
+              onTap: onClear,
+              child: Text(
+                'Clear',
+                style:
+                    GoogleFonts.inter(fontSize: 12, color: AppTheme.goldColor),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchItem(String term, {bool isTrending = false}) {
+    return ListTile(
+      leading: Icon(
+        isTrending ? Icons.trending_up_rounded : Icons.history_rounded,
+        size: 18,
+        color: AppTheme.textTertiaryColor,
+      ),
+      title: Text(
+        term,
+        style:
+            GoogleFonts.inter(fontSize: 14, color: AppTheme.textPrimaryColor),
+      ),
+      onTap: () {
+        _searchController.text = term;
+        _searchFocusNode.unfocus();
+        Provider.of<SearchProvider>(context, listen: false)
+            .addRecentSearch(term);
+        _fetchWatches();
+      },
+    );
+  }
+
+  Widget _buildSliverLoading(bool isGridView) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 900 ? 4 : (width > 600 ? 3 : 2);
+
+    if (isGridView) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(24),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: 0.65,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => const _NeumorphicProductShimmer(),
+            childCount: crossAxisCount * 3,
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.all(24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: ShimmerWidget.rounded(
+              height: 120,
+            ),
+          ),
+          childCount: 6,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverProductList(WatchProvider watchProvider, bool isGridView) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 900 ? 4 : (width > 600 ? 3 : 2);
+
+    if (isGridView) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: 0.62,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final watch = watchProvider.watches[index];
+              return WatchCard(
+                watch: watch,
+                isListMode: false,
+                heroTag: 'browse_grid_${watch.id}',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailScreen(watchId: watch.id)),
+                ),
+              );
+            },
+            childCount: watchProvider.watches.length,
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final watch = watchProvider.watches[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: WatchCard(
+                watch: watch,
+                isListMode: true,
+                heroTag: 'browse_list_${watch.id}',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailScreen(watchId: watch.id)),
+                ),
+              ),
+            );
+          },
+          childCount: watchProvider.watches.length,
+        ),
       ),
     );
   }
@@ -437,6 +661,11 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // Presets Section
+                  _buildPresetsSection(setModalState),
 
                   const SizedBox(height: 24),
 
@@ -703,6 +932,21 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     ),
                   ),
 
+                  // Save Preset Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: TextButton.icon(
+                      onPressed: () => _showSavePresetDialog(),
+                      icon: const Icon(Icons.bookmark_border_rounded, size: 18),
+                      label: const Text('Save these filters as a preset'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.goldColor,
+                        textStyle: GoogleFonts.inter(
+                            fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
                   // Footer / Apply Button
                   Padding(
                     padding: const EdgeInsets.all(24),
@@ -779,6 +1023,119 @@ class _BrowseScreenState extends State<BrowseScreen> {
               fontWeight: FontWeight.w600,
               color: kTextColor,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetsSection(Function(void Function()) setModalState) {
+    final searchProvider = Provider.of<SearchProvider>(context);
+    if (searchProvider.presets.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Your Presets',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF4A5568),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 40,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: searchProvider.presets.length,
+            itemBuilder: (context, index) {
+              final preset = searchProvider.presets[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _NeumorphicButton(
+                  onTap: () {
+                    setModalState(() {
+                      _selectedCategory = preset.category;
+                      _selectedBrandId = preset.brandId;
+                      _minPrice = preset.minPrice;
+                      _maxPrice = preset.maxPrice;
+                      _onlySale = preset.onlySale;
+                    });
+                  },
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Text(
+                        preset.name,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF4A5568),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => searchProvider.removePreset(preset.name),
+                        child: const Icon(Icons.close,
+                            size: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showSavePresetDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Save Filter Preset', style: GoogleFonts.playfairDisplay()),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+              hintText: 'Preset name (e.g. Budget Rolex)'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                final searchProvider =
+                    Provider.of<SearchProvider>(context, listen: false);
+                searchProvider.savePreset(FilterPreset(
+                  name: controller.text,
+                  category: _selectedCategory,
+                  brandId: _selectedBrandId,
+                  minPrice: _minPrice,
+                  maxPrice: _maxPrice,
+                  onlySale: _onlySale,
+                ));
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Filter preset saved!')),
+                );
+              }
+            },
+            child: const Text('Save',
+                style: TextStyle(
+                    color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -962,170 +1319,26 @@ class _NeumorphicFilterChip extends StatelessWidget {
   }
 }
 
-class _NeumorphicWatchCard extends StatelessWidget {
-  final Watch watch;
-  final VoidCallback onTap;
+class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
 
-  const _NeumorphicWatchCard({required this.watch, required this.onTap});
+  _StickySearchDelegate({required this.child});
 
   @override
-  Widget build(BuildContext context) {
-    const kTextColor = Color(0xFF4A5568);
-    return GestureDetector(
-      onTap: onTap,
-      child: _NeumorphicContainer(
-        padding: const EdgeInsets.all(12),
-        borderRadius: BorderRadius.circular(25),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _NeumorphicContainer(
-                isConcave: true,
-                borderRadius: BorderRadius.circular(20),
-                padding: const EdgeInsets.all(8),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Hero(
-                        tag: 'watch_${watch.id}',
-                        child: CachedNetworkImage(
-                          imageUrl:
-                              watch.images.isNotEmpty ? watch.images.first : '',
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: const Color(0xFFE0E5EC),
-                            highlightColor: const Color(0xFFF0F5FC),
-                            child: Container(color: Colors.white),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.watch),
-                        ),
-                      ),
-                    ),
-                    if (watch.isOnSale)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${watch.discountPercentage}% OFF',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    if (!watch.isInStock)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4A5568).withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'SOLD OUT',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      bottom: 8,
-                      right: 8,
-                      child: _NeumorphicButton(
-                        shape: BoxShape.circle,
-                        padding: const EdgeInsets.all(6),
-                        onTap: () {
-                          if (watch.images.isNotEmpty) {
-                            showQuickView(
-                              context,
-                              watch.images.first,
-                              'watch_${watch.id}',
-                            );
-                          }
-                        },
-                        child: Icon(
-                          Icons.visibility_outlined,
-                          size: 14,
-                          color: kTextColor.withOpacity(0.7),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    watch.brand?.name.toUpperCase() ?? '',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: kTextColor.withOpacity(0.5),
-                      letterSpacing: 1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    watch.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: kTextColor,
-                      height: 1.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Consumer<SettingsProvider>(
-                    builder: (context, settings, child) {
-                      return Text(
-                        settings.formatPrice(watch.currentPrice),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.primaryColor,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 70;
+
+  @override
+  double get minExtent => 70;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
   }
 }
 

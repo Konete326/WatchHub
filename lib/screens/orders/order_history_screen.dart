@@ -9,6 +9,9 @@ import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import 'order_detail_screen.dart';
+import '../../utils/haptics.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/empty_state.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -30,6 +33,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   }
 
   void _toggleExpanded(String orderId) {
+    HapticHelper.light();
     setState(() {
       if (_expandedOrders.contains(orderId)) {
         _expandedOrders.remove(orderId);
@@ -93,11 +97,23 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         child: Consumer2<OrderProvider, SettingsProvider>(
           builder: (context, orderProvider, settings, child) {
             if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-              return _buildShimmerLoading();
+              return const ListShimmer(itemCount: 6);
             }
 
             if (orderProvider.orders.isEmpty) {
-              return _buildEmptyState(context);
+              return EmptyState(
+                lottieUrl:
+                    'https://assets10.lottiefiles.com/packages/lf20_p366v7bb.json', // Order history animation
+                icon: Icons.receipt_long_outlined,
+                title: 'No orders yet',
+                message:
+                    'When you place an order, it will appear here. Start exploring our luxury collection!',
+                actionLabel: 'Start Shopping',
+                onActionPressed: () {
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/home', (route) => false);
+                },
+              );
             }
 
             return ListView.builder(
@@ -148,6 +164,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           duration: const Duration(seconds: 1),
                         ),
                       );
+                      HapticHelper.medium();
 
                       if (order.orderItems == null) {
                         await orderProv.fetchOrderById(order.id);
@@ -181,82 +198,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    const kTextColor = Color(0xFF4A5568);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _NeumorphicContainer(
-              shape: BoxShape.circle,
-              padding: const EdgeInsets.all(50),
-              isConcave: true,
-              child: Icon(
-                Icons.receipt_long_outlined,
-                size: 80,
-                color: kTextColor.withOpacity(0.15),
-              ),
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              'No orders yet',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: kTextColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'When you place an order, it will appear here. Start exploring our luxury collection!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: kTextColor.withOpacity(0.6),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 48),
-            _NeumorphicButton(
-              onTap: () {
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/home', (route) => false);
-              },
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
-              borderRadius: BorderRadius.circular(20),
-              child: const Text(
-                'Start Shopping',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: 5,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Container(
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(25),
-          ),
-        ),
-      ),
-    );
-  }
+  // Removed unused _buildEmptyState and _buildShimmerLoading in favor of consistent widgets
 }
 
 class _NeumorphicOrderCard extends StatelessWidget {
@@ -466,7 +408,7 @@ class _NeumorphicOrderCard extends StatelessWidget {
           _OrderTimeline(currentStatus: status),
           const SizedBox(height: 24),
 
-          // Actions
+          // Actions Row 1: Details & Buy Again
           Row(
             children: [
               Expanded(
@@ -512,6 +454,75 @@ class _NeumorphicOrderCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          // Actions Row 2: Invoice & Return
+          Row(
+            children: [
+              Expanded(
+                child: _NeumorphicButton(
+                  onTap: () {
+                    // Placeholder for invoice download
+                    HapticHelper.success();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Downloading Invoice...')),
+                    );
+                  },
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.download_rounded,
+                          size: 16, color: kTextColor.withOpacity(0.7)),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Invoice',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: kTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              if (status == 'DELIVERED')
+                Expanded(
+                  child: _NeumorphicButton(
+                    onTap: () {
+                      // Placeholder for return/exchange
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('Initiating Return/Exchange request...')),
+                      );
+                    },
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.keyboard_return_rounded,
+                            size: 16, color: AppTheme.errorColor),
+                        SizedBox(width: 8),
+                        Text(
+                          'Return',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.errorColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                const Spacer(),
+            ],
+          ),
         ],
       ),
     );
@@ -525,126 +536,211 @@ class _OrderTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (currentStatus == 'CANCELLED') {
+      return _buildCancelledTimeline();
+    }
+
     final steps = [
       _TimelineStep(
         status: 'PENDING',
-        label: 'Ordered',
+        label: 'Order Placed',
+        description: 'Your order has been confirmed',
         icon: Icons.shopping_bag_outlined,
       ),
       _TimelineStep(
         status: 'PROCESSING',
         label: 'Processing',
+        description: 'We are preparing your order',
         icon: Icons.inventory_2_outlined,
       ),
       _TimelineStep(
         status: 'SHIPPED',
         label: 'Shipped',
+        description: 'Your order is on the way',
         icon: Icons.local_shipping_outlined,
+      ),
+      _TimelineStep(
+        status: 'OUT_FOR_DELIVERY',
+        label: 'Out for Delivery',
+        description: 'Arriving today',
+        icon: Icons.delivery_dining_outlined,
       ),
       _TimelineStep(
         status: 'DELIVERED',
         label: 'Delivered',
+        description: 'Order completed successfully',
         icon: Icons.check_circle_outline_rounded,
       ),
     ];
 
-    if (currentStatus == 'CANCELLED') {
-      return _buildCancelledTimeline();
-    }
-
     final currentIndex = _getStatusIndex(currentStatus);
+    final progressPercent = (currentIndex / (steps.length - 1)).clamp(0.0, 1.0);
 
     return Column(
-      children: List.generate(steps.length, (index) {
-        final step = steps[index];
-        final isCompleted = index <= currentIndex;
-        final isLast = index == steps.length - 1;
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Timeline Rail
-            SizedBox(
-              width: 30,
-              child: Column(
+      children: [
+        // Progress Bar
+        _NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(10),
+          padding: const EdgeInsets.all(4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 8,
+              child: Stack(
                 children: [
-                  // Dot (Convex if completed, Concave if pending)
-                  _NeumorphicContainer(
-                    isConcave: !isCompleted,
-                    shape: BoxShape.circle,
-                    padding: const EdgeInsets.all(4),
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isCompleted
-                            ? _getStepColor(step.status)
-                            : Colors.transparent,
-                      ),
-                      child: isCompleted
-                          ? const Icon(Icons.check,
-                              size: 8, color: Colors.white)
-                          : null,
+                  // Background
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E5EC),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-
-                  // Line (Concave path)
-                  if (!isLast)
-                    Container(
-                      width: 4,
-                      height: 30,
+                  // Progress
+                  AnimatedFractionallySizedBox(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                    widthFactor: progressPercent,
+                    child: Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.softUiBackground,
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              offset: const Offset(1, 0),
-                              blurRadius: 1),
-                          const BoxShadow(
-                              color: Colors.white,
-                              offset: Offset(-1, 0),
-                              blurRadius: 1),
-                        ],
+                        gradient: LinearGradient(
+                          colors: [
+                            _getStepColor(currentStatus),
+                            _getStepColor(currentStatus).withOpacity(0.7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+          ),
+        ),
+        const SizedBox(height: 20),
 
-            // Step Label
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 2, bottom: isLast ? 0 : 20),
-                child: Row(
-                  children: [
-                    Icon(
-                      step.icon,
-                      size: 18,
+        // Step Icons Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(steps.length, (index) {
+            final step = steps[index];
+            final isCompleted = index <= currentIndex;
+            final isCurrent = index == currentIndex;
+
+            return Expanded(
+              child: Column(
+                children: [
+                  // Icon Circle
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: isCurrent ? 44 : 36,
+                    height: isCurrent ? 44 : 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
                       color: isCompleted
                           ? _getStepColor(step.status)
+                          : const Color(0xFFE0E5EC),
+                      boxShadow: isCurrent
+                          ? [
+                              BoxShadow(
+                                color:
+                                    _getStepColor(step.status).withOpacity(0.4),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : isCompleted
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    offset: const Offset(2, 2),
+                                    blurRadius: 4,
+                                  ),
+                                  const BoxShadow(
+                                    color: Colors.white,
+                                    offset: Offset(-2, -2),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                    ),
+                    child: Icon(
+                      step.icon,
+                      size: isCurrent ? 22 : 18,
+                      color: isCompleted
+                          ? Colors.white
                           : const Color(0xFF4A5568).withOpacity(0.3),
                     ),
-                    const SizedBox(width: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  // Label
+                  Text(
+                    step.label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color: isCompleted
+                          ? const Color(0xFF4A5568)
+                          : const Color(0xFF4A5568).withOpacity(0.4),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 16),
+
+        // Current Step Description Card
+        _NeumorphicIndicatorContainer(
+          isSelected: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _getStepColor(currentStatus).withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  steps[currentIndex].icon,
+                  color: _getStepColor(currentStatus),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      step.label,
+                      steps[currentIndex].label,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight:
-                            isCompleted ? FontWeight.bold : FontWeight.normal,
-                        color: isCompleted
-                            ? const Color(0xFF4A5568)
-                            : const Color(0xFF4A5568).withOpacity(0.3),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _getStepColor(currentStatus),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      steps[currentIndex].description,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: const Color(0xFF4A5568).withOpacity(0.7),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -655,17 +751,37 @@ class _OrderTimeline extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const Icon(Icons.cancel_outlined,
-              color: AppTheme.errorColor, size: 24),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.errorColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.cancel_outlined,
+                color: AppTheme.errorColor, size: 24),
+          ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              'This order has been cancelled',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.errorColor,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Order Cancelled',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.errorColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'This order has been cancelled',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: const Color(0xFF4A5568).withOpacity(0.7),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -680,10 +796,11 @@ class _OrderTimeline extends StatelessWidget {
       case 'PROCESSING':
         return 1;
       case 'SHIPPED':
-      case 'OUT_FOR_DELIVERY':
         return 2;
-      case 'DELIVERED':
+      case 'OUT_FOR_DELIVERY':
         return 3;
+      case 'DELIVERED':
+        return 4;
       default:
         return 0;
     }
@@ -697,6 +814,8 @@ class _OrderTimeline extends StatelessWidget {
         return Colors.blue;
       case 'SHIPPED':
         return Colors.purple;
+      case 'OUT_FOR_DELIVERY':
+        return Colors.deepPurple;
       case 'DELIVERED':
         return AppTheme.successColor;
       default:
@@ -708,11 +827,13 @@ class _OrderTimeline extends StatelessWidget {
 class _TimelineStep {
   final String status;
   final String label;
+  final String description;
   final IconData icon;
 
   _TimelineStep({
     required this.status,
     required this.label,
+    required this.description,
     required this.icon,
   });
 }

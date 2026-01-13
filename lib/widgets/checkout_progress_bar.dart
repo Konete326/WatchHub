@@ -13,19 +13,20 @@ class CheckoutProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       color: AppTheme.softUiBackground,
       child: Stack(
-        alignment: Alignment.center,
+        alignment: Alignment.topCenter,
         children: [
           // Deep Recessed Track
           Positioned(
-            left: 40,
-            right: 40,
+            top: 24,
+            left: 30,
+            right: 30,
             child: NeumorphicContainer(
               isConcave: true,
               borderRadius: BorderRadius.circular(10),
-              child: const SizedBox(height: 8, width: double.infinity),
+              child: const SizedBox(height: 4, width: double.infinity),
             ),
           ),
 
@@ -33,9 +34,11 @@ class CheckoutProgressBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStep(0, 'Address', Icons.location_on_rounded),
-              _buildStep(1, 'Payment', Icons.account_balance_wallet_rounded),
-              _buildStep(2, 'Success', Icons.verified_rounded),
+              _buildStep(0, 'Cart', Icons.shopping_cart_rounded),
+              _buildStep(1, 'Address', Icons.location_on_rounded),
+              _buildStep(2, 'Shipping', Icons.local_shipping_rounded),
+              _buildStep(3, 'Payment', Icons.account_balance_wallet_rounded),
+              _buildStep(4, 'Review', Icons.verified_rounded),
             ],
           ),
         ],

@@ -19,12 +19,25 @@ class _ContactScreenState extends State<ContactScreen> {
   final SupportService _supportService = SupportService();
   bool _isSubmitting = false;
 
+  String _selectedPriority = 'MEDIUM';
+  String? _selectedCategory;
+  final List<String> _priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+  final List<String> _categories = [
+    'Product',
+    'Order',
+    'Shipping',
+    'Payment',
+    'Other'
+  ];
+
   @override
   void initState() {
     super.initState();
     if (widget.ticket != null) {
       _subjectController.text = widget.ticket!.subject;
       _messageController.text = widget.ticket!.message;
+      _selectedPriority = widget.ticket!.priority;
+      _selectedCategory = widget.ticket!.category;
     }
   }
 
@@ -38,9 +51,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Future<void> _submitTicket() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
       if (widget.ticket != null) {
@@ -48,11 +59,15 @@ class _ContactScreenState extends State<ContactScreen> {
           id: widget.ticket!.id,
           subject: _subjectController.text.trim(),
           message: _messageController.text.trim(),
+          priority: _selectedPriority,
+          status: widget.ticket!.status,
         );
       } else {
         await _supportService.createTicket(
           subject: _subjectController.text.trim(),
           message: _messageController.text.trim(),
+          priority: _selectedPriority,
+          category: _selectedCategory,
         );
       }
 
@@ -74,7 +89,7 @@ class _ContactScreenState extends State<ContactScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to request support: $e'),
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: AppTheme.errorColor,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -84,9 +99,7 @@ class _ContactScreenState extends State<ContactScreen> {
       );
     } finally {
       if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
+        setState(() => _isSubmitting = false);
       }
     }
   }
@@ -110,6 +123,20 @@ class _ContactScreenState extends State<ContactScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _buildDropdownField(
+                label: 'Category',
+                value: _selectedCategory,
+                items: _categories,
+                onChanged: (v) => setState(() => _selectedCategory = v),
+              ),
+              const SizedBox(height: 24),
+              _buildDropdownField(
+                label: 'Priority',
+                value: _selectedPriority,
+                items: _priorities,
+                onChanged: (v) => setState(() => _selectedPriority = v!),
+              ),
+              const SizedBox(height: 24),
               _buildInputField(
                 label: 'Subject',
                 controller: _subjectController,
@@ -166,6 +193,44 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.softUiTextColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        NeumorphicContainer(
+          isConcave: true,
+          borderRadius: BorderRadius.circular(15),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              hint: Text('Select $label'),
+              items: items
+                  .map((i) => DropdownMenuItem(value: i, child: Text(i)))
+                  .toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

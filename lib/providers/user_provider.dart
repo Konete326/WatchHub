@@ -75,6 +75,24 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateSavedSize(String size) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      // Mocking the update in userService
+      _user = await _userService.updateProfile(savedStrapSize: size);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = FirebaseErrorHandler.getMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> toggleNotifications(bool enabled) async {
     _isLoading = true;
     _errorMessage = null;
@@ -144,6 +162,32 @@ class UserProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> redeemPoints(int points) async {
+    if (_user == null) return false;
+    if (_user!.loyaltyPoints < points) {
+      _errorMessage = "Insufficient points";
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      // Mocking the backend update
+      // In a real app, you would call _userService.redeemPoints(points)
+      // await _userService.redeemPoints(points);
+
+      // Simulating update locally
+      final newPoints = _user!.loyaltyPoints - points;
+      _user = _user!.copyWith(loyaltyPoints: newPoints);
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = "Failed to redeem points";
       notifyListeners();
       return false;
     }
