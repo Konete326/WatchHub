@@ -3,6 +3,7 @@ import '../../services/support_service.dart';
 import '../../models/faq.dart';
 import '../../utils/theme.dart';
 import '../../widgets/neumorphic_widgets.dart';
+import '../../utils/error_handler.dart';
 
 class FAQScreen extends StatefulWidget {
   const FAQScreen({super.key});
@@ -36,6 +37,17 @@ class _FAQScreenState extends State<FAQScreen> {
         setState(() {
           _isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(FirebaseErrorHandler.getMessage(e)),
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
       }
     }
   }

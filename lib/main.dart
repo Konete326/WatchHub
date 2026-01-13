@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:provider/provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,6 +16,12 @@ import 'providers/review_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/search_provider.dart';
+import 'providers/compare_provider.dart';
+import 'providers/support_provider.dart';
+import 'providers/feature_provider.dart';
+import 'services/analytics_service.dart';
+import 'utils/reliability_utils.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 import 'screens/splash/splash_screen.dart';
@@ -32,7 +38,8 @@ import 'screens/admin/manage_reviews_screen.dart';
 import 'screens/admin/manage_banners_screen.dart';
 import 'screens/admin/manage_promotion_screen.dart';
 import 'screens/admin/manage_coupons_screen.dart';
-import 'screens/admin/shipping_settings_screen.dart';
+import 'screens/admin/settings_hub_screen.dart';
+import 'screens/admin/security_settings_screen.dart';
 import 'screens/admin/manage_faqs_screen.dart';
 import 'screens/admin/manage_tickets_screen.dart';
 import 'screens/admin/send_notification_screen.dart';
@@ -45,6 +52,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  AnalyticsService()
+      .logEvent(AnalyticsEvent.search, parameters: {'trigger': 'app_start'});
 
   // TODO: Fix path issue - currently not loading properly
   // await dotenv.load(fileName: ".env");
@@ -82,6 +92,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => SearchProvider()),
+        ChangeNotifierProvider(create: (_) => CompareProvider()),
+        ChangeNotifierProvider(create: (_) => SupportProvider()),
+        ChangeNotifierProvider(create: (_) => FeatureProvider()..loadFlags()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, _) {
@@ -91,6 +105,18 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: settingsProvider.themeMode,
+            builder: (context, child) {
+              ErrorWidget.builder = (details) => ReliabilityView(
+                    title: 'Something went wrong',
+                    message: kDebugMode
+                        ? details.exception.toString()
+                        : 'An unexpected error occurred. Our team has been notified.',
+                    onRetry: () =>
+                        Navigator.of(context).pushReplacementNamed('/home'),
+                    actionLabel: 'Back to Home',
+                  );
+              return child!;
+            },
             home: const SplashScreen(),
             routes: {
               '/login': (context) => const LoginScreen(),
@@ -106,7 +132,9 @@ class MyApp extends StatelessWidget {
               '/admin/banners': (context) => const ManageBannersScreen(),
               '/admin/promotions': (context) => const ManagePromotionScreen(),
               '/admin/coupons': (context) => const ManageCouponsScreen(),
-              '/admin/shipping': (context) => const ShippingSettingsScreen(),
+              '/admin/settings': (context) => const SettingsHubScreen(),
+              '/admin/shipping': (context) => const SettingsHubScreen(),
+              '/admin/security': (context) => const SecuritySettingsScreen(),
               '/admin/faqs': (context) => const ManageFAQsScreen(),
               '/admin/tickets': (context) => const ManageTicketsScreen(),
               '/admin/audit-logs': (context) => const AuditLogsScreen(),

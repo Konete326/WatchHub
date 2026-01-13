@@ -8,6 +8,9 @@ import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../product/product_detail_screen.dart';
+import '../../utils/haptics.dart';
+import '../../widgets/neumorphic_widgets.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -37,17 +40,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-            child: _NeumorphicContainer(
+            child: NeumorphicContainer(
               borderRadius: BorderRadius.circular(20),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  _NeumorphicButton(
+                  NeumorphicButtonSmall(
                     onTap: () => Navigator.of(context).pop(),
-                    padding: const EdgeInsets.all(10),
-                    shape: BoxShape.circle,
-                    child: const Icon(Icons.arrow_back,
-                        color: kTextColor, size: 20),
+                    icon: Icons.arrow_back,
+                    tooltip: 'Back',
                   ),
                   const Expanded(
                     child: Center(
@@ -61,7 +62,149 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 44),
+                  // Move All to Cart Button
+                  Consumer2<WishlistProvider, CartProvider>(
+                    builder: (context, wishlistProvider, cartProvider, _) {
+                      if (wishlistProvider.isEmpty) {
+                        return const SizedBox(width: 44);
+                      }
+                      return Row(
+                        children: [
+                          NeumorphicButtonSmall(
+                            onTap: () {
+                              final String shareText =
+                                  'Check out my luxury watch wishlist on WatchHub! ${wishlistProvider.wishlistItems.map((e) => e.watch?.name).join(', ')}';
+                              Clipboard.setData(ClipboardData(text: shareText));
+                              HapticHelper.success();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Wishlist link shared! (Copied to clipboard)')),
+                              );
+                            },
+                            icon: Icons.share_rounded,
+                            tooltip: 'Share Wishlist',
+                            iconColor: AppTheme.goldColor,
+                          ),
+                          const SizedBox(width: 12),
+                          NeumorphicButtonSmall(
+                            onTap: () async {
+                              HapticFeedback.mediumImpact();
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: kBackgroundColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  title: const Text(
+                                    'Move All to Cart',
+                                    style: TextStyle(
+                                      color: kTextColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    'Move all ${wishlistProvider.itemCount} items to your cart?',
+                                    style: TextStyle(
+                                      color: kTextColor.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          color:
+                                              kTextColor.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.primaryColor,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Move All',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(width: 16),
+                                        Text('Moving items to cart...'),
+                                      ],
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
+                                    backgroundColor:
+                                        kTextColor.withValues(alpha: 0.9),
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(15)),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+
+                                final count =
+                                    await wishlistProvider.moveAllToCart();
+                                await cartProvider.fetchCart();
+                                cartProvider.triggerAddedToCartAnimation();
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          const Icon(Icons.check_circle,
+                                              color: Colors.white, size: 20),
+                                          const SizedBox(width: 12),
+                                          Text('$count items moved to cart!'),
+                                        ],
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: AppTheme.successColor,
+                                      margin: const EdgeInsets.all(16),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15)),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            icon: Icons.add_shopping_cart,
+                            tooltip: 'Move All to Cart',
+                            iconColor: AppTheme.primaryColor,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -76,7 +219,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Consumer3<WishlistProvider, CartProvider, SettingsProvider>(
           builder: (context, wishlistProvider, cartProvider, settings, child) {
             if (wishlistProvider.isLoading && wishlistProvider.isEmpty) {
-              return _buildShimmerLoading();
+              return const ListShimmer();
             }
 
             if (wishlistProvider.isEmpty) {
@@ -102,7 +245,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         color: const Color(0xFFFFEBEE), // Solid soft red
                         borderRadius: BorderRadius.circular(25),
                       ),
-                      child: _NeumorphicContainer(
+                      child: NeumorphicContainer(
                         isConcave: true,
                         shape: BoxShape.circle,
                         padding: const EdgeInsets.all(12),
@@ -117,7 +260,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         SnackBar(
                           content: Text('Removed ${watch.name} from wishlist'),
                           behavior: SnackBarBehavior.floating,
-                          backgroundColor: kTextColor.withOpacity(0.9),
+                          backgroundColor: kTextColor.withValues(alpha: 0.9),
                           margin: const EdgeInsets.all(16),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15)),
@@ -133,18 +276,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
                           ),
                         );
                       },
-                      child: _NeumorphicContainer(
+                      child: NeumorphicContainer(
                         borderRadius: BorderRadius.circular(25),
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
                             // Watch Image in Concave Container
-                            _NeumorphicContainer(
+                            NeumorphicContainer(
                               isConcave: true,
                               borderRadius: BorderRadius.circular(20),
                               padding: const EdgeInsets.all(8),
                               child: Hero(
-                                tag: 'watch_${watch.id}',
+                                tag: 'wishlist_${watch.id}',
                                 child: CachedNetworkImage(
                                   imageUrl: watch.images.isNotEmpty
                                       ? watch.images.first
@@ -228,18 +371,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                         isSelected: true,
                                         shape: BoxShape.circle,
                                         padding: const EdgeInsets.all(4),
-                                        child: _NeumorphicButton(
+                                        child: NeumorphicButtonSmall(
                                           onTap: () async {
                                             HapticFeedback.selectionClick();
                                             await wishlistProvider
                                                 .toggleWishlist(
                                                     watch.id, item.id);
                                           },
-                                          padding: const EdgeInsets.all(10),
-                                          shape: BoxShape.circle,
-                                          child: const Icon(Icons.favorite,
-                                              color: Colors.redAccent,
-                                              size: 20),
+                                          icon: Icons.favorite,
+                                          tooltip: 'Remove from Wishlist',
+                                          iconColor: Colors.redAccent,
+                                          padding: 10,
                                         ),
                                       ),
                                     ],
@@ -270,7 +412,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final isStockLimitReached = currentQty >= watch.stock;
     final canAdd = watch.isInStock && !isStockLimitReached;
 
-    return _NeumorphicButton(
+    return NeumorphicButton(
       onTap: canAdd
           ? () async {
               HapticFeedback.lightImpact();
@@ -304,7 +446,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             fontWeight: FontWeight.bold,
             color: canAdd
                 ? AppTheme.primaryColor
-                : const Color(0xFF4A5568).withOpacity(0.3),
+                : const Color(0xFF4A5568).withValues(alpha: 0.3),
           ),
         ),
       ),
@@ -319,14 +461,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _NeumorphicContainer(
+            NeumorphicContainer(
               shape: BoxShape.circle,
               padding: const EdgeInsets.all(40),
               isConcave: true,
               child: Icon(
                 Icons.favorite_border_rounded,
                 size: 80,
-                color: kTextColor.withOpacity(0.2),
+                color: kTextColor.withValues(alpha: 0.2),
               ),
             ),
             const SizedBox(height: 40),
@@ -344,12 +486,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: kTextColor.withOpacity(0.6),
+                color: kTextColor.withValues(alpha: 0.6),
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 48),
-            _NeumorphicButton(
+            NeumorphicButton(
               onTap: () {
                 Navigator.of(context)
                     .pushNamedAndRemoveUntil('/home', (route) => false);
@@ -370,153 +512,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
   }
-
-  Widget _buildShimmerLoading() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: 5,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Shimmer.fromColors(
-          baseColor: const Color(0xFFE0E5EC),
-          highlightColor: const Color(0xFFF1F4F8),
-          child: Container(
-            height: 160,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // --- Neumorphic Components ---
-
-class _NeumorphicContainer extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-  final BorderRadiusGeometry? borderRadius;
-  final BoxShape shape;
-  final bool isConcave;
-
-  const _NeumorphicContainer({
-    required this.child,
-    this.padding = EdgeInsets.zero,
-    this.borderRadius,
-    this.shape = BoxShape.rectangle,
-    this.isConcave = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: AppTheme.softUiBackground,
-        shape: shape,
-        borderRadius: shape == BoxShape.rectangle ? borderRadius : null,
-        boxShadow: isConcave
-            ? [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    offset: const Offset(4, 4),
-                    blurRadius: 4,
-                    spreadRadius: 1),
-                BoxShadow(
-                    color: Colors.white.withOpacity(0.8),
-                    offset: const Offset(-4, -4),
-                    blurRadius: 4,
-                    spreadRadius: 1),
-              ]
-            : [
-                const BoxShadow(
-                    color: AppTheme.softUiShadowDark,
-                    offset: Offset(6, 6),
-                    blurRadius: 16),
-                const BoxShadow(
-                    color: AppTheme.softUiShadowLight,
-                    offset: Offset(-6, -6),
-                    blurRadius: 16),
-              ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _NeumorphicButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  final EdgeInsetsGeometry padding;
-  final BorderRadiusGeometry? borderRadius;
-  final BoxShape shape;
-  final bool isPressed;
-
-  const _NeumorphicButton({
-    required this.child,
-    required this.onTap,
-    this.padding = EdgeInsets.zero,
-    this.borderRadius,
-    this.shape = BoxShape.rectangle,
-    this.isPressed = false,
-  });
-
-  @override
-  State<_NeumorphicButton> createState() => _NeumorphicButtonState();
-}
-
-class _NeumorphicButtonState extends State<_NeumorphicButton> {
-  bool _isGesturePressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool effectivePressed = widget.isPressed || _isGesturePressed;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isGesturePressed = true),
-      onTapUp: (_) => setState(() => _isGesturePressed = false),
-      onTapCancel: () => setState(() => _isGesturePressed = false),
-      onTap: widget.onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: widget.padding,
-        decoration: BoxDecoration(
-          color: AppTheme.softUiBackground,
-          shape: widget.shape,
-          borderRadius:
-              widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
-          boxShadow: effectivePressed
-              ? [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      offset: const Offset(2, 2),
-                      blurRadius: 2,
-                      spreadRadius: 1),
-                  const BoxShadow(
-                      color: Colors.white,
-                      offset: Offset(-2, -2),
-                      blurRadius: 2,
-                      spreadRadius: 1),
-                ]
-              : [
-                  const BoxShadow(
-                      color: AppTheme.softUiShadowDark,
-                      offset: Offset(4, 4),
-                      blurRadius: 10),
-                  const BoxShadow(
-                      color: AppTheme.softUiShadowLight,
-                      offset: Offset(-4, -4),
-                      blurRadius: 10),
-                ],
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
 
 class _NeumorphicIndicatorContainer extends StatelessWidget {
   final Widget child;
@@ -545,7 +543,7 @@ class _NeumorphicIndicatorContainer extends StatelessWidget {
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     offset: const Offset(2, 2),
                     blurRadius: 2,
                     spreadRadius: 1),

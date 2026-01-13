@@ -6,10 +6,21 @@ class SupportTicket {
   final String userId;
   final String subject;
   final String message;
-  final String status;
+  final String status; // OPEN, IN_PROGRESS, PENDING_USER, RESOLVED, CLOSED
+  final String priority; // LOW, MEDIUM, HIGH, URGENT
+  final String? assigneeId;
+  final String? category;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  final DateTime slaDeadline;
+  final DateTime? lastRespondedAt;
+  final DateTime? resolvedAt;
+  final String? closeReason;
+  final String? mergedIntoId;
+  final List<String> attachments;
   final List<TicketMessage>? messages;
   final User? user;
+  final User? assignee;
 
   SupportTicket({
     required this.id,
@@ -17,40 +28,67 @@ class SupportTicket {
     required this.subject,
     required this.message,
     required this.status,
+    required this.priority,
     required this.createdAt,
+    required this.slaDeadline,
+    this.updatedAt,
+    this.assigneeId,
+    this.category,
+    this.lastRespondedAt,
+    this.resolvedAt,
+    this.closeReason,
+    this.mergedIntoId,
+    this.attachments = const [],
     this.messages,
     this.user,
+    this.assignee,
   });
 
   factory SupportTicket.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic date) {
+      if (date == null) return DateTime.now();
+      if (date is Timestamp) return date.toDate();
+      return DateTime.parse(date.toString());
+    }
+
     return SupportTicket(
       id: json['id'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
       subject: json['subject'] as String? ?? '',
       message: json['message'] as String? ?? '',
       status: json['status'] as String? ?? 'OPEN',
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] is Timestamp 
-              ? (json['createdAt'] as Timestamp).toDate() 
-              : DateTime.parse(json['createdAt'] as String))
-          : DateTime.now(),
-      messages: json['messages'] != null
-          ? (json['messages'] as List).map((m) => TicketMessage.fromJson(m as Map<String, dynamic>)).toList()
+      priority: json['priority'] as String? ?? 'MEDIUM',
+      assigneeId: json['assigneeId'] as String?,
+      category: json['category'] as String?,
+      createdAt: parseDate(json['createdAt']),
+      updatedAt:
+          json['updatedAt'] != null ? parseDate(json['updatedAt']) : null,
+      slaDeadline: parseDate(json['slaDeadline']),
+      lastRespondedAt: json['lastRespondedAt'] != null
+          ? parseDate(json['lastRespondedAt'])
           : null,
-      user: json['user'] != null ? User.fromJson(json['user'] as Map<String, dynamic>) : null,
+      resolvedAt:
+          json['resolvedAt'] != null ? parseDate(json['resolvedAt']) : null,
+      closeReason: json['closeReason'] as String?,
+      mergedIntoId: json['mergedIntoId'] as String?,
+      attachments: (json['attachments'] as List?)?.cast<String>() ?? [],
+      messages: json['messages'] != null
+          ? (json['messages'] as List)
+              .map((m) => TicketMessage.fromJson(m as Map<String, dynamic>))
+              .toList()
+          : null,
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
+      assignee: json['assignee'] != null
+          ? User.fromJson(json['assignee'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   factory SupportTicket.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return SupportTicket(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      subject: data['subject'] ?? '',
-      message: data['message'] ?? '',
-      status: data['status'] ?? 'OPEN',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
+    return SupportTicket.fromJson({...data, 'id': doc.id});
   }
 
   Map<String, dynamic> toJson() {
@@ -59,23 +97,35 @@ class SupportTicket {
       'subject': subject,
       'message': message,
       'status': status,
+      'priority': priority,
+      'assigneeId': assigneeId,
+      'category': category,
       'createdAt': createdAt,
+      'updatedAt': updatedAt ?? DateTime.now(),
+      'slaDeadline': slaDeadline,
+      'lastRespondedAt': lastRespondedAt,
+      'resolvedAt': resolvedAt,
+      'closeReason': closeReason,
+      'mergedIntoId': mergedIntoId,
+      'attachments': attachments,
     };
   }
 
+  bool get isExpired =>
+      DateTime.now().isAfter(slaDeadline) &&
+      status != 'RESOLVED' &&
+      status != 'CLOSED';
+
+  Duration get timeRemaining => slaDeadline.difference(DateTime.now());
+
   String get statusDisplay {
-    switch (status) {
-      case 'OPEN':
-        return 'Open';
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'RESOLVED':
-        return 'Resolved';
-      case 'CLOSED':
-        return 'Closed';
-      default:
-        return status;
-    }
+    return status
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word.isNotEmpty
+            ? word[0].toUpperCase() + word.substring(1).toLowerCase()
+            : '')
+        .join(' ');
   }
 }
 
@@ -84,6 +134,9 @@ class TicketMessage {
   final String ticketId;
   final String message;
   final bool isAdmin;
+  final String? senderId;
+  final String? senderName;
+  final List<String> attachments;
   final DateTime createdAt;
 
   TicketMessage({
@@ -92,30 +145,27 @@ class TicketMessage {
     required this.message,
     required this.isAdmin,
     required this.createdAt,
+    this.senderId,
+    this.senderName,
+    this.attachments = const [],
   });
 
   factory TicketMessage.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic date) {
+      if (date == null) return DateTime.now();
+      if (date is Timestamp) return date.toDate();
+      return DateTime.parse(date.toString());
+    }
+
     return TicketMessage(
       id: json['id'] as String? ?? '',
       ticketId: json['ticketId'] as String? ?? '',
       message: json['message'] as String? ?? '',
       isAdmin: json['isAdmin'] as bool? ?? false,
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] is Timestamp 
-              ? (json['createdAt'] as Timestamp).toDate() 
-              : DateTime.parse(json['createdAt'] as String))
-          : DateTime.now(),
-    );
-  }
-
-  factory TicketMessage.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return TicketMessage(
-      id: doc.id,
-      ticketId: data['ticketId'] ?? '',
-      message: data['message'] ?? '',
-      isAdmin: data['isAdmin'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      senderId: json['senderId'] as String?,
+      senderName: json['senderName'] as String?,
+      attachments: (json['attachments'] as List?)?.cast<String>() ?? [],
+      createdAt: parseDate(json['createdAt']),
     );
   }
 
@@ -124,8 +174,10 @@ class TicketMessage {
       'ticketId': ticketId,
       'message': message,
       'isAdmin': isAdmin,
+      'senderId': senderId,
+      'senderName': senderName,
+      'attachments': attachments,
       'createdAt': createdAt,
     };
   }
 }
-

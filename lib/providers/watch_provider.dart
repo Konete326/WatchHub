@@ -13,6 +13,10 @@ class WatchProvider with ChangeNotifier {
 
   List<Watch> _watches = [];
   List<Watch> _featuredWatches = [];
+  List<Watch> _newArrivals = [];
+  List<Watch> _editorsPicks = [];
+  List<Watch> _limitedEditions = [];
+  List<Watch> _budgetWatches = [];
   List<Brand> _brands = [];
   List<Category> _categories = [];
   List<HomeBanner> _banners = [];
@@ -31,6 +35,10 @@ class WatchProvider with ChangeNotifier {
 
   List<Watch> get watches => _watches;
   List<Watch> get featuredWatches => _featuredWatches;
+  List<Watch> get newArrivals => _newArrivals;
+  List<Watch> get editorsPicks => _editorsPicks;
+  List<Watch> get limitedEditions => _limitedEditions;
+  List<Watch> get budgetWatches => _budgetWatches;
   List<Brand> get brands => _brands;
   List<Category> get categories => _categories;
   List<HomeBanner> get banners => _banners;
@@ -48,14 +56,24 @@ class WatchProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _featuredWatches = await _watchService.getFeaturedWatches(limit: 10);
-      // Don't set error message if empty - just show empty state in UI
+      final results = await Future.wait([
+        _watchService.getFeaturedWatches(limit: 10),
+        _watchService.getNewArrivals(limit: 10),
+        _watchService.getLimitedEditions(limit: 10),
+        _watchService.getBudgetWatches(maxPrice: 50000, limit: 10),
+      ]);
+
+      _featuredWatches = results[0];
+      _newArrivals = results[1];
+      _editorsPicks = results[0]; // For now, use featured as editor's picks
+      _limitedEditions = results[2];
+      _budgetWatches = results[3];
+
       if (_featuredWatches.isEmpty) {
-        _errorMessage = null; // Clear error, let UI handle empty state
+        _errorMessage = null;
       }
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
-      _featuredWatches = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -84,15 +102,26 @@ class WatchProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchBanners() async {
+  Future<void> fetchBanners({String? userSegment, String? deviceType}) async {
     try {
-      _banners = await _watchService.getBanners();
+      _banners = await _watchService.getBanners(
+        userSegment: userSegment,
+        deviceType: deviceType,
+      );
       notifyListeners();
     } catch (e) {
       _errorMessage = FirebaseErrorHandler.getMessage(e);
       _banners = [];
       notifyListeners();
     }
+  }
+
+  Future<void> trackBannerImpression(String bannerId) async {
+    await _watchService.trackBannerImpression(bannerId);
+  }
+
+  Future<void> trackBannerClick(String bannerId) async {
+    await _watchService.trackBannerClick(bannerId);
   }
 
   Future<void> fetchPromotionHighlight() async {

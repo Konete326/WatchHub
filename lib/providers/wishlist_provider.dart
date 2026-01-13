@@ -83,6 +83,25 @@ class WishlistProvider with ChangeNotifier {
     }
   }
 
+  /// Move all wishlist items to cart at once
+  Future<int> moveAllToCart() async {
+    int successCount = 0;
+    final itemsToMove = List<WishlistItem>.from(_wishlistItems);
+
+    for (final item in itemsToMove) {
+      try {
+        await _wishlistService.moveToCart(item.id);
+        successCount++;
+      } catch (e) {
+        // Continue with other items even if one fails
+        print('Failed to move item ${item.id}: $e');
+      }
+    }
+
+    await fetchWishlist(); // Refresh wishlist after all moves
+    return successCount;
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

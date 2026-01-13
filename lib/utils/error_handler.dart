@@ -1,15 +1,43 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
+import 'package:flutter/services.dart';
 
 class FirebaseErrorHandler {
   static String getMessage(dynamic e) {
+    String errorStr = e.toString();
+
+    // 1. Check for Connectivity/Network specific errors first
+    // Checks both the type and the string representation for wrapped exceptions
+    if (e is SocketException ||
+        errorStr.contains('SocketException') ||
+        errorStr.contains('Network is unreachable') ||
+        errorStr.contains('Connection refused') ||
+        errorStr.contains('Connection reset by peer') ||
+        errorStr.contains('Failed host lookup') ||
+        errorStr.contains('ClientException') ||
+        errorStr.contains('XMLHttpRequest error')) {
+      return 'Internet Connection Error: Unable to connect to the server. Please check your internet connection.';
+    }
+
+    if (e is TimeoutException ||
+        errorStr.contains('TimeoutException') ||
+        errorStr.contains('deadline-exceeded')) {
+      return 'Connection Timeout: The server took too long to respond. Please try again later.';
+    }
+
+    if (e is HttpException || errorStr.contains('HttpException')) {
+      return 'Server Error: We are having trouble connecting to the server. Please try again.';
+    }
+
+    // 2. Firebase Auth Exceptions
     if (e is FirebaseAuthException) {
       switch (e.code) {
         case 'user-not-found':
           return 'No user found with this email.';
         case 'wrong-password':
-          return 'Wrong password provided.';
+          return 'Incorrect password provided.';
         case 'email-already-in-use':
           return 'The email address is already in use by another account.';
         case 'invalid-email':
@@ -19,57 +47,62 @@ class FirebaseErrorHandler {
         case 'operation-not-allowed':
           return 'Operation not allowed.';
         case 'network-request-failed':
-          return 'Network error. Please check your internet connection.';
+          return 'Internet Connection Error: Unable to connect to authentication server. Check your internet.';
         case 'user-disabled':
           return 'This user account has been disabled.';
         case 'too-many-requests':
-          return 'Too many attempts. Please try again later.';
+          return 'Too many login attempts. Please try again later.';
         default:
           return e.message ?? 'An unknown authentication error occurred.';
       }
-    } else if (e is FirebaseException) {
+    }
+
+    // 3. Firebase General Exceptions
+    if (e is FirebaseException) {
       switch (e.code) {
         case 'permission-denied':
-          return 'You do not have permission to perform this action.';
+          return 'Access Denied: You do not have permission to perform this action.';
         case 'unavailable':
-          return 'The service is currently unavailable. Please check your internet.';
+          return 'Service Unavailable: The server is currently unreachable. Please check your internet.';
         case 'not-found':
-          return 'The requested document was not found.';
+          return 'Not Found: The requested data was not found.';
         case 'already-exists':
-          return 'The document already exists.';
+          return 'Data Conflict: The document already exists.';
         case 'deadline-exceeded':
-          return 'The operation timed out. Please try again.';
+          return 'Request Timeout: The operation took too long. Please try again.';
         case 'network-error':
-          return 'Network error occurred. Please check your connection.';
+          return 'Internet Connection Error: Please check your connection.';
         default:
           return e.message ?? 'A database error occurred.';
       }
-    } else if (e is SocketException) {
-      return 'No internet connection. Please check your network settings.';
-    } else if (e is Exception) {
-      final errorStr = e.toString();
-      // Try to extract a meaningful message
+    }
+
+    // 4. Platform Exceptions
+    if (e is PlatformException) {
+      if (e.code == 'network_error') {
+        return 'Internet Connection Error: Please check your connection.';
+      }
+      return e.message ?? 'A platform error occurred.';
+    }
+
+    // 5. Generic Exceptions cleaning
+    if (e is Exception || e is Error) {
+      // Clean up common prefixes
       if (errorStr.contains('Exception:')) {
-        return errorStr.split('Exception:').last.trim();
+        errorStr = errorStr.split('Exception:').last.trim();
       }
       if (errorStr.contains('Error:')) {
-        return errorStr.split('Error:').last.trim();
+        errorStr = errorStr.split('Error:').last.trim();
       }
-      return errorStr.replaceAll('Exception: ', '').replaceAll('Error: ', '');
-    } else if (e is String) {
+      return errorStr;
+    }
+
+    // 6. Direct String
+    if (e is String) {
       return e;
     }
 
-    // For any other type, try to convert to string
-    try {
-      final errorStr = e.toString();
-      if (errorStr.isNotEmpty && errorStr != 'null') {
-        return errorStr;
-      }
-    } catch (_) {
-      // If conversion fails, use default
-    }
-
+    // Fallback
     return 'An unexpected error occurred. Please try again.';
   }
 }

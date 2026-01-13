@@ -7,8 +7,7 @@ import '../../providers/admin_provider.dart';
 import '../../models/category.dart';
 import '../../utils/theme.dart';
 import '../../utils/validators.dart';
-
-import '../../widgets/admin/admin_drawer.dart';
+import '../../widgets/admin/admin_layout.dart';
 
 class ManageCategoriesScreen extends StatefulWidget {
   const ManageCategoriesScreen({super.key});
@@ -19,11 +18,20 @@ class ManageCategoriesScreen extends StatefulWidget {
 
 class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => Provider.of<AdminProvider>(context, listen: false)
         .fetchAllCategories());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _showDuplicateError() {
@@ -41,9 +49,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             'A category with this name already exists. Please use a different name.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
+              onPressed: () => Navigator.pop(context), child: const Text('OK')),
         ],
       ),
     );
@@ -54,7 +60,6 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     XFile? selectedImage;
     final formKey = GlobalKey<FormState>();
 
-    // Dialog khulne se pehle purana error clear kar dein
     Provider.of<AdminProvider>(context, listen: false).clearError();
 
     showDialog(
@@ -74,16 +79,15 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     onTap: () async {
                       final XFile? image = await _picker.pickImage(
                           source: ImageSource.gallery, imageQuality: 70);
-                      if (image != null) {
+                      if (image != null)
                         setDialogState(() => selectedImage = image);
-                      }
                     },
                     child: Container(
                       height: 100,
                       width: 100,
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         image: selectedImage != null
                             ? null
                             : (category?.imageUrl != null &&
@@ -96,27 +100,19 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                       ),
                       child: selectedImage != null
                           ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                               child: FutureBuilder<Uint8List>(
-                                future: selectedImage!.readAsBytes(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    return Image.memory(
-                                      snapshot.data!,
-                                      fit: BoxFit.contain,
-                                      width: 100,
-                                      height: 100,
-                                    );
-                                  }
-                                  return const Center(
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2));
-                                },
-                              ),
-                            )
+                                  future: selectedImage!.readAsBytes(),
+                                  builder: (context, snapshot) =>
+                                      snapshot.hasData
+                                          ? Image.memory(snapshot.data!,
+                                              fit: BoxFit.contain)
+                                          : const Center(
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2))))
                           : (category?.imageUrl == null ||
                                   category!.imageUrl!.isEmpty)
-                              ? const Icon(Icons.add_a_photo,
+                              ? const Icon(Icons.add_a_photo_outlined,
                                   size: 40, color: Colors.grey)
                               : null,
                     ),
@@ -126,24 +122,20 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     controller: nameController,
                     decoration: const InputDecoration(
                         labelText: 'Category Name',
-                        border: OutlineInputBorder()),
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter category name'),
                     validator: (v) => Validators.required(v, 'Name'),
                     onChanged: (_) => adminProvider.clearError(),
                   ),
-
-                  // Naya Error Message Section
                   if (adminProvider.errorMessage != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(
-                        adminProvider.errorMessage!,
-                        style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(adminProvider.errorMessage!,
+                            style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center)),
                 ],
               ),
             ),
@@ -151,57 +143,36 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
               TextButton(
                   onPressed: adminProvider.isLoading
                       ? null
-                      : () {
-                          adminProvider.clearError();
-                          Navigator.pop(dialogContext);
-                        },
+                      : () => Navigator.pop(dialogContext),
                   child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: adminProvider.isLoading
                     ? null
                     : () async {
                         if (!formKey.currentState!.validate()) return;
-
                         final newName =
                             InputSanitizer.sanitize(nameController.text);
-
-                        // Check for duplicate name
                         final isDuplicate = adminProvider.categories.any((c) =>
                             c.name.toLowerCase() == newName.toLowerCase() &&
                             c.id != category?.id);
-
                         if (isDuplicate) {
                           _showDuplicateError();
                           return;
                         }
-
-                        bool success;
-                        if (category == null) {
-                          success = await adminProvider.createCategory(
-                            name: newName,
-                            imageFile: selectedImage,
-                          );
-                        } else {
-                          success = await adminProvider.updateCategory(
-                            id: category.id,
-                            name: newName,
-                            imageFile: selectedImage,
-                          );
-                        }
-
+                        bool success = category == null
+                            ? await adminProvider.createCategory(
+                                name: newName, imageFile: selectedImage)
+                            : await adminProvider.updateCategory(
+                                id: category.id,
+                                name: newName,
+                                imageFile: selectedImage);
                         if (success && mounted) {
-                          if (Navigator.canPop(dialogContext)) {
-                            Navigator.pop(dialogContext);
-                          }
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(category == null
-                                      ? 'Category added'
-                                      : 'Category updated'),
-                                  backgroundColor: AppTheme.successColor),
-                            );
-                          }
+                          Navigator.pop(dialogContext);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(category == null
+                                  ? 'Category added'
+                                  : 'Category updated'),
+                              backgroundColor: AppTheme.successColor));
                         }
                       },
                 child: adminProvider.isLoading
@@ -248,53 +219,116 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Manage Categories')),
-      drawer: const AdminDrawer(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditDialog(),
-        child: const Icon(Icons.add),
-      ),
-      body: Consumer<AdminProvider>(
+    return AdminLayout(
+      title: 'Manage Categories',
+      currentRoute: '/admin/categories',
+      actions: [
+        IconButton(
+            icon: const Icon(Icons.add_rounded),
+            onPressed: () => _showAddEditDialog(),
+            tooltip: 'Add Category'),
+      ],
+      child: Consumer<AdminProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading && provider.categories.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (provider.categories.isEmpty) {
-            return const Center(child: Text('No categories found'));
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.categories.length,
-            itemBuilder: (context, index) {
-              final category = provider.categories[index];
-              return Card(
-                child: ListTile(
-                  leading:
-                      category.imageUrl != null && category.imageUrl!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: category.imageUrl!,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.contain)
-                          : const Icon(Icons.category),
-                  title: Text(category.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () =>
-                              _showAddEditDialog(category: category)),
-                      IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteCategory(category)),
-                    ],
+          final filteredCategories = provider.categories
+              .where((c) =>
+                  c.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+              .toList();
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search categories...',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            })
+                        : null,
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
                   ),
+                  onChanged: (v) => setState(() => _searchQuery = v),
                 ),
-              );
-            },
+              ),
+              Expanded(
+                child: provider.isLoading && provider.categories.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredCategories.isEmpty
+                        ? const Center(child: Text('No categories found'))
+                        : RefreshIndicator(
+                            onRefresh: () => provider.fetchAllCategories(),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filteredCategories.length,
+                              itemBuilder: (context, index) {
+                                final category = filteredCategories[index];
+                                return Card(
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      side: BorderSide(
+                                          color: Colors.grey.shade200)),
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  child: ListTile(
+                                    leading: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: category.imageUrl != null &&
+                                              category.imageUrl!.isNotEmpty
+                                          ? CachedNetworkImage(
+                                              imageUrl: category.imageUrl!,
+                                              width: 40,
+                                              height: 40,
+                                              fit: BoxFit.contain)
+                                          : Container(
+                                              width: 40,
+                                              height: 40,
+                                              color: Colors.grey.shade100,
+                                              child: const Icon(
+                                                  Icons.category_outlined)),
+                                    ),
+                                    title: Text(category.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                            icon: const Icon(
+                                                Icons.edit_outlined,
+                                                size: 20,
+                                                color: Colors.blue),
+                                            onPressed: () => _showAddEditDialog(
+                                                category: category)),
+                                        IconButton(
+                                            icon: const Icon(
+                                                Icons.delete_outline,
+                                                size: 20,
+                                                color: Colors.red),
+                                            onPressed: () =>
+                                                _deleteCategory(category)),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ],
           );
         },
       ),

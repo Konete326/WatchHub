@@ -116,10 +116,9 @@ class _ReviewDialogState extends State<ReviewDialog> {
       if (success) {
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.review != null
-                ? 'Review updated successfully'
-                : 'Review submitted successfully'),
+          const SnackBar(
+            content: Text(
+                'Review submitted! It will be visible after a quick moderation check.'),
             backgroundColor: AppTheme.successColor,
             behavior: SnackBarBehavior.floating,
           ),

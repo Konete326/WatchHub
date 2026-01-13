@@ -6,8 +6,10 @@ import '../../providers/cart_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
 import '../../widgets/empty_state.dart';
-import '../checkout/address_selection_screen.dart';
+import '../checkout/checkout_screen.dart';
 import '../../utils/image_utils.dart';
+import '../../utils/haptics.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class CartScreen extends StatefulWidget {
   final bool showBackButton;
@@ -115,11 +117,13 @@ class _CartScreenState extends State<CartScreen> {
       body: Consumer2<CartProvider, SettingsProvider>(
         builder: (context, cartProvider, settings, child) {
           if (cartProvider.isLoading && cartProvider.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const ListShimmer();
           }
 
           if (cartProvider.isEmpty) {
             return EmptyState(
+              lottieUrl:
+                  null, // lottieUrl removed due to 403 error, falling back to icon
               icon: Icons.shopping_basket_outlined,
               title: 'Your cart is empty',
               message:
@@ -145,7 +149,10 @@ class _CartScreenState extends State<CartScreen> {
                     children: [
                       _NeumorphicCheckbox(
                         value: cartProvider.isAllSelected,
-                        onChanged: (value) => cartProvider.selectAll(value),
+                        onChanged: (value) {
+                          HapticHelper.selection();
+                          cartProvider.selectAll(value);
+                        },
                       ),
                       const SizedBox(width: 16),
                       const Expanded(
@@ -216,8 +223,10 @@ class _CartScreenState extends State<CartScreen> {
                               value: cartProvider.selectedItemIds
                                   .contains(item.id),
                               size: 22,
-                              onChanged: (value) =>
-                                  cartProvider.toggleSelection(item.id),
+                              onChanged: (value) {
+                                HapticHelper.selection();
+                                cartProvider.toggleSelection(item.id);
+                              },
                             ),
 
                             const SizedBox(width: 12),
@@ -251,7 +260,7 @@ class _CartScreenState extends State<CartScreen> {
                                   borderRadius: BorderRadius.circular(13),
                                   child: watch.images.isNotEmpty
                                       ? Hero(
-                                          tag: 'cart_image_${item.id}',
+                                          tag: 'cart_${item.id}',
                                           child: CachedNetworkImage(
                                             imageUrl: watch.images.first,
                                             fit: BoxFit
@@ -324,6 +333,7 @@ class _CartScreenState extends State<CartScreen> {
                                           _NeumorphicButton(
                                             onTap: () async {
                                               if (item.quantity > 1) {
+                                                HapticHelper.light();
                                                 await cartProvider
                                                     .updateQuantity(item.id,
                                                         item.quantity - 1);
@@ -357,6 +367,7 @@ class _CartScreenState extends State<CartScreen> {
                                           _NeumorphicButton(
                                             onTap: () async {
                                               if (item.quantity < watch.stock) {
+                                                HapticHelper.light();
                                                 await cartProvider
                                                     .updateQuantity(item.id,
                                                         item.quantity + 1);
@@ -469,13 +480,19 @@ class _CartScreenState extends State<CartScreen> {
                         child: _NeumorphicButton(
                           onTap: cartProvider.hasSelection
                               ? () {
+                                  HapticHelper.medium();
+                                  HapticHelper.medium();
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            const AddressSelectionScreen()),
+                                            const CheckoutScreen(
+                                                initialStep: 1)),
                                   );
                                 }
-                              : () {},
+                              : () {
+                                  HapticHelper
+                                      .heavy(); // Error vibration if pressed without selection
+                                },
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           borderRadius: BorderRadius.circular(16),
                           child: Row(

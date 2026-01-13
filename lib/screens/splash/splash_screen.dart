@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../utils/theme.dart';
@@ -76,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.softUiBackground,
+      backgroundColor: AppTheme.backgroundColor,
       body: Stack(
         children: [
           Center(
@@ -107,23 +108,23 @@ class _SplashScreenState extends State<SplashScreen>
                   },
                 ),
                 const SizedBox(height: 60),
-                const Text(
+                Text(
                   'WatchHub',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.softUiTextColor,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primaryColor,
                     letterSpacing: 2,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'PREMIUM TIMEPIECES',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.softUiTextColor.withOpacity(0.4),
-                    letterSpacing: 4,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.goldColor,
+                    letterSpacing: 5,
                   ),
                 ),
                 const SizedBox(height: 80),
@@ -141,10 +142,10 @@ class _SplashScreenState extends State<SplashScreen>
             child: Center(
               child: Text(
                 'v1.0.4 Premium Edition',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 10,
-                  color: AppTheme.softUiTextColor.withOpacity(0.2),
-                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textTertiaryColor,
+                  fontWeight: FontWeight.w500,
                   letterSpacing: 1,
                 ),
               ),
@@ -164,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
         height: size * (1.0 + value * 0.2),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppTheme.softUiBackground,
+          color: AppTheme.backgroundColor,
           boxShadow: [
             BoxShadow(
               color: AppTheme.softUiShadowDark.withOpacity(0.3 * (1.0 - value)),
@@ -202,12 +203,12 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppTheme.primaryColor, Color(0xFF64B5F6)],
+                        colors: [AppTheme.goldColor, AppTheme.roseGoldColor],
                       ),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.4),
+                          color: AppTheme.goldColor.withOpacity(0.4),
                           blurRadius: 8,
                           offset: const Offset(2, 0),
                         ),

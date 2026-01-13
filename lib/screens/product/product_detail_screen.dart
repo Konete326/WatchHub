@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/watch_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/wishlist_provider.dart';
@@ -12,6 +13,11 @@ import '../../utils/theme.dart';
 import '../../utils/image_utils.dart';
 import '../../widgets/reviews_section.dart';
 import '../../models/watch.dart';
+import 'virtual_try_on_screen.dart';
+import '../../providers/compare_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../../models/notification.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String watchId;
@@ -29,6 +35,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       CarouselSliderController();
   final ScrollController _scrollController = ScrollController();
   bool _isSpecificationsExpanded = false;
+  String _pincode = '';
+  String? _shippingEstimate;
+  bool _isNotifyMeSubscribed = false;
+  bool _isPriceDropSubscribed = false;
+  bool _is360Mode = false;
 
   @override
   void initState() {
@@ -46,10 +57,312 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
+  Widget _build360Viewer(Watch watch) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        setState(() {
+          if (details.delta.dx > 5) {
+            _currentImageIndex = (_currentImageIndex + 1) % watch.images.length;
+          } else if (details.delta.dx < -5) {
+            _currentImageIndex =
+                (_currentImageIndex - 1 + watch.images.length) %
+                    watch.images.length;
+          }
+        });
+      },
+      child: CachedNetworkImage(
+        imageUrl: watch.images[_currentImageIndex],
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget _buildVariantSelection(Watch watch) {
+    final kTextColor = AppTheme.textPrimaryColor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (watch.variants != null && watch.variants!.isNotEmpty) ...[
+          Text(
+            'Color Theme',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: kTextColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: watch.variants!.length,
+              itemBuilder: (context, index) {
+                final variant = watch.variants![index];
+                final isSelected =
+                    _selectedVariant?.colorName == variant.colorName;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: _NeumorphicIndicatorContainer(
+                    isSelected: isSelected,
+                    shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(4),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _selectedVariant = variant;
+                          if (variant.image != null) {
+                            final imgIndex =
+                                watch.images.indexOf(variant.image!);
+                            if (imgIndex != -1) {
+                              _carouselController.animateToPage(imgIndex);
+                            }
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Color(int.parse(
+                              variant.colorHex.replaceAll('#', '0xFF'))),
+                          shape: BoxShape.circle,
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check,
+                                color: Colors.white, size: 20)
+                            : null,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+        if (watch.hasAnyStrapOption) ...[
+          Text(
+            'Strap Material',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: kTextColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              if (watch.hasBeltOption)
+                _buildChoiceChip(
+                  label: 'Leather Belt',
+                  icon: Icons.unfold_more_rounded,
+                  isSelected: watch.strapType == 'belt',
+                  onTap: () {},
+                ),
+              const SizedBox(width: 12),
+              if (watch.hasChainOption)
+                _buildChoiceChip(
+                  label: 'Steel Chain',
+                  icon: Icons.link_rounded,
+                  isSelected: watch.strapType == 'chain',
+                  onTap: () {},
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChoiceChip({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final kTextColor = AppTheme.textPrimaryColor;
+    return GestureDetector(
+      onTap: onTap,
+      child: _NeumorphicIndicatorContainer(
+        isSelected: isSelected,
+        borderRadius: BorderRadius.circular(15),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon,
+                size: 16, color: isSelected ? AppTheme.goldColor : kTextColor),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? AppTheme.goldColor : kTextColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShippingSection() {
+    final kTextColor = AppTheme.textPrimaryColor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Check Shipping & Delivery',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: kTextColor,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _NeumorphicContainer(
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Enter Pincode',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(fontSize: 14),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (val) => _pincode = val,
+                  ),
+                ),
+              ),
+              _NeumorphicButton(
+                onTap: _checkShipping,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                borderRadius: BorderRadius.circular(15),
+                child: const Text(
+                  'Check',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_shippingEstimate != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12, left: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.local_shipping_outlined,
+                    size: 16, color: AppTheme.successColor),
+                const SizedBox(width: 8),
+                Text(
+                  _shippingEstimate!,
+                  style: const TextStyle(
+                    color: AppTheme.successColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTrustElements() {
+    final kTextColor = AppTheme.textPrimaryColor;
+    final trustItems = [
+      {
+        'icon': Icons.verified_user_outlined,
+        'label': 'Authenticity Guaranteed'
+      },
+      {'icon': Icons.history_rounded, 'label': '7-Day Easy Returns'},
+      {'icon': Icons.security_rounded, 'label': '2-Year Warranty'},
+      {'icon': Icons.payment_rounded, 'label': 'Secure Payments'},
+    ];
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: trustItems.map((item) {
+        return Container(
+          width: (MediaQuery.of(context).size.width - 64) / 2,
+          child: Row(
+            children: [
+              Icon(item['icon'] as IconData,
+                  size: 20, color: AppTheme.goldColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item['label'] as String,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: kTextColor.withOpacity(0.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _checkShipping() {
+    if (_pincode.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid pincode')),
+      );
+      return;
+    }
+    setState(() {
+      _shippingEstimate = 'Delivered by Thursday, Jan 15';
+    });
+  }
+
+  void _togglePriceDropAlert() {
+    setState(() => _isPriceDropSubscribed = !_isPriceDropSubscribed);
+    if (_isPriceDropSubscribed) {
+      final notificationProvider =
+          Provider.of<NotificationProvider>(context, listen: false);
+      notificationProvider.addNotification(
+        title: 'Price Drop Alert Set!',
+        body:
+            'We will notify you when the price of ${Provider.of<WatchProvider>(context, listen: false).selectedWatch?.name} drops.',
+        type: NotificationType.promotion,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Price drop alert set!')),
+      );
+    }
+  }
+
+  void _toggleRestockNotify() {
+    setState(() => _isNotifyMeSubscribed = !_isNotifyMeSubscribed);
+    if (_isNotifyMeSubscribed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('We will notify you when back in stock!')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    const kBackgroundColor = AppTheme.softUiBackground;
-    const kTextColor = AppTheme.softUiTextColor;
+    const kBackgroundColor = AppTheme.backgroundColor;
+    const kTextColor = AppTheme.textPrimaryColor;
 
     return Scaffold(
       backgroundColor: kBackgroundColor,
@@ -68,43 +381,84 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child:
                       const Icon(Icons.arrow_back, color: kTextColor, size: 20),
                 ),
-                const Text(
+                Text(
                   'Details',
-                  style: TextStyle(
+                  style: GoogleFonts.playfairDisplay(
                     color: kTextColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
                   ),
                 ),
-                Consumer<WishlistProvider>(
-                  builder: (context, wishlistProvider, child) {
-                    final watch =
-                        Provider.of<WatchProvider>(context).selectedWatch;
-                    if (watch == null) return const SizedBox(width: 44);
+                Consumer3<WishlistProvider, CompareProvider, WatchProvider>(
+                  builder: (context, wishlistProvider, compareProvider,
+                      watchProvider, child) {
+                    final watch = watchProvider.selectedWatch;
+                    if (watch == null) return const SizedBox(width: 88);
 
                     final isInWishlist =
                         wishlistProvider.isInWishlist(watch.id);
-                    return _NeumorphicIndicatorContainer(
-                      isSelected: isInWishlist,
-                      shape: BoxShape.circle,
-                      padding: const EdgeInsets.all(4),
-                      child: _NeumorphicButton(
-                        onTap: () async {
-                          HapticFeedback.mediumImpact();
-                          final wishlistItem = wishlistProvider.wishlistItems
-                              .where((item) => item.watchId == watch.id)
-                              .firstOrNull;
-                          await wishlistProvider.toggleWishlist(
-                              watch.id, wishlistItem?.id);
-                        },
-                        padding: const EdgeInsets.all(10),
-                        shape: BoxShape.circle,
-                        child: Icon(
-                          isInWishlist ? Icons.favorite : Icons.favorite_border,
-                          color: isInWishlist ? Colors.redAccent : kTextColor,
-                          size: 20,
+                    final isInCompare = compareProvider.isInCompare(watch.id);
+
+                    return Row(
+                      children: [
+                        _NeumorphicIndicatorContainer(
+                          isSelected: isInCompare,
+                          shape: BoxShape.circle,
+                          padding: const EdgeInsets.all(4),
+                          child: _NeumorphicButton(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              compareProvider.toggleCompare(watch);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(isInCompare
+                                      ? 'Removed from comparison'
+                                      : 'Added to comparison (${compareProvider.compareList.length}/3)'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            padding: const EdgeInsets.all(10),
+                            shape: BoxShape.circle,
+                            child: Icon(
+                              isInCompare
+                                  ? Icons.compare_arrows_rounded
+                                  : Icons.compare_arrows_rounded,
+                              color:
+                                  isInCompare ? AppTheme.goldColor : kTextColor,
+                              size: 20,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        _NeumorphicIndicatorContainer(
+                          isSelected: isInWishlist,
+                          shape: BoxShape.circle,
+                          padding: const EdgeInsets.all(4),
+                          child: _NeumorphicButton(
+                            onTap: () async {
+                              HapticFeedback.mediumImpact();
+                              final wishlistItem = wishlistProvider
+                                  .wishlistItems
+                                  .where((item) => item.watchId == watch.id)
+                                  .firstOrNull;
+                              await wishlistProvider.toggleWishlist(
+                                  watch.id, wishlistItem?.id);
+                            },
+                            padding: const EdgeInsets.all(10),
+                            shape: BoxShape.circle,
+                            child: Icon(
+                              isInWishlist
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isInWishlist
+                                  ? AppTheme.roseGoldColor
+                                  : kTextColor,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -116,9 +470,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       body: Consumer<WatchProvider>(
         builder: (context, watchProvider, child) {
           if (watchProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
-            );
+            return const ProductDetailShimmer();
           }
 
           if (watchProvider.errorMessage != null) {
@@ -207,37 +559,94 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Stack(
                         alignment: Alignment.bottomCenter,
                         children: [
-                          CarouselSlider(
-                            carouselController: _carouselController,
-                            options: CarouselOptions(
-                              height: double.infinity,
-                              viewportFraction: 1.0,
-                              enableInfiniteScroll: watch.images.length > 1,
-                              onPageChanged: (index, reason) {
-                                setState(() {
-                                  _currentImageIndex = index;
-                                });
-                              },
+                          if (_is360Mode && watch.images.length > 5)
+                            _build360Viewer(watch)
+                          else
+                            CarouselSlider(
+                              carouselController: _carouselController,
+                              options: CarouselOptions(
+                                height: double.infinity,
+                                viewportFraction: 1.0,
+                                enableInfiniteScroll: watch.images.length > 1,
+                                onPageChanged: (index, reason) {
+                                  setState(() {
+                                    _currentImageIndex = index;
+                                  });
+                                },
+                              ),
+                              items: watch.images.map<Widget>((imageUrl) {
+                                return InteractiveViewer(
+                                  minScale: 1.0,
+                                  maxScale: 3.0,
+                                  child: GestureDetector(
+                                    onTap: () => ImageUtils.showFullScreenImage(
+                                        context, imageUrl),
+                                    child: Hero(
+                                      tag: imageUrl,
+                                      child: CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        fit: BoxFit.contain,
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(
+                                          Icons.image_not_supported_outlined,
+                                          size: 80,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                            items: watch.images.map<Widget>((imageUrl) {
-                              return GestureDetector(
-                                onTap: () => ImageUtils.showFullScreenImage(
-                                    context, imageUrl),
-                                child: Hero(
-                                  tag: 'watch_${watch.id}_detail',
-                                  child: CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    fit: BoxFit.contain,
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      size: 80,
-                                      color: Colors.grey,
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Row(
+                              children: [
+                                if (watch.images.length > 5)
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                        () => _is360Mode = !_is360Mode),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: _is360Mode
+                                            ? AppTheme.goldColor
+                                                .withOpacity(0.2)
+                                            : AppTheme.primaryColor
+                                                .withOpacity(0.05),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.threed_rotation_rounded,
+                                        color: _is360Mode
+                                            ? AppTheme.goldColor
+                                            : AppTheme.primaryColor,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                GestureDetector(
+                                  onTap: () => ImageUtils.showFullScreenImage(
+                                      context,
+                                      watch.images[_currentImageIndex]),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor
+                                          .withOpacity(0.05),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.fullscreen_rounded,
+                                      color: AppTheme.primaryColor,
+                                      size: 20,
                                     ),
                                   ),
                                 ),
-                              );
-                            }).toList(),
+                              ],
+                            ),
                           ),
                           if (watch.images.length > 1)
                             Positioned(
@@ -287,11 +696,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               borderRadius: BorderRadius.circular(12),
                               child: Text(
                                 watch.brand!.name.toUpperCase(),
-                                style: const TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
-                                  letterSpacing: 1.2,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.goldColor,
+                                  letterSpacing: 1.5,
                                 ),
                               ),
                             ),
@@ -335,11 +744,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       // Product Name
                       Text(
                         watch.name,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: kTextColor,
-                          letterSpacing: -0.5,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryColor,
+                          letterSpacing: 0.5,
+                          height: 1.2,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -347,86 +757,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       // Description
                       Text(
                         watch.description,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 15,
-                          color: kTextColor.withOpacity(0.7),
-                          height: 1.6,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondaryColor,
+                          height: 1.7,
                         ),
                       ),
                       const SizedBox(height: 32),
 
-                      // Variant Selector
-                      if (watch.variants != null &&
-                          watch.variants!.isNotEmpty) ...[
-                        const Text(
-                          'Available Options',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: kTextColor,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: watch.variants!.map((variant) {
-                            final isSelected = _selectedVariant?.colorName ==
-                                variant.colorName;
-                            return _NeumorphicIndicatorContainer(
-                              isSelected: isSelected,
-                              shape: BoxShape.circle,
-                              padding: const EdgeInsets.all(6),
-                              child: GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() {
-                                    _selectedVariant = variant;
-                                    if (variant.image != null) {
-                                      final imgIndex =
-                                          watch.images.indexOf(variant.image!);
-                                      if (imgIndex != -1) {
-                                        _carouselController
-                                            .animateToPage(imgIndex);
-                                      }
-                                    }
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Color(int.parse(variant.colorHex
-                                        .replaceAll('#', '0xFF'))),
-                                    shape: BoxShape.circle,
-                                    boxShadow: isSelected
-                                        ? []
-                                        : [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.2),
-                                              offset: const Offset(3, 3),
-                                              blurRadius: 6,
-                                            ),
-                                            BoxShadow(
-                                              color: Colors.white,
-                                              offset: const Offset(-3, -3),
-                                              blurRadius: 6,
-                                            ),
-                                          ],
-                                  ),
-                                  child: isSelected
-                                      ? const Icon(Icons.check,
-                                          color: Colors.white, size: 24)
-                                      : null,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
+                      // Variant Selection Section
+                      _buildVariantSelection(watch),
+                      const SizedBox(height: 32),
+
+                      // Shipping & Pincode Section
+                      _buildShippingSection(),
+                      const SizedBox(height: 32),
+
+                      // Trust Elements Section
+                      _buildTrustElements(),
+                      const SizedBox(height: 32),
 
                       // Specifications Expansion Header
                       _NeumorphicButton(
@@ -441,11 +791,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Specifications',
-                              style: TextStyle(
+                              style: GoogleFonts.playfairDisplay(
                                 fontSize: 17,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: kTextColor,
                               ),
                             ),
@@ -513,11 +863,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                       // Similar Watches
                       if (watchProvider.relatedWatches.isNotEmpty) ...[
-                        const Text(
+                        Text(
                           'Similar Watches',
-                          style: TextStyle(
+                          style: GoogleFonts.playfairDisplay(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: kTextColor,
                           ),
                         ),
@@ -568,6 +918,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         builder: (context, watchProvider, child) {
           final watch = watchProvider.selectedWatch;
           if (watch == null) return const SizedBox();
+          final kTextColor = AppTheme.textPrimaryColor;
 
           return Container(
             color: kBackgroundColor,
@@ -582,139 +933,243 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Total Price',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: kTextColor,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Price',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                          Consumer<SettingsProvider>(
+                            builder: (context, settings, _) => Text(
+                              settings.formatPrice(watch.currentPrice),
+                              style: GoogleFonts.inter(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Consumer<SettingsProvider>(
-                        builder: (context, settings, _) => Text(
-                          settings.formatPrice(watch.currentPrice),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                      // Smart CTAs: Price Drop Alert
+                      _NeumorphicIndicatorContainer(
+                        isSelected: _isPriceDropSubscribed,
+                        shape: BoxShape.circle,
+                        padding: const EdgeInsets.all(4),
+                        child: _NeumorphicButton(
+                          onTap: _togglePriceDropAlert,
+                          padding: const EdgeInsets.all(12),
+                          shape: BoxShape.circle,
+                          child: Icon(
+                            _isPriceDropSubscribed
+                                ? Icons.notifications_active
+                                : Icons.notifications_none_rounded,
+                            color: _isPriceDropSubscribed
+                                ? AppTheme.goldColor
+                                : kTextColor,
+                            size: 24,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Consumer<CartProvider>(
-                          builder: (context, cartProvider, _) {
-                            final currentQty =
-                                cartProvider.getQuantityInCart(watch.id);
-                            final isStockLimitReached =
-                                currentQty >= watch.stock;
-                            final canAdd =
-                                watch.isInStock && !isStockLimitReached;
-
-                            return _NeumorphicButton(
-                              onTap: canAdd
-                                  ? () async {
-                                      HapticFeedback.lightImpact();
-                                      final success =
-                                          await cartProvider.addToCart(
-                                        watch,
-                                        productColor:
-                                            _selectedVariant?.colorName,
-                                      );
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(success
-                                                ? 'Added to cart'
-                                                : 'Failed to add'),
-                                            backgroundColor: success
-                                                ? AppTheme.successColor
-                                                : AppTheme.errorColor,
-                                            behavior: SnackBarBehavior.floating,
-                                            margin: const EdgeInsets.only(
-                                                bottom: 150,
-                                                left: 24,
-                                                right: 24),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  : () {},
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              borderRadius: BorderRadius.circular(15),
-                              child: Center(
-                                child: Text(
-                                  'Add to Cart',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: canAdd
-                                        ? AppTheme.primaryColor
-                                        : kTextColor.withOpacity(0.3),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _NeumorphicButton(
-                          onTap: watch.isInStock
-                              ? () async {
-                                  HapticFeedback.mediumImpact();
-                                  final success =
-                                      await Provider.of<CartProvider>(context,
-                                              listen: false)
-                                          .addToCart(watch,
-                                              productColor:
-                                                  _selectedVariant?.colorName);
-
-                                  if (!mounted) return;
-
-                                  if (success) {
-                                    Navigator.pushNamed(context, '/cart');
-                                  } else {
-                                    final errorMessage =
-                                        Provider.of<CartProvider>(context,
-                                                listen: false)
-                                            .errorMessage;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            errorMessage ?? 'Failed to buy'),
-                                        backgroundColor: AppTheme.errorColor,
-                                        behavior: SnackBarBehavior.floating,
-                                        margin: const EdgeInsets.only(
-                                            bottom: 150, left: 24, right: 24),
-                                      ),
-                                    );
-                                  }
-                                }
-                              : () {},
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          borderRadius: BorderRadius.circular(15),
-                          child: Center(
-                            child: Text(
-                              'Buy Now',
+                  const SizedBox(height: 16),
+                  if (!watch.isInStock)
+                    _NeumorphicButton(
+                      onTap: _toggleRestockNotify,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      borderRadius: BorderRadius.circular(15),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isNotifyMeSubscribed
+                                  ? Icons.check_circle
+                                  : Icons.mail_outline_rounded,
+                              color: _isNotifyMeSubscribed
+                                  ? AppTheme.successColor
+                                  : AppTheme.primaryColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isNotifyMeSubscribed
+                                  ? 'Subscribed to Restock'
+                                  : 'Notify Me When in Stock',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: watch.isInStock
-                                    ? kTextColor
-                                    : kTextColor.withOpacity(0.3),
+                                color: _isNotifyMeSubscribed
+                                    ? AppTheme.successColor
+                                    : AppTheme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Consumer<CartProvider>(
+                            builder: (context, cartProvider, _) {
+                              final currentQty =
+                                  cartProvider.getQuantityInCart(watch.id);
+                              final isStockLimitReached =
+                                  currentQty >= watch.stock;
+                              final canAdd =
+                                  watch.isInStock && !isStockLimitReached;
+
+                              return _NeumorphicButton(
+                                onTap: canAdd
+                                    ? () async {
+                                        HapticFeedback.lightImpact();
+                                        final success =
+                                            await cartProvider.addToCart(
+                                          watch,
+                                          productColor:
+                                              _selectedVariant?.colorName,
+                                        );
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(success
+                                                  ? 'Added to cart'
+                                                  : 'Failed to add'),
+                                              backgroundColor: success
+                                                  ? AppTheme.successColor
+                                                  : AppTheme.errorColor,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              margin: const EdgeInsets.only(
+                                                  bottom: 150,
+                                                  left: 24,
+                                                  right: 24),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    : () {},
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                borderRadius: BorderRadius.circular(15),
+                                child: Center(
+                                  child: Text(
+                                    'Add to Cart',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: canAdd
+                                          ? AppTheme.primaryColor
+                                          : kTextColor.withOpacity(0.3),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _NeumorphicButton(
+                            onTap: watch.isInStock
+                                ? () async {
+                                    HapticFeedback.mediumImpact();
+                                    final success =
+                                        await Provider.of<CartProvider>(
+                                                context,
+                                                listen: false)
+                                            .addToCart(
+                                                watch,
+                                                productColor: _selectedVariant
+                                                    ?.colorName);
+
+                                    if (!mounted) return;
+
+                                    if (success) {
+                                      Navigator.pushNamed(context, '/cart');
+                                    } else {
+                                      final errorMessage =
+                                          Provider.of<CartProvider>(context,
+                                                  listen: false)
+                                              .errorMessage;
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              errorMessage ?? 'Failed to buy'),
+                                          backgroundColor: AppTheme.errorColor,
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: const EdgeInsets.only(
+                                              bottom: 150, left: 24, right: 24),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                : () {},
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            borderRadius: BorderRadius.circular(15),
+                            child: Center(
+                              child: Text(
+                                'Buy Now',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: watch.isInStock
+                                      ? kTextColor
+                                      : kTextColor.withOpacity(0.3),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  const SizedBox(height: 12),
+                  // AR Try-On Button
+                  _NeumorphicButton(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VirtualTryOnScreen(
+                            watchImageUrl: watch.images.isNotEmpty
+                                ? watch.images.first
+                                : '',
+                          ),
+                        ),
+                      );
+                    },
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    borderRadius: BorderRadius.circular(15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt_outlined,
+                          color: Colors.deepPurple.shade400,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AR Try-On',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.deepPurple.shade400,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

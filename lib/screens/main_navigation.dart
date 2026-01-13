@@ -20,11 +20,6 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  // Neumorphic Blue Theme Constants
-  static const Color navBlueMain = Color(0xFF2E5BFF);
-  static const Color navBlueLight = Color(0xFF4D76FF);
-  static const Color navBlueDark = Color(0xFF1A3EBF);
-
   @override
   void initState() {
     super.initState();
@@ -66,7 +61,7 @@ class _MainNavigationState extends State<MainNavigation> {
       },
       child: Scaffold(
         extendBody: true,
-        backgroundColor: AppTheme.softUiBackground,
+        backgroundColor: AppTheme.backgroundColor,
         body: IndexedStack(
           index: _currentIndex,
           children: screens,
@@ -74,20 +69,15 @@ class _MainNavigationState extends State<MainNavigation> {
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
           child: Container(
-            height: 85,
+            height: 75,
             decoration: BoxDecoration(
-              color: navBlueMain,
-              borderRadius: BorderRadius.circular(35),
+              color: AppTheme.primaryColor,
+              borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: navBlueDark.withOpacity(0.5),
-                  offset: const Offset(4, 4),
-                  blurRadius: 12,
-                ),
-                BoxShadow(
-                  color: navBlueLight.withOpacity(0.35),
-                  offset: const Offset(-4, -4),
-                  blurRadius: 12,
+                  color: AppTheme.primaryColor.withOpacity(0.3),
+                  offset: const Offset(0, 10),
+                  blurRadius: 20,
                 ),
               ],
             ),
@@ -112,12 +102,13 @@ class _MainNavigationState extends State<MainNavigation> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
-      child: _NeumorphicNavButton(
+      child: _PremiumNavButton(
         isSelected: isSelected,
         child: Icon(
           icon,
-          color: isSelected ? Colors.white : Colors.white60,
-          size: 26,
+          color:
+              isSelected ? AppTheme.goldColor : Colors.white.withOpacity(0.6),
+          size: 24,
         ),
       ),
     );
@@ -129,12 +120,13 @@ class _MainNavigationState extends State<MainNavigation> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
-      child: _NeumorphicNavButton(
+      child: _PremiumNavButton(
         isSelected: isSelected,
         child: IconTheme(
           data: IconThemeData(
-            color: isSelected ? Colors.white : Colors.white60,
-            size: 26,
+            color:
+                isSelected ? AppTheme.goldColor : Colors.white.withOpacity(0.6),
+            size: 24,
           ),
           child: const AnimatedCartIcon(),
         ),
@@ -143,69 +135,51 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 }
 
-class _NeumorphicNavButton extends StatelessWidget {
+class _PremiumNavButton extends StatelessWidget {
   final bool isSelected;
   final Widget child;
 
-  const _NeumorphicNavButton({
+  const _PremiumNavButton({
     required this.isSelected,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    const Color navBlueMain = Color(0xFF2E5BFF);
-    const Color navBlueLight = Color(0xFF4D76FF);
-    const Color navBlueDark = Color(0xFF1A3EBF);
-
-    final bool isSelected = this.isSelected;
-
     return AnimatedScale(
-      scale: isSelected ? 1.15 : 1.0,
+      scale: isSelected ? 1.2 : 1.0,
       duration: const Duration(milliseconds: 200),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        width: 58,
-        height: 58,
-        decoration: BoxDecoration(
-          color: isSelected ? navBlueLight : navBlueMain,
-          shape: BoxShape.circle,
-          border: isSelected
-              ? Border.all(color: Colors.white.withOpacity(0.3), width: 1.5)
-              : null,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.35),
-                    offset: const Offset(-3, -3),
-                    blurRadius: 8,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    offset: const Offset(3, 3),
-                    blurRadius: 8,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.1),
-                    blurRadius: 15,
-                    spreadRadius: 2,
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: navBlueDark.withOpacity(0.4),
-                    offset: const Offset(3, 3),
-                    blurRadius: 6,
-                  ),
-                  BoxShadow(
-                    color: navBlueLight.withOpacity(0.2),
-                    offset: const Offset(-3, -3),
-                    blurRadius: 6,
-                  ),
-                ],
-        ),
-        child: Center(child: child),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (isSelected)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.goldColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+            ),
+          child,
+          if (isSelected)
+            Positioned(
+              bottom: -4,
+              child: Container(
+                width: 4,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: AppTheme.goldColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

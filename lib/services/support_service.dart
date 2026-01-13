@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/support_ticket.dart';
 import '../models/faq.dart';
+import '../models/canned_response.dart';
 
 class SupportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -13,15 +14,47 @@ class SupportService {
   Future<SupportTicket> createTicket({
     required String subject,
     required String message,
+    String priority = 'MEDIUM',
+    String? category,
+    List<String> attachments = const [],
   }) async {
     if (uid == null) throw Exception('User not logged in');
+
+    // Calculate SLA Deadline
+    final now = DateTime.now();
+    Duration slaDuration;
+    switch (priority.toUpperCase()) {
+      case 'URGENT':
+        slaDuration = const Duration(hours: 4);
+        break;
+      case 'HIGH':
+        slaDuration = const Duration(hours: 12);
+        break;
+      case 'MEDIUM':
+        slaDuration = const Duration(hours: 24);
+        break;
+      case 'LOW':
+        slaDuration = const Duration(hours: 48);
+        break;
+      default:
+        slaDuration = const Duration(hours: 24);
+    }
+    final slaDeadline = now.add(slaDuration);
 
     final docRef = await _firestore.collection('support_tickets').add({
       'userId': uid,
       'subject': subject,
       'message': message,
       'status': 'OPEN',
+      'priority': priority.toUpperCase(),
+      'category': category,
+      'attachments': attachments,
       'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'slaDeadline': slaDeadline,
+      'lastRespondedAt': null,
+      'resolvedAt': null,
+      'assigneeId': null,
     });
 
     final doc = await docRef.get();
@@ -30,13 +63,20 @@ class SupportService {
 
   Future<void> updateTicket({
     required String id,
-    required String subject,
-    required String message,
+    String? subject,
+    String? message,
+    String? priority,
+    String? status,
   }) async {
-    await _firestore.collection('support_tickets').doc(id).update({
-      'subject': subject,
-      'message': message,
-    });
+    final updates = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (subject != null) updates['subject'] = subject;
+    if (message != null) updates['message'] = message;
+    if (priority != null) updates['priority'] = priority;
+    if (status != null) updates['status'] = status;
+
+    await _firestore.collection('support_tickets').doc(id).update(updates);
   }
 
   Future<void> deleteTicket(String id) async {
@@ -61,27 +101,32 @@ class SupportService {
     final doc = await _firestore.collection('support_tickets').doc(id).get();
     if (!doc.exists) throw Exception('Ticket not found');
 
-    final messagesSnapshot = await doc.reference.collection('messages').get();
+    final messagesSnapshot = await doc.reference
+        .collection('messages')
+        .orderBy('createdAt', descending: false)
+        .get();
 
-    final ticket = SupportTicket.fromFirestore(doc);
+    final data = doc.data() as Map<String, dynamic>;
     final messages = messagesSnapshot.docs
-        .map((m) => TicketMessage.fromFirestore(m))
+        .map((m) => TicketMessage.fromJson({...m.data(), 'id': m.id}))
         .toList();
-    messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    return SupportTicket(
-      id: ticket.id,
-      userId: ticket.userId,
-      subject: ticket.subject,
-      message: ticket.message,
-      status: ticket.status,
-      createdAt: ticket.createdAt,
-      messages: messages,
-    );
+    return SupportTicket.fromJson({
+      ...data,
+      'id': doc.id,
+      'messages': messages.map((m) => m.toJson()).toList(),
+    });
   }
 
-  Future<void> addMessageToTicket(String ticketId, String message) async {
-    if (uid == null) throw Exception('User not logged in');
+  Future<void> addMessageToTicket({
+    required String ticketId,
+    required String message,
+    bool isAdmin = false,
+    String? senderId,
+    String? senderName,
+    List<String> attachments = const [],
+  }) async {
+    if (!isAdmin && uid == null) throw Exception('User not logged in');
 
     await _firestore
         .collection('support_tickets')
@@ -90,9 +135,105 @@ class SupportService {
         .add({
       'ticketId': ticketId,
       'message': message,
-      'isAdmin': false,
+      'isAdmin': isAdmin,
+      'senderId': senderId ?? uid,
+      'senderName': senderName,
+      'attachments': attachments,
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // Update status and last responded
+    final updates = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (isAdmin) {
+      updates['status'] = 'PENDING_USER';
+      updates['lastRespondedAt'] = FieldValue.serverTimestamp();
+    } else {
+      updates['status'] = 'IN_PROGRESS';
+    }
+
+    await _firestore
+        .collection('support_tickets')
+        .doc(ticketId)
+        .update(updates);
+  }
+
+  // Admin Specific Methods
+  Future<void> assignTicket(String ticketId, String adminId) async {
+    await _firestore.collection('support_tickets').doc(ticketId).update({
+      'assigneeId': adminId,
+      'status': 'IN_PROGRESS',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> resolveTicket(String ticketId, {String? reason}) async {
+    await _firestore.collection('support_tickets').doc(ticketId).update({
+      'status': 'RESOLVED',
+      'closeReason': reason,
+      'resolvedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> mergeTickets(String sourceId, String targetId) async {
+    await _firestore.runTransaction((transaction) async {
+      final sourceRef = _firestore.collection('support_tickets').doc(sourceId);
+      final targetRef = _firestore.collection('support_tickets').doc(targetId);
+
+      transaction.update(sourceRef, {
+        'status': 'CLOSED',
+        'closeReason': 'Merged into $targetId',
+        'mergedIntoId': targetId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Move messages if needed, or just link them.
+      // Simplified: Just add a message to target ticket
+      transaction.set(targetRef.collection('messages').doc(), {
+        'ticketId': targetId,
+        'message': 'SYSTEM: Ticket #$sourceId was merged into this ticket.',
+        'isAdmin': true,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<Map<String, dynamic>> getSupportStats() async {
+    final snapshot = await _firestore.collection('support_tickets').get();
+    final tickets =
+        snapshot.docs.map((doc) => SupportTicket.fromFirestore(doc)).toList();
+
+    int open = 0, inProgress = 0, resolved = 0, expired = 0;
+    Map<String, int> priorityBreakdown = {};
+    Map<String, int> categoryBreakdown = {};
+
+    for (var t in tickets) {
+      if (t.status == 'OPEN')
+        open++;
+      else if (t.status == 'IN_PROGRESS' || t.status == 'PENDING_USER')
+        inProgress++;
+      else if (t.status == 'RESOLVED' || t.status == 'CLOSED') resolved++;
+
+      if (t.isExpired) expired++;
+
+      priorityBreakdown[t.priority] = (priorityBreakdown[t.priority] ?? 0) + 1;
+      if (t.category != null) {
+        categoryBreakdown[t.category!] =
+            (categoryBreakdown[t.category!] ?? 0) + 1;
+      }
+    }
+
+    return {
+      'total': tickets.length,
+      'open': open,
+      'inProgress': inProgress,
+      'resolved': resolved,
+      'expired': expired,
+      'priorityBreakdown': priorityBreakdown,
+      'categoryBreakdown': categoryBreakdown,
+    };
   }
 
   // FAQs
@@ -122,5 +263,23 @@ class SupportService {
       'faqs': faqs,
       'categories': categories,
     };
+  }
+
+  // Canned Responses
+  Future<List<CannedResponse>> getCannedResponses() async {
+    final snapshot = await _firestore.collection('canned_responses').get();
+    return snapshot.docs
+        .map((doc) => CannedResponse.fromFirestore(doc))
+        .toList();
+  }
+
+  Future<void> createCannedResponse(
+      String title, String content, String category) async {
+    await _firestore.collection('canned_responses').add({
+      'title': title,
+      'content': content,
+      'category': category,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 }

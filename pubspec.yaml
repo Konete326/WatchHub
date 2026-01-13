@@ -24,6 +24,7 @@ dependencies:
 
   # UI Components
   cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
   cached_network_image: ^3.3.1
   carousel_slider: ^5.0.0
   flutter_rating_bar: ^4.0.1
@@ -44,6 +45,9 @@ dependencies:
   crypto: ^3.0.3
   pdf: ^3.10.8
   printing: ^5.11.1
+  lottie: ^3.3.2
+  flutter_animate: ^4.5.2
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:

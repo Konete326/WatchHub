@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/watch_provider.dart';
+import '../../providers/search_provider.dart';
 import '../../widgets/watch_card.dart';
 import '../product/product_detail_screen.dart';
 import '../../utils/theme.dart';
@@ -17,9 +18,8 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedBrandId;
   String? _selectedCategory;
-  RangeValues _priceRange = const RangeValues(0, 5000);
+  RangeValues _priceRange = const RangeValues(0, 50000);
   bool _isFilterApplied = false;
-  final List<String> _recentSearches = ['Rolex', 'Omega', 'Luxury', 'Classic'];
 
   @override
   void initState() {
@@ -28,6 +28,8 @@ class _SearchScreenState extends State<SearchScreen> {
       final watchProvider = Provider.of<WatchProvider>(context, listen: false);
       watchProvider.fetchBrands();
       watchProvider.fetchCategories();
+      // Clear previous search results to start fresh
+      watchProvider.fetchWatches(refresh: true, search: '');
     });
   }
 
@@ -38,13 +40,20 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _performSearch(String query) {
-    Provider.of<WatchProvider>(context, listen: false).fetchWatches(
+    final watchProvider = Provider.of<WatchProvider>(context, listen: false);
+    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+
+    if (query.isNotEmpty) {
+      searchProvider.addRecentSearch(query.trim());
+    }
+
+    watchProvider.fetchWatches(
       refresh: true,
       search: query.isEmpty ? null : query.trim(),
       brandId: _selectedBrandId,
       category: _selectedCategory,
       minPrice: _priceRange.start > 0 ? _priceRange.start : null,
-      maxPrice: _priceRange.end < 5000 ? _priceRange.end : null,
+      maxPrice: _priceRange.end < 50000 ? _priceRange.end : null,
     );
   }
 
@@ -193,7 +202,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.68,
+                      childAspectRatio: 0.62,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 20,
                     ),
@@ -203,6 +212,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       final watch = watchProvider.watches[index];
                       return WatchCard(
                         watch: watch,
+                        heroTag: 'search_${watch.id}',
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -224,43 +234,51 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildRecentSearches() {
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        scrollDirection: Axis.horizontal,
-        itemCount: _recentSearches.length,
-        itemBuilder: (context, index) {
-          final term = _recentSearches[index];
-          final isSelected = _searchController.text == term;
-          return Padding(
-            padding: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
-            child: NeumorphicButton(
-              onTap: () {
-                _searchController.text = term;
-                _performSearch(term);
-                setState(() {});
-              },
-              isPressed: isSelected,
-              borderRadius: BorderRadius.circular(15),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Center(
-                child: Text(
-                  term,
-                  style: TextStyle(
-                    color: isSelected
-                        ? AppTheme.primaryColor
-                        : AppTheme.softUiTextColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+    return Consumer<SearchProvider>(
+      builder: (context, searchProvider, child) {
+        if (searchProvider.recentSearches.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          height: 60,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            scrollDirection: Axis.horizontal,
+            itemCount: searchProvider.recentSearches.length,
+            itemBuilder: (context, index) {
+              final term = searchProvider.recentSearches[index];
+              final isSelected = _searchController.text == term;
+              return Padding(
+                padding: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
+                child: NeumorphicButton(
+                  onTap: () {
+                    _searchController.text = term;
+                    _performSearch(term);
+                    setState(() {});
+                  },
+                  isPressed: isSelected,
+                  borderRadius: BorderRadius.circular(15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Center(
+                    child: Text(
+                      term,
+                      style: TextStyle(
+                        color: isSelected
+                            ? AppTheme.primaryColor
+                            : AppTheme.softUiTextColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -310,9 +328,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 onTap: () {
                   setState(() {
                     _searchController.clear();
-                    _selectedBrandId = null;
                     _selectedCategory = null;
-                    _priceRange = const RangeValues(0, 5000);
+                    _selectedBrandId = null;
+                    _priceRange = const RangeValues(0, 50000);
                     _isFilterApplied = false;
                   });
                   _performSearch('');
@@ -403,7 +421,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                   setModalState(() {
                                     _selectedBrandId = null;
                                     _selectedCategory = null;
-                                    _priceRange = const RangeValues(0, 5000);
+                                    _priceRange = const RangeValues(0, 50000);
                                     _isFilterApplied = false;
                                   });
                                 },
@@ -504,14 +522,14 @@ class _SearchScreenState extends State<SearchScreen> {
                             child: RangeSlider(
                               values: _priceRange,
                               min: 0,
-                              max: 5000,
+                              max: 50000,
                               divisions: 50,
                               activeColor: AppTheme.primaryColor,
                               inactiveColor:
                                   AppTheme.softUiTextColor.withOpacity(0.1),
                               labels: RangeLabels(
-                                '\$${_priceRange.start.round()}',
-                                '\$${_priceRange.end.round()}',
+                                'PKR ${_priceRange.start.round()}',
+                                'PKR ${_priceRange.end.round()}',
                               ),
                               onChanged: (values) {
                                 setModalState(() {
@@ -527,7 +545,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 _isFilterApplied = _selectedBrandId != null ||
                                     _selectedCategory != null ||
                                     _priceRange.start > 0 ||
-                                    _priceRange.end < 5000;
+                                    _priceRange.end < 50000;
                               });
                               _performSearch(_searchController.text);
                               Navigator.pop(context);

@@ -18,11 +18,13 @@ class UserService {
     return User.fromFirestore(doc);
   }
 
-  Future<User> updateProfile({String? name, String? phone}) async {
+  Future<User> updateProfile(
+      {String? name, String? phone, String? savedStrapSize}) async {
     if (uid == null) throw Exception('User not logged in');
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
     if (phone != null) updates['phone'] = phone;
+    if (savedStrapSize != null) updates['savedStrapSize'] = savedStrapSize;
 
     await _firestore.collection('users').doc(uid).update(updates);
     final doc = await _firestore.collection('users').doc(uid).get();
