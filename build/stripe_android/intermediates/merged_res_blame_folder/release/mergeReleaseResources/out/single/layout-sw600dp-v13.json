@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-sw600dp-v13/mtrl_layout_snackbar.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-sw600dp-v13/mtrl_layout_snackbar.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-sw600dp-v13/design_layout_snackbar.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-sw600dp-v13/design_layout_snackbar.xml"
+    }
+]

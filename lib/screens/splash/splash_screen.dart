@@ -110,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 60),
                 Text(
                   'WatchHub',
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.montserrat(
                     fontSize: 42,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primaryColor,

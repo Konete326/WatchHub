@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_standard_accelerate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_standard_accelerate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_emphasized.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_emphasized.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/mtrl_fast_out_slow_in.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/mtrl_fast_out_slow_in.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_emphasized_accelerate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_emphasized_accelerate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_standard.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_standard.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/mtrl_fast_out_linear_in.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/mtrl_fast_out_linear_in.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_emphasized_decelerate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_emphasized_decelerate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/mtrl_linear_out_slow_in.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/mtrl_linear_out_slow_in.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_linear.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_linear.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/interpolator-v21/m3_sys_motion_easing_standard_decelerate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/interpolator-v21/m3_sys_motion_easing_standard_decelerate.xml"
+    }
+]

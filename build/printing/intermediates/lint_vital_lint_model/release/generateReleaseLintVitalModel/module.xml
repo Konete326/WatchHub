@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Dell 7480\AppData\Local\Pub\Cache\hosted\pub.dev\printing-5.14.2\android"
+    name=":printing"
+    type="LIBRARY"
+    maven="net.nfet.flutter.printing:printing:1.0"
+    agpVersion="8.11.1"
+    buildFolder="D:\aptech\WatchHub\build\printing"
+    bootClassPath="D:\Android\Sdk\platforms\android-34\android.jar;D:\Android\Sdk\build-tools\35.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

@@ -1,0 +1,82 @@
+{
+    "logs": [
+        {
+            "outputFile": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/values-uz/values-uz.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\18265d4ebe0e97e3b2b53abd5e729982\\transformed\\core-1.17.0\\res\\values-uz\\values-uz.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,360,460,568,672,791",
+                        "endColumns": "101,101,100,99,107,103,118,100",
+                        "endOffsets": "152,254,355,455,563,667,786,887"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,13",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,360,460,568,672,1234",
+                        "endColumns": "101,101,100,99,107,103,118,100",
+                        "endOffsets": "152,254,355,455,563,667,786,1330"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\7ce2ab99595b1cdae7c03aa12a351b1f\\transformed\\browser-1.9.0\\res\\values-uz\\values-uz.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,173,282,392",
+                        "endColumns": "117,108,109,105",
+                        "endOffsets": "168,277,387,493"
+                    },
+                    "to": {
+                        "startLines": "9,10,11,12",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "791,909,1018,1128",
+                        "endColumns": "117,108,109,105",
+                        "endOffsets": "904,1013,1123,1229"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "io.flutter.plugins.urllauncher.url_launcher_android-mergeReleaseResources-25:/values-uz/values-uz.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\18265d4ebe0e97e3b2b53abd5e729982\\transformed\\core-1.17.0\\res\\values-uz\\values-uz.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,360,460,568,672,791",
+                        "endColumns": "101,101,100,99,107,103,118,100",
+                        "endOffsets": "152,254,355,455,563,667,786,887"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,13",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,360,460,568,672,1234",
+                        "endColumns": "101,101,100,99,107,103,118,100",
+                        "endOffsets": "152,254,355,455,563,667,786,1330"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\7ce2ab99595b1cdae7c03aa12a351b1f\\transformed\\browser-1.9.0\\res\\values-uz\\values-uz.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,173,282,392",
+                        "endColumns": "117,108,109,105",
+                        "endOffsets": "168,277,387,493"
+                    },
+                    "to": {
+                        "startLines": "9,10,11,12",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "791,909,1018,1128",
+                        "endColumns": "117,108,109,105",
+                        "endOffsets": "904,1013,1123,1229"
+                    }
+                }
+            ]
+        }
+    ]
+}

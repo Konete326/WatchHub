@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/animator-v21/design_appbar_state_list_animator.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/animator-v21/design_appbar_state_list_animator.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/animator-v21/m3_appbar_state_list_animator.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/animator-v21/m3_appbar_state_list_animator.xml"
+    }
+]

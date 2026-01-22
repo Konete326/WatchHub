@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "net.nfet.flutter.printing-release-25:/layout-v21/notification_template_icon_group.xml",
+        "source": "net.nfet.flutter.printing-core-1.13.1-11:/layout-v21/notification_template_icon_group.xml"
+    },
+    {
+        "merged": "net.nfet.flutter.printing-release-25:/layout-v21/notification_action.xml",
+        "source": "net.nfet.flutter.printing-core-1.13.1-11:/layout-v21/notification_action.xml"
+    },
+    {
+        "merged": "net.nfet.flutter.printing-release-25:/layout-v21/notification_template_custom_big.xml",
+        "source": "net.nfet.flutter.printing-core-1.13.1-11:/layout-v21/notification_template_custom_big.xml"
+    },
+    {
+        "merged": "net.nfet.flutter.printing-release-25:/layout-v21/notification_action_tombstone.xml",
+        "source": "net.nfet.flutter.printing-core-1.13.1-11:/layout-v21/notification_action_tombstone.xml"
+    }
+]

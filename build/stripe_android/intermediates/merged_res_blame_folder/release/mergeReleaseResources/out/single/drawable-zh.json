@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-zh/stripe_ic_unionpay_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable-zh/stripe_ic_unionpay_template_32.xml"
+    }
+]

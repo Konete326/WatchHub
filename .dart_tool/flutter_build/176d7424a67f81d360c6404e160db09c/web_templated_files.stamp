@@ -1,0 +1,1 @@
+{"inputs":["D:\\aptech\\WatchHub\\web\\*\\index.html","D:\\aptech\\WatchHub\\web\\flutter_bootstrap.js","C:\\src\\flutter\\bin\\cache\\engine.stamp"],"outputs":["D:\\aptech\\WatchHub\\build\\web\\*\\index.html","D:\\aptech\\WatchHub\\build\\web\\flutter_bootstrap.js"],"buildKey":"[{\"compileTarget\":\"dart2js\",\"renderer\":\"canvaskit\",\"mainJsPath\":\"main.dart.js\"}]"}

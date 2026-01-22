@@ -133,7 +133,7 @@ class WatchCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         watch.name,
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.montserrat(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimaryColor,
@@ -224,7 +224,7 @@ class WatchCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     watch.name,
-                    style: GoogleFonts.playfairDisplay(
+                    style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimaryColor,

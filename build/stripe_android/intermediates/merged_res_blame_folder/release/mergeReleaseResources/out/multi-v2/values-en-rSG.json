@@ -1,0 +1,48 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-mergeReleaseResources-89:/values-en-rSG/values-en-rSG.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\b36d64022610b83c482990d471caa003\\transformed\\play-services-wallet-19.3.0\\res\\values-en-rSG\\values.xml",
+                    "from": {
+                        "startLines": "4,5",
+                        "startColumns": "0,0",
+                        "startOffsets": "206,263",
+                        "endColumns": "56,70",
+                        "endOffsets": "262,333"
+                    },
+                    "to": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,116",
+                        "endColumns": "60,74",
+                        "endOffsets": "111,186"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-release-91:/values-en-rSG/values-en-rSG.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\b36d64022610b83c482990d471caa003\\transformed\\play-services-wallet-19.3.0\\res\\values-en-rSG\\values.xml",
+                    "from": {
+                        "startLines": "4,5",
+                        "startColumns": "0,0",
+                        "startOffsets": "206,263",
+                        "endColumns": "56,70",
+                        "endOffsets": "262,333"
+                    },
+                    "to": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,116",
+                        "endColumns": "60,74",
+                        "endOffsets": "111,186"
+                    }
+                }
+            ]
+        }
+    ]
+}

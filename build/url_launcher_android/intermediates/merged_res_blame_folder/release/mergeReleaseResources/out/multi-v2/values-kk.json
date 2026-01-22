@@ -1,0 +1,82 @@
+{
+    "logs": [
+        {
+            "outputFile": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/values-kk/values-kk.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\18265d4ebe0e97e3b2b53abd5e729982\\transformed\\core-1.17.0\\res\\values-kk\\values-kk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,359,462,566,663,774",
+                        "endColumns": "99,101,101,102,103,96,110,100",
+                        "endOffsets": "150,252,354,457,561,658,769,870"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,13",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,359,462,566,663,1191",
+                        "endColumns": "99,101,101,102,103,96,110,100",
+                        "endOffsets": "150,252,354,457,561,658,769,1287"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\7ce2ab99595b1cdae7c03aa12a351b1f\\transformed\\browser-1.9.0\\res\\values-kk\\values-kk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,155,259,367",
+                        "endColumns": "99,103,107,104",
+                        "endOffsets": "150,254,362,467"
+                    },
+                    "to": {
+                        "startLines": "9,10,11,12",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "774,874,978,1086",
+                        "endColumns": "99,103,107,104",
+                        "endOffsets": "869,973,1081,1186"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "io.flutter.plugins.urllauncher.url_launcher_android-mergeReleaseResources-25:/values-kk/values-kk.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\18265d4ebe0e97e3b2b53abd5e729982\\transformed\\core-1.17.0\\res\\values-kk\\values-kk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,359,462,566,663,774",
+                        "endColumns": "99,101,101,102,103,96,110,100",
+                        "endOffsets": "150,252,354,457,561,658,769,870"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,13",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,359,462,566,663,1191",
+                        "endColumns": "99,101,101,102,103,96,110,100",
+                        "endOffsets": "150,252,354,457,561,658,769,1287"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\7ce2ab99595b1cdae7c03aa12a351b1f\\transformed\\browser-1.9.0\\res\\values-kk\\values-kk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,155,259,367",
+                        "endColumns": "99,103,107,104",
+                        "endOffsets": "150,254,362,467"
+                    },
+                    "to": {
+                        "startLines": "9,10,11,12",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "774,874,978,1086",
+                        "endColumns": "99,103,107,104",
+                        "endOffsets": "869,973,1081,1186"
+                    }
+                }
+            ]
+        }
+    ]
+}

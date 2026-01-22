@@ -111,7 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: Center(
                     child: Text(
                       _getStepTitle(),
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.montserrat(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.softUiTextColor,
@@ -386,7 +386,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Frequently Bought Together',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.montserrat(
                 fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         SizedBox(

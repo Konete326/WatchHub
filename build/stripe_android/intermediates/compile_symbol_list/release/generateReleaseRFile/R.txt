@@ -1,0 +1,2 @@
+int id googlePayButton 0x0
+int layout stripe_react_native_google_pay_button 0x0

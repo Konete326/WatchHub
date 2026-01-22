@@ -1,0 +1,1202 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_checkbox_unchecked_mtrl.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_checkbox_unchecked_mtrl.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_cash_app_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_cash_app_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_textfield_search_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_textfield_search_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_indeterminate_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_indeterminate_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_card.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_card.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_star_black_48dp.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_star_black_48dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_zip.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_zip.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_vector_test.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-resources-1.6.1-10:/drawable/abc_vector_test.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_jcb.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_jcb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_hong_leong.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_hong_leong.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_spinner_textfield_background_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_spinner_textfield_background_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_clock_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_clock_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_seekbar_tick_mark_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_seekbar_tick_mark_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_fpx.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_fpx.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_polling_failure.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_polling_failure.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_warning_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_warning_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_nfcu.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_nfcu.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_star_half_black_48dp.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_star_half_black_48dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_info.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_info.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_radio_on_mtrl.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_radio_on_mtrl.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_pressed_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_pressed_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_radio_on_to_off_mtrl_animation.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_radio_on_to_off_mtrl_animation.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_dark_normal.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_dark_normal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_citi.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_citi.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_overflow_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_overflow_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_discover_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_discover_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_unknown.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_unknown.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_checkbox_checked_to_unchecked_mtrl_animation.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_checkbox_checked_to_unchecked_mtrl_animation.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_capitalone.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_capitalone.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_cvc.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_cvc.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_seekbar_thumb_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_seekbar_thumb_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_track_decoration.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_track_decoration.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_radio_off_to_on_mtrl_animation.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_radio_off_to_on_mtrl_animation.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_alipay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_alipay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_password_eye.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_password_eye.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_light_normal.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_light_normal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_warning.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_warning.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_switch_thumb_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_switch_thumb_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_loading_spinner.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_loading_spinner.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_calendar_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_calendar_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/pay_button_generic_background_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-wallet-19.3.0-57:/drawable/pay_button_generic_background_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_hcaptcha_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-hcaptcha-20.44.2-44:/drawable/stripe_ic_hcaptcha_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_mail.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_mail.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_amex_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_amex_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_light_normal.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_light_normal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_error.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_error.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_compass.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_compass.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_mtrl_checked_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_mtrl_checked_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_clear_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_clear_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_p24.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_p24.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_unionpay.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_unionpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_edit_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_edit_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_dialog_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_dialog_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_oxxo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_oxxo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/navigation_empty_icon.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/navigation_empty_icon.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_radio_material_anim.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_radio_material_anim.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_hsbc.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_hsbc.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_lock.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_lock.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_visa_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_visa_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_sepa_debit.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_sepa_debit.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_checkbox_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_checkbox_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_link_logo_knockout_white.xml",
+        "source": "com.flutter.stripe.stripe_android-link-20.44.2-26:/drawable/stripe_link_logo_knockout_white.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_mastercard_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_mastercard_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_discover.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_discover.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_grabpay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_grabpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_amazon_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_amazon_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_indeterminate_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_indeterminate_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_edit_symbol.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_edit_symbol.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_kfh.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_kfh.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_afterpay_clearpay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_afterpay_clearpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_tab_indicator_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_tab_indicator_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_revolut_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_revolut_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_avd_hide_password.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_avd_hide_password.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_m3_chip_checked_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_m3_chip_checked_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_item_background_holo_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_item_background_holo_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ratingbar_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ratingbar_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_light_focused.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_light_focused.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_popupmenu_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_popupmenu_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_boa.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_boa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_search_black_24.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_search_black_24.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_link_error.xml",
+        "source": "com.flutter.stripe.stripe_android-link-20.44.2-26:/drawable/stripe_link_error.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_paypal.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_paypal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_wechat_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_wechat_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_radio_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_radio_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/notification_bg_low.xml",
+        "source": "com.flutter.stripe.stripe_android-core-1.13.1-43:/drawable/notification_bg_low.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/tooltip_frame_light.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/tooltip_frame_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_jcb_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_jcb_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_affirm_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_affirm_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_default_mtrl_shape.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_default_mtrl_shape.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_bottom_sheet_drag_handle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_bottom_sheet_drag_handle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_m3_chip_check.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_m3_chip_check.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_checkbox_checked_mtrl.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_checkbox_checked_mtrl.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_back.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_back.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_cut_mtrl_alpha.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_cut_mtrl_alpha.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_tabs_line_indicator.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_tabs_line_indicator.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_googlepay_primary_button_checkmark.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_googlepay_primary_button_checkmark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_public.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_public.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_suntrust.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_suntrust.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/design_ic_visibility_off.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/design_ic_visibility_off.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_diners.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_diners.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_clear.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_clear.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_cartebancaire_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_cartebancaire_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_checked_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_checked_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_visa.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_visa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_card_form_view_text_input_layout_background.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_card_form_view_text_input_layout_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_link.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_link.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_cartes_bancaires.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_cartes_bancaires.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_arrow_drop_down.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_arrow_drop_down.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_keyboard_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_keyboard_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_trash.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_trash.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_photo_camera.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_photo_camera.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_check_material_anim.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_check_material_anim.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_morganchase.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_morganchase.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_ctil_chevron_up.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_ctil_chevron_up.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_cartesbancaires.png",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_cartesbancaires.png"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_mtrl_chip_checked_black.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_mtrl_chip_checked_black.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_wellsfargo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_wellsfargo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_klarna.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_klarna.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/design_snackbar_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/design_snackbar_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_giropay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_giropay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_checkmark.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_checkmark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_card_visa.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-ui-core-20.44.2-35:/drawable/stripe_ic_card_visa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/design_fab_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/design_fab_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_menu_arrow_down_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_menu_arrow_down_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/notification_bg.xml",
+        "source": "com.flutter.stripe.stripe_android-core-1.13.1-43:/drawable/notification_bg.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_add.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_add.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_ab_back_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_ab_back_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_unionpay_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_unionpay_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_voice_search_api_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_voice_search_api_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ratingbar_indicator_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ratingbar_indicator_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_upi.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_upi.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_mtrl_chip_checked_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_mtrl_chip_checked_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_error.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_error.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_checked_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_checked_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_unchecked_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_unchecked_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_ideal.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_ideal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_checkmark_tinted.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_checkmark_tinted.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_bottomsheet_drag_handle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_bottomsheet_drag_handle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_disabled.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_disabled.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_svb.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_svb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_person.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_person.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_tabs_rounded_line_indicator.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_tabs_rounded_line_indicator.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_add_black_32dp.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_add_black_32dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/design_password_eye.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/design_password_eye.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_checked_indeterminate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_checked_indeterminate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_ambank.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_ambank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_list_selector_holo_light.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_list_selector_holo_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_usaa.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_usaa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_cimb.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_cimb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_list_selector_holo_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_list_selector_holo_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_check_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_check_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_brandicon_institution.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_brandicon_institution.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_bank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_indeterminate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_indeterminate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_ctil_chevron_down.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_ctil_chevron_down.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_light_focused.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_light_focused.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_google_pay_mark.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_google_pay_mark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_track.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_track.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_keyboard_arrow_right_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_keyboard_arrow_right_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_clear_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_clear_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_ocbc.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_ocbc.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_unionpay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_unionpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_maybank.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_maybank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_td.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_td.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_swish.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_swish.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_checkbox_unchecked_to_checked_mtrl_animation.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_checkbox_unchecked_to_checked_mtrl_animation.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_list_selector_background_transition_holo_light.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_list_selector_background_transition_holo_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_delete_symbol.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_delete_symbol.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_discover.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_discover.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_boleto.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_boleto.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_jcb.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_jcb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_panel_arrow_right.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_panel_arrow_right.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_twint.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_twint.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_cancel.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_cancel.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_selectall_mtrl_alpha.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_selectall_mtrl_alpha.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_usbank.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_usbank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_affin.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_affin.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_arrow_drop_right_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_arrow_drop_right_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_raykat.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_raykat.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_share_mtrl_alpha.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_share_mtrl_alpha.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_bacs_direct_debit_mark.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_bacs_direct_debit_mark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_visa.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_visa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_keyboard_arrow_left_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_keyboard_arrow_left_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_tabs_default_indicator.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_tabs_default_indicator.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_unchecked_indeterminate.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_unchecked_indeterminate.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/material_ic_menu_arrow_up_black_24dp.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/material_ic_menu_arrow_up_black_24dp.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_search.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_search.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_affirm.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_affirm.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_checkbox_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_checkbox_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_add_light.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_add_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_close.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_close.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_dark_focused.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_dark_focused.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_unchecked_pressed.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_unchecked_pressed.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_paymentsheet_testmode_background.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_paymentsheet_testmode_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_stripe.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_stripe.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_uob.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_uob.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_indicator.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_indicator.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_generic.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_generic.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_add_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_add_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_bsn.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_bsn.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_error_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_error_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_popupmenu_background_overlay.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_popupmenu_background_overlay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_dropdown_arrow.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_dropdown_arrow.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_konbini.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_konbini.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_googlepay_primary_button_lock.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_googlepay_primary_button_lock.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_pressed.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_pressed.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_dark_focused.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_dark_focused.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_light.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_chevron_down.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-ui-core-20.44.2-35:/drawable/stripe_ic_chevron_down.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/notification_tile_bg.xml",
+        "source": "com.flutter.stripe.stripe_android-core-1.13.1-43:/drawable/notification_tile_bg.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_unknown.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_unknown.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/pay_button_generic_background_mask_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-wallet-19.3.0-57:/drawable/pay_button_generic_background_mask_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_cab_background_top_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_cab_background_top_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/tooltip_frame_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/tooltip_frame_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_arrow_back_black_24.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_arrow_back_black_24.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_discover.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_discover.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_copy_mtrl_am_alpha.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_copy_mtrl_am_alpha.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_item_background_holo_light.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_item_background_holo_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_unionpay.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_unionpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_islam.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_islam.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_bank.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_bank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_blik.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_blik.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_dinersclub.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_dinersclub.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_clearpay_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_clearpay_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_check_mark.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_check_mark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_disabled.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_disabled.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_cartes_bancaires.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_cartes_bancaires.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_diners_template_32.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_diners_template_32.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_alma.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_alma.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/pay_button_generic_background_mask_light.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-wallet-19.3.0-57:/drawable/pay_button_generic_background_mask_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_standard_chartered.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_standard_chartered.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_link_logo_knockout_black.xml",
+        "source": "com.flutter.stripe.stripe_android-link-20.44.2-26:/drawable/stripe_link_logo_knockout_black.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_ctil_chevron.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_ctil_chevron.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/design_ic_visibility.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/design_ic_visibility.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_text_cursor_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_text_cursor_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_afterpay_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_afterpay_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/avd_hide_password.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/avd_hide_password.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_card_progress_background.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_card_progress_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/notification_icon_background.xml",
+        "source": "com.flutter.stripe.stripe_android-core-1.13.1-43:/drawable/notification_icon_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_mastercard.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_mastercard.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/test_level_drawable.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/test_level_drawable.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_cab_background_internal_bg.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_cab_background_internal_bg.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/btn_radio_off_mtrl.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/btn_radio_off_mtrl.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_bancontact.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_bancontact.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_visa.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_visa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_light.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_light.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_icon_unchecked_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_icon_unchecked_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ratingbar_small_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ratingbar_small_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_link_logo_bw.xml",
+        "source": "com.flutter.stripe.stripe_android-link-20.44.2-26:/drawable/stripe_link_logo_bw.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_eps.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_eps.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_avd_show_password.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_avd_show_password.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_multibanco.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_multibanco.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_unknown.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_unknown.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_m3_chip_close.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_m3_chip_close.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_dark_normal.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_dark_normal.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/avd_show_password.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/avd_show_password.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_muamalat.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_muamalat.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_sepa.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_sepa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_arrow_down.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_arrow_down.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_simple_button_background.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_simple_button_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_card_mastercard.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable/stripe_ic_paymentsheet_card_mastercard.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_becs.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_becs.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_go_search_api_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_go_search_api_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/m3_popupmenu_background_overlay.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/m3_popupmenu_background_overlay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_rhb.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_rhb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_ic_arrow_drop_up.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_ic_arrow_drop_up.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_search_api_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_search_api_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_bank.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_bank.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_pnc.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_pnc.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_error.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_error.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_3ds2_ic_arrow.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable/stripe_3ds2_ic_arrow.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_checked_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_checked_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_clear_black_24.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_clear_black_24.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/ic_mtrl_chip_close_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/ic_mtrl_chip_close_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_bank_alliance.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-core-20.44.2-13:/drawable/stripe_ic_bank_alliance.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_paymentsheet_pm_mobile_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable/stripe_ic_paymentsheet_pm_mobile_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_icon_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_icon_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_edit.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_edit.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_check_circle.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_ic_check_circle.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_ic_menu_paste_mtrl_am_alpha.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_ic_menu_paste_mtrl_am_alpha.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_btn_borderless_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_btn_borderless_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/common_google_signin_btn_text_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-base-18.3.0-32:/drawable/common_google_signin_btn_text_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_list_selector_background_transition_holo_dark.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_list_selector_background_transition_holo_dark.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/abc_seekbar_track_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable/abc_seekbar_track_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_mastercard.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_mastercard.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-financial-connections-20.44.2-12:/drawable/stripe_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/stripe_ic_cvc_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable/stripe_ic_cvc_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_checkbox_button_unchecked_checked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_checkbox_button_unchecked_checked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_pressed_unchecked.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_pressed_unchecked.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/mtrl_switch_thumb_checked_pressed.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable/mtrl_switch_thumb_checked_pressed.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable/pay_button_generic_background_light.xml",
+        "source": "com.flutter.stripe.stripe_android-play-services-wallet-19.3.0-57:/drawable/pay_button_generic_background_light.xml"
+    }
+]

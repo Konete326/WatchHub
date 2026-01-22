@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_answer_video_low.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_answer_video_low.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_answer_low.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_answer_low.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/notification_bg_low.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/notification_bg_low.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/notification_tile_bg.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/notification_tile_bg.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_answer.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_answer.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_decline.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_decline.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_answer_video.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_answer_video.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/notification_icon_background.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/notification_icon_background.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/ic_call_decline_low.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/ic_call_decline_low.xml"
+    },
+    {
+        "merged": "io.flutter.plugins.urllauncher.url_launcher_android-release-27:/drawable/notification_bg.xml",
+        "source": "io.flutter.plugins.urllauncher.url_launcher_android-core-1.17.0-1:/drawable/notification_bg.xml"
+    }
+]

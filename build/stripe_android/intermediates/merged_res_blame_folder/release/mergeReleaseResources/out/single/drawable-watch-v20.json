@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-watch-v20/abc_dialog_material_background.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable-watch-v20/abc_dialog_material_background.xml"
+    }
+]

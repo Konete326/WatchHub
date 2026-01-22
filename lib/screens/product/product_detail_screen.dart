@@ -85,7 +85,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (watch.variants != null && watch.variants!.isNotEmpty) ...[
           Text(
             'Color Theme',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: kTextColor,
@@ -146,7 +146,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (watch.hasAnyStrapOption) ...[
           Text(
             'Strap Material',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: kTextColor,
@@ -216,7 +216,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           'Check Shipping & Delivery',
-          style: GoogleFonts.playfairDisplay(
+          style: GoogleFonts.montserrat(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: kTextColor,
@@ -383,7 +383,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 Text(
                   'Details',
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.montserrat(
                     color: kTextColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 22,
@@ -744,7 +744,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       // Product Name
                       Text(
                         watch.name,
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.montserrat(
                           fontSize: 30,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.primaryColor,
@@ -793,7 +793,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           children: [
                             Text(
                               'Specifications',
-                              style: GoogleFonts.playfairDisplay(
+                              style: GoogleFonts.montserrat(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                                 color: kTextColor,
@@ -865,7 +865,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       if (watchProvider.relatedWatches.isNotEmpty) ...[
                         Text(
                           'Similar Watches',
-                          style: GoogleFonts.playfairDisplay(
+                          style: GoogleFonts.montserrat(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                             color: kTextColor,

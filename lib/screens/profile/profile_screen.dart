@@ -105,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Center(
                     child: Text(
                       'Profile',
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.montserrat(
                         color: kTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
@@ -212,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     Text(
                       user.name,
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.montserrat(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: kTextColor,
@@ -356,7 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '$tier Member',
-                      style: GoogleFonts.playfairDisplay(
+                      style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: kTextColor,
@@ -435,7 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Select Strap Size',
-                style: GoogleFonts.playfairDisplay(
+                style: GoogleFonts.montserrat(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: kTextColor)),
@@ -487,7 +487,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: kBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: Text('Refer a Friend',
-            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold)),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

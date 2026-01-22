@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.watchhub.app-mergeReleaseResources-100:/values-ig/values-ig.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\90e5dce28153700ff5846e4a3abcb818\\transformed\\hcaptcha-20.44.2\\res\\values-ig\\values-ig.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "79",
+                        "endOffsets": "130"
+                    }
+                }
+            ]
+        }
+    ]
+}

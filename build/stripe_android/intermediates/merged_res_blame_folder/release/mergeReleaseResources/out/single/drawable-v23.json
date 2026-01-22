@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/mtrl_popupmenu_background_overlay.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable-v23/mtrl_popupmenu_background_overlay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/abc_control_background_material.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/drawable-v23/abc_control_background_material.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/m3_tabs_transparent_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable-v23/m3_tabs_transparent_background.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/m3_radiobutton_ripple.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable-v23/m3_radiobutton_ripple.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/m3_selection_control_ripple.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable-v23/m3_selection_control_ripple.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-v23/m3_tabs_background.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/drawable-v23/m3_tabs_background.xml"
+    }
+]

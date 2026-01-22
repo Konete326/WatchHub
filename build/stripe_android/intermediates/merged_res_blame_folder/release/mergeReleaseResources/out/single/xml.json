@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/xml/image_share_filepaths.xml",
+        "source": "com.flutter.stripe.stripe_android-browser-1.7.0-64:/xml/image_share_filepaths.xml"
+    }
+]

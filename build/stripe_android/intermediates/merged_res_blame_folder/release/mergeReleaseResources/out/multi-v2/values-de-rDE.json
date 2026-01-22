@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-mergeReleaseResources-89:/values-de-rDE/values-de-rDE.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\2021f6b3a0bb0277640b2b2823f86018\\transformed\\stripe-3ds2-android-6.1.8\\res\\values-de-rDE\\values-de-rDE.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "55,145,247,315,382,449,524",
+                        "endColumns": "89,101,67,66,66,74,73",
+                        "endOffsets": "140,242,310,377,444,519,593"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-release-91:/values-de-rDE/values-de-rDE.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\2021f6b3a0bb0277640b2b2823f86018\\transformed\\stripe-3ds2-android-6.1.8\\res\\values-de-rDE\\values-de-rDE.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "55,145,247,315,382,449,524",
+                        "endColumns": "89,101,67,66,66,74,73",
+                        "endOffsets": "140,242,310,377,444,519,593"
+                    }
+                }
+            ]
+        }
+    ]
+}

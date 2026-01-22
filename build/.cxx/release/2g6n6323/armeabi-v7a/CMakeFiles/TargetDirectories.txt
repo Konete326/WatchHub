@@ -1,0 +1,2 @@
+D:/aptech/WatchHub/build/.cxx/release/2g6n6323/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/aptech/WatchHub/build/.cxx/release/2g6n6323/armeabi-v7a/CMakeFiles/rebuild_cache.dir

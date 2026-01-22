@@ -113,7 +113,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 Expanded(
                   child: Text(
                     'Notifications',
-                    style: GoogleFonts.playfairDisplay(
+                    style: GoogleFonts.montserrat(
                       color: AppTheme.softUiTextColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 24,
@@ -293,7 +293,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           ),
           const SizedBox(height: 24),
           Text(title,
-              style: GoogleFonts.playfairDisplay(
+              style: GoogleFonts.montserrat(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.softUiTextColor)),
@@ -317,7 +317,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         backgroundColor: AppTheme.softUiBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: Text(title,
-            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold)),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
         content: Text(content),
         actions: [
           TextButton(
@@ -534,7 +534,7 @@ class _NotificationActionSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(notification.title,
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.montserrat(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.softUiTextColor)),

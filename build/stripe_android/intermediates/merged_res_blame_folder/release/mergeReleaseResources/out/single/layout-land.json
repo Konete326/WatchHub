@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-land/material_timepicker.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-land/material_timepicker.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-land/material_clock_period_toggle_land.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-land/material_clock_period_toggle_land.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-land/mtrl_picker_header_dialog.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-land/mtrl_picker_header_dialog.xml"
+    }
+]

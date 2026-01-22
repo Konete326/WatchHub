@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-release-91:/values-tr-rTR/values-tr-rTR.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\2021f6b3a0bb0277640b2b2823f86018\\transformed\\stripe-3ds2-android-6.1.8\\res\\values-tr-rTR\\values-tr-rTR.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "55,140,239,308,377,440,511",
+                        "endColumns": "84,98,68,68,62,70,66",
+                        "endOffsets": "135,234,303,372,435,506,573"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.flutter.stripe.stripe_android-mergeReleaseResources-89:/values-tr-rTR/values-tr-rTR.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Dell 7480\\.gradle\\caches\\8.14\\transforms\\2021f6b3a0bb0277640b2b2823f86018\\transformed\\stripe-3ds2-android-6.1.8\\res\\values-tr-rTR\\values-tr-rTR.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "55,140,239,308,377,440,511",
+                        "endColumns": "84,98,68,68,62,70,66",
+                        "endOffsets": "135,234,303,372,435,506,573"
+                    }
+                }
+            ]
+        }
+    ]
+}

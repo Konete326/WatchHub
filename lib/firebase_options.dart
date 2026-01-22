@@ -21,10 +21,7 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for ios - '
@@ -51,6 +48,14 @@ class DefaultFirebaseOptions {
         );
     }
   }
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyD1ynwOslBIxZTkhac954uOX6vWuHgP_yo',
+    appId: '1:1076372472812:android:com.example.watchhub',
+    messagingSenderId: '1076372472812',
+    projectId: 'watchhub-f4ec6',
+    storageBucket: 'watchhub-f4ec6.firebasestorage.app',
+  );
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyD1ynwOslBIxZTkhac954uOX6vWuHgP_yo',

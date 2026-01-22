@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-v26/mtrl_calendar_month.xml",
+        "source": "com.flutter.stripe.stripe_android-material-1.11.0-1:/layout-v26/mtrl_calendar_month.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/layout-v26/abc_screen_toolbar.xml",
+        "source": "com.flutter.stripe.stripe_android-appcompat-1.6.1-61:/layout-v26/abc_screen_toolbar.xml"
+    }
+]

@@ -21,6 +21,7 @@ class BrowseScreen extends StatefulWidget {
   final String? initialSearch;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final bool autoFocusSearch;
 
   const BrowseScreen({
     super.key,
@@ -32,6 +33,7 @@ class BrowseScreen extends StatefulWidget {
     this.initialSearch,
     this.showBackButton = true,
     this.onBack,
+    this.autoFocusSearch = false,
   });
 
   @override
@@ -78,6 +80,13 @@ class _BrowseScreenState extends State<BrowseScreen> {
         _isSearchFocused = _searchFocusNode.hasFocus;
       });
     });
+    
+    // Auto-focus search field if requested
+    if (widget.autoFocusSearch) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _searchFocusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -155,7 +164,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                           Expanded(
                             child: Text(
                               'Discover',
-                              style: GoogleFonts.playfairDisplay(
+                              style: GoogleFonts.montserrat(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.textPrimaryColor,
@@ -342,7 +351,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.softUiBackground,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -354,7 +363,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Material(
-                  color: Colors.white,
+                  color: AppTheme.softUiBackground,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                         maxHeight: MediaQuery.of(context).size.height * 0.5),
@@ -1103,7 +1112,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Save Filter Preset', style: GoogleFonts.playfairDisplay()),
+        title: Text('Save Filter Preset', style: GoogleFonts.montserrat()),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(

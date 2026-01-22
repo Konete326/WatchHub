@@ -60,35 +60,40 @@ class _MainNavigationState extends State<MainNavigation> {
         }
       },
       child: Scaffold(
-        extendBody: true,
+        extendBody: false,
         backgroundColor: AppTheme.backgroundColor,
         body: IndexedStack(
           index: _currentIndex,
           children: screens,
         ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          child: Container(
-            height: 75,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
-                  offset: const Offset(0, 10),
-                  blurRadius: 20,
-                ),
-              ],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(25),
+              topRight: Radius.circular(25),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNavItem(0, Icons.home_rounded, 'Home'),
-                _buildNavItem(1, Icons.grid_view_rounded, 'Browse'),
-                _buildCartItem(2),
-                _buildNavItem(3, Icons.person_rounded, 'Profile'),
-              ],
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.3),
+                offset: const Offset(0, -5),
+                blurRadius: 20,
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 75,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(0, Icons.home_rounded, 'Home'),
+                  _buildNavItem(1, Icons.grid_view_rounded, 'Browse'),
+                  _buildCartItem(2),
+                  _buildNavItem(3, Icons.person_rounded, 'Profile'),
+                ],
+              ),
             ),
           ),
         ),

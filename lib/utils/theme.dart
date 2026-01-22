@@ -51,8 +51,8 @@ class AppTheme {
   // TYPOGRAPHY - Luxury Font Pairing
   // ============================================
 
-  // Playfair Display for Headings (Serif - Elegant)
-  static TextStyle get headingFont => GoogleFonts.playfairDisplay();
+  // Montserrat for Headings (Modern Sans-serif - Clean & Elegant)
+  static TextStyle get headingFont => GoogleFonts.montserrat();
 
   // Inter for Body Text (Sans-serif - Modern & Clean)
   static TextStyle get bodyFont => GoogleFonts.inter();
@@ -89,7 +89,7 @@ class AppTheme {
           systemNavigationBarColor: Colors.transparent,
           systemNavigationBarIconBrightness: Brightness.dark,
         ),
-        titleTextStyle: GoogleFonts.playfairDisplay(
+        titleTextStyle: GoogleFonts.montserrat(
           color: Colors.white,
           fontSize: 22,
           fontWeight: FontWeight.w600,
@@ -113,7 +113,7 @@ class AppTheme {
       // Input Decoration Theme - Refined & Clean
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: backgroundColor,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
@@ -240,42 +240,42 @@ class AppTheme {
 
       // Text Theme - Luxury Typography Pairing
       textTheme: TextTheme(
-        // Display Styles (Playfair Display - Elegant Headings)
-        displayLarge: GoogleFonts.playfairDisplay(
+        // Display Styles (Montserrat - Modern Headings)
+        displayLarge: GoogleFonts.montserrat(
           fontSize: 48,
           fontWeight: FontWeight.w700,
           color: textPrimaryColor,
           letterSpacing: -0.5,
           height: 1.2,
         ),
-        displayMedium: GoogleFonts.playfairDisplay(
+        displayMedium: GoogleFonts.montserrat(
           fontSize: 36,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
           letterSpacing: -0.25,
           height: 1.25,
         ),
-        displaySmall: GoogleFonts.playfairDisplay(
+        displaySmall: GoogleFonts.montserrat(
           fontSize: 28,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
           height: 1.3,
         ),
 
-        // Headline Styles (Playfair Display)
-        headlineLarge: GoogleFonts.playfairDisplay(
+        // Headline Styles (Montserrat)
+        headlineLarge: GoogleFonts.montserrat(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
           height: 1.35,
         ),
-        headlineMedium: GoogleFonts.playfairDisplay(
+        headlineMedium: GoogleFonts.montserrat(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
           height: 1.4,
         ),
-        headlineSmall: GoogleFonts.playfairDisplay(
+        headlineSmall: GoogleFonts.montserrat(
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: textPrimaryColor,
@@ -400,7 +400,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        titleTextStyle: GoogleFonts.playfairDisplay(
+        titleTextStyle: GoogleFonts.montserrat(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
@@ -548,7 +548,7 @@ class AppTheme {
           systemNavigationBarColor: Colors.transparent,
           systemNavigationBarIconBrightness: Brightness.light,
         ),
-        titleTextStyle: GoogleFonts.playfairDisplay(
+        titleTextStyle: GoogleFonts.montserrat(
           color: darkTextPrimary,
           fontSize: 22,
           fontWeight: FontWeight.w600,
@@ -699,39 +699,39 @@ class AppTheme {
 
       // Text Theme - Dark Mode Typography
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.playfairDisplay(
+        displayLarge: GoogleFonts.montserrat(
           fontSize: 48,
           fontWeight: FontWeight.w700,
           color: darkTextPrimary,
           letterSpacing: -0.5,
           height: 1.2,
         ),
-        displayMedium: GoogleFonts.playfairDisplay(
+        displayMedium: GoogleFonts.montserrat(
           fontSize: 36,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           letterSpacing: -0.25,
           height: 1.25,
         ),
-        displaySmall: GoogleFonts.playfairDisplay(
+        displaySmall: GoogleFonts.montserrat(
           fontSize: 28,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           height: 1.3,
         ),
-        headlineLarge: GoogleFonts.playfairDisplay(
+        headlineLarge: GoogleFonts.montserrat(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           height: 1.35,
         ),
-        headlineMedium: GoogleFonts.playfairDisplay(
+        headlineMedium: GoogleFonts.montserrat(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,
           height: 1.4,
         ),
-        headlineSmall: GoogleFonts.playfairDisplay(
+        headlineSmall: GoogleFonts.montserrat(
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: darkTextPrimary,
@@ -850,7 +850,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        titleTextStyle: GoogleFonts.playfairDisplay(
+        titleTextStyle: GoogleFonts.montserrat(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: darkTextPrimary,

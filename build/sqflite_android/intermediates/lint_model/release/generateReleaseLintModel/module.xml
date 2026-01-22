@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Dell 7480\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.2+2\android"
+    name=":sqflite_android"
+    type="LIBRARY"
+    maven="com.tekartik.sqflite:sqflite_android:1.0-SNAPSHOT"
+    agpVersion="8.11.1"
+    buildFolder="D:\aptech\WatchHub\build\sqflite_android"
+    bootClassPath="D:\Android\Sdk\platforms\android-36\android.jar;D:\Android\Sdk\build-tools\35.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-36"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

@@ -1,0 +1,4 @@
+R_DEF: Internal format may change without notice
+local
+id googlePayButton
+layout stripe_react_native_google_pay_button

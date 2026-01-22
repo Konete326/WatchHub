@@ -24,7 +24,7 @@ class PremiumDialogs {
               const SizedBox(height: 16),
               Text(
                 'Success!',
-                style: GoogleFonts.playfairDisplay(
+                style: GoogleFonts.montserrat(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.primaryColor,

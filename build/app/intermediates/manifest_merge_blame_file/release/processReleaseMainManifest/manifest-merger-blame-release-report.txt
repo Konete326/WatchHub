@@ -1,0 +1,1064 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.watchhub"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="36" />
+10    <!-- Internet permission for Firebase and network requests -->
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:3:5-67
+11-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:3:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:4:5-79
+12-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:4:22-76
+13    <!--
+14         Required to query activities that can process text, see:
+15         https://developer.android.com/training/package-visibility and
+16         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+17
+18         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+19    -->
+20    <queries>
+20-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:43:5-48:15
+21        <intent>
+21-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:44:9-47:18
+22            <action android:name="android.intent.action.PROCESS_TEXT" />
+22-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:45:13-72
+22-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:45:21-70
+23
+24            <data android:mimeType="text/plain" />
+24-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+24-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:19-48
+25        </intent>
+26        <!-- Added to check the default browser that will host the AuthFlow. -->
+27        <intent>
+27-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:13:9-17:18
+28            <action android:name="android.intent.action.VIEW" />
+28-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+28-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+29
+30            <data android:scheme="http" />
+30-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+31        </intent> <!-- Added to check if Chrome is installed for browser-based payment authentication (e.g. 3DS1). -->
+32        <package android:name="com.android.chrome" /> <!-- Needs to be explicitly declared on Android R+ -->
+32-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:11:9-54
+32-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:11:18-51
+33        <package android:name="com.google.android.apps.maps" />
+33-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:33:9-64
+33-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:33:18-61
+34    </queries>
+35
+36    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Permissions options for the `notification` group -->
+36-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:5-68
+36-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:22-65
+37    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+37-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:5-77
+37-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:22-74
+38    <uses-permission android:name="android.permission.VIBRATE" /> <!-- Required by older versions of Google Play services to create IID tokens -->
+38-->[:flutter_local_notifications] D:\aptech\WatchHub\build\flutter_local_notifications\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:5-66
+38-->[:flutter_local_notifications] D:\aptech\WatchHub\build\flutter_local_notifications\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:7:22-63
+39    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+39-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:26:5-82
+39-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:26:22-79
+40    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+40-->[com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c7b38b29396d57204f20fcbcbbbd9e2b\transformed\recaptcha-18.6.1\AndroidManifest.xml:9:5-98
+40-->[com.google.android.recaptcha:recaptcha:18.6.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c7b38b29396d57204f20fcbcbbbd9e2b\transformed\recaptcha-18.6.1\AndroidManifest.xml:9:22-95
+41
+42    <uses-feature
+42-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:26:5-28:35
+43        android:glEsVersion="0x00020000"
+43-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:27:9-41
+44        android:required="true" />
+44-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:28:9-32
+45
+46    <permission
+46-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:22:5-24:47
+47        android:name="com.example.watchhub.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+47-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:23:9-81
+48        android:protectionLevel="signature" />
+48-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:24:9-44
+49
+50    <uses-permission android:name="com.example.watchhub.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+50-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:26:5-97
+50-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:26:22-94
+51
+52    <application
+53        android:name="android.app.Application"
+53-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:8:9-42
+54        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+54-->[androidx.core:core:1.17.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\18265d4ebe0e97e3b2b53abd5e729982\transformed\core-1.17.0\AndroidManifest.xml:28:18-86
+55        android:extractNativeLibs="false"
+56        android:icon="@mipmap/ic_launcher"
+56-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:9:9-43
+57        android:label="watchhub" >
+57-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:7:9-33
+58        <activity
+58-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:10:9-31:20
+59            android:name="com.example.watchhub.MainActivity"
+59-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:11:13-41
+60            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+60-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:16:13-163
+61            android:exported="true"
+61-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:12:13-36
+62            android:hardwareAccelerated="true"
+62-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:17:13-47
+63            android:launchMode="singleTop"
+63-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:13:13-43
+64            android:taskAffinity=""
+64-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:14:13-36
+65            android:theme="@style/LaunchTheme"
+65-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:15:13-47
+66            android:windowSoftInputMode="adjustResize" >
+66-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:18:13-55
+67
+68            <!--
+69                 Specifies an Android theme to apply to this Activity as soon as
+70                 the Android process has started. This theme is visible to the user
+71                 while the Flutter UI initializes. After that, this theme continues
+72                 to determine the Window background behind the Flutter UI.
+73            -->
+74            <meta-data
+74-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:23:13-26:17
+75                android:name="io.flutter.embedding.android.NormalTheme"
+75-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:24:15-70
+76                android:resource="@style/NormalTheme" />
+76-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:25:15-52
+77
+78            <intent-filter>
+78-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:27:13-30:29
+79                <action android:name="android.intent.action.MAIN" />
+79-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:28:17-68
+79-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:28:25-66
+80
+81                <category android:name="android.intent.category.LAUNCHER" />
+81-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:29:17-76
+81-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:29:27-74
+82            </intent-filter>
+83        </activity>
+84        <!--
+85             Don't delete the meta-data below.
+86             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+87        -->
+88        <meta-data
+88-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:34:9-36:33
+89            android:name="flutterEmbedding"
+89-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:35:13-44
+90            android:value="2" />
+90-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:36:13-30
+91
+92        <provider
+92-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:9-17:20
+93            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
+93-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-82
+94            android:authorities="com.example.watchhub.flutter.image_provider"
+94-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-74
+95            android:exported="false"
+95-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-37
+96            android:grantUriPermissions="true" >
+96-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:13:13-47
+97            <meta-data
+97-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:13-16:75
+98                android:name="android.support.FILE_PROVIDER_PATHS"
+98-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:17-67
+99                android:resource="@xml/flutter_image_picker_file_paths" />
+99-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:16:17-72
+100        </provider> <!-- Trigger Google Play services to install the backported photo picker module. -->
+101        <service
+101-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:19:9-31:19
+102            android:name="com.google.android.gms.metadata.ModuleDependencies"
+102-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:20:13-78
+103            android:enabled="false"
+103-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:21:13-36
+104            android:exported="false" >
+104-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:13-37
+105            <intent-filter>
+105-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:24:13-26:29
+106                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+106-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:17-94
+106-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:25-91
+107            </intent-filter>
+108
+109            <meta-data
+109-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:28:13-30:36
+110                android:name="photopicker_activity:0:required"
+110-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:29:17-63
+111                android:value="" />
+111-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:30:17-33
+112        </service>
+113
+114        <activity
+114-->[:url_launcher_android] D:\aptech\WatchHub\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-11:74
+115            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+115-->[:url_launcher_android] D:\aptech\WatchHub\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-74
+116            android:exported="false"
+116-->[:url_launcher_android] D:\aptech\WatchHub\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-37
+117            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+117-->[:url_launcher_android] D:\aptech\WatchHub\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-71
+118        <activity
+118-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:21:9-65:20
+119            android:name="com.stripe.android.financialconnections.FinancialConnectionsSheetRedirectActivity"
+119-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:22:13-109
+120            android:exported="true"
+120-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:23:13-36
+121            android:launchMode="singleTask" >
+121-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:24:13-44
+122            <intent-filter>
+122-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:25:13-64:29
+123                <action android:name="android.intent.action.VIEW" />
+123-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+123-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+124
+125                <category android:name="android.intent.category.DEFAULT" />
+125-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:17-76
+125-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:27-73
+126                <category android:name="android.intent.category.BROWSABLE" />
+126-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:17-78
+126-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:27-75
+127
+128                <!-- Returning from app2app: return_url is triggered to reopen web AuthFlow and poll accounts. -->
+129                <data
+129-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+130                    android:host="link-accounts"
+131                    android:pathPrefix="/com.example.watchhub/authentication_return"
+132                    android:scheme="stripe-auth" />
+133
+134                <!-- Returning from app2app: return_url is triggered to reopen native AuthFlow and poll accounts. -->
+135                <data
+135-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+136                    android:host="link-native-accounts"
+137                    android:pathPrefix="/com.example.watchhub/authentication_return"
+138                    android:scheme="stripe-auth" />
+139
+140                <!-- End of web AuthFlow success and cancel URIs that begin with "stripe-auth://link-accounts/{app-id}/...” -->
+141                <data
+141-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+142                    android:host="link-accounts"
+143                    android:path="/com.example.watchhub/success"
+144                    android:scheme="stripe-auth" />
+145                <data
+145-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+146                    android:host="link-accounts"
+147                    android:path="/com.example.watchhub/cancel"
+148                    android:scheme="stripe-auth" />
+149
+150                <!-- Opening app2app: Web flow triggers stripe-auth://native-redirect/{app-id}/http://web-that-redirects-to-native -->
+151                <data
+151-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+152                    android:host="native-redirect"
+153                    android:pathPrefix="/com.example.watchhub"
+154                    android:scheme="stripe-auth" />
+155
+156                <!-- Accepts success/cancel/fail URIs that begin with "stripe://auth-redirect” -->
+157                <data
+157-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+158                    android:host="auth-redirect"
+159                    android:pathPrefix="/com.example.watchhub"
+160                    android:scheme="stripe" />
+161            </intent-filter>
+162        </activity>
+163        <activity
+163-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:66:9-69:77
+164            android:name="com.stripe.android.financialconnections.FinancialConnectionsSheetActivity"
+164-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:67:13-101
+165            android:exported="false"
+165-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:68:13-37
+166            android:theme="@style/StripeFinancialConnectionsDefaultTheme" />
+166-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:69:13-74
+167        <activity
+167-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:70:9-74:58
+168            android:name="com.stripe.android.financialconnections.ui.FinancialConnectionsSheetNativeActivity"
+168-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:71:13-110
+169            android:exported="false"
+169-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:72:13-37
+170            android:theme="@style/StripeFinancialConnectionsDefaultTheme"
+170-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:73:13-74
+171            android:windowSoftInputMode="adjustResize" />
+171-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:74:13-55
+172
+173        <service
+173-->[:firebase_auth] D:\aptech\WatchHub\build\firebase_auth\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-12:19
+174            android:name="com.google.firebase.components.ComponentDiscoveryService"
+174-->[:firebase_auth] D:\aptech\WatchHub\build\firebase_auth\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:18-89
+175            android:directBootAware="true"
+175-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:32:13-43
+176            android:exported="false" >
+176-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:68:13-37
+177            <meta-data
+177-->[:firebase_auth] D:\aptech\WatchHub\build\firebase_auth\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-11:85
+178                android:name="com.google.firebase.components:io.flutter.plugins.firebase.auth.FlutterFirebaseAuthRegistrar"
+178-->[:firebase_auth] D:\aptech\WatchHub\build\firebase_auth\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:17-124
+179                android:value="com.google.firebase.components.ComponentRegistrar" />
+179-->[:firebase_auth] D:\aptech\WatchHub\build\firebase_auth\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:17-82
+180            <meta-data
+180-->[:cloud_firestore] D:\aptech\WatchHub\build\cloud_firestore\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-11:85
+181                android:name="com.google.firebase.components:io.flutter.plugins.firebase.firestore.FlutterFirebaseFirestoreRegistrar"
+181-->[:cloud_firestore] D:\aptech\WatchHub\build\cloud_firestore\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:17-134
+182                android:value="com.google.firebase.components.ComponentRegistrar" />
+182-->[:cloud_firestore] D:\aptech\WatchHub\build\cloud_firestore\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:17-82
+183            <meta-data
+183-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:36:13-38:85
+184                android:name="com.google.firebase.components:io.flutter.plugins.firebase.messaging.FlutterFirebaseAppRegistrar"
+184-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:37:17-128
+185                android:value="com.google.firebase.components.ComponentRegistrar" />
+185-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:38:17-82
+186            <meta-data
+186-->[:firebase_storage] D:\aptech\WatchHub\build\firebase_storage\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-11:85
+187                android:name="com.google.firebase.components:io.flutter.plugins.firebase.storage.FlutterFirebaseAppRegistrar"
+187-->[:firebase_storage] D:\aptech\WatchHub\build\firebase_storage\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:17-126
+188                android:value="com.google.firebase.components.ComponentRegistrar" />
+188-->[:firebase_storage] D:\aptech\WatchHub\build\firebase_storage\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:17-82
+189            <meta-data
+189-->[:firebase_core] D:\aptech\WatchHub\build\firebase_core\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-11:85
+190                android:name="com.google.firebase.components:io.flutter.plugins.firebase.core.FlutterFirebaseCoreRegistrar"
+190-->[:firebase_core] D:\aptech\WatchHub\build\firebase_core\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:17-124
+191                android:value="com.google.firebase.components.ComponentRegistrar" />
+191-->[:firebase_core] D:\aptech\WatchHub\build\firebase_core\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:17-82
+192            <meta-data
+192-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:69:13-71:85
+193                android:name="com.google.firebase.components:com.google.firebase.auth.FirebaseAuthRegistrar"
+193-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:70:17-109
+194                android:value="com.google.firebase.components.ComponentRegistrar" />
+194-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:71:17-82
+195            <meta-data
+195-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:17:13-19:85
+196                android:name="com.google.firebase.components:com.google.firebase.firestore.FirebaseFirestoreKtxRegistrar"
+196-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:18:17-122
+197                android:value="com.google.firebase.components.ComponentRegistrar" />
+197-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:19:17-82
+198            <meta-data
+198-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:20:13-22:85
+199                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"
+199-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:21:17-111
+200                android:value="com.google.firebase.components.ComponentRegistrar" />
+200-->[com.google.firebase:firebase-firestore:25.1.4] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3f3301f40d0b0b154add29d7a311e0cc\transformed\firebase-firestore-25.1.4\AndroidManifest.xml:22:17-82
+201            <meta-data
+201-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:57:13-59:85
+202                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingKtxRegistrar"
+202-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:58:17-122
+203                android:value="com.google.firebase.components.ComponentRegistrar" />
+203-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:59:17-82
+204            <meta-data
+204-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:60:13-62:85
+205                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar"
+205-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:61:17-119
+206                android:value="com.google.firebase.components.ComponentRegistrar" />
+206-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:62:17-82
+207            <meta-data
+207-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:30:13-32:85
+208                android:name="com.google.firebase.components:com.google.firebase.storage.FirebaseStorageKtxRegistrar"
+208-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:31:17-118
+209                android:value="com.google.firebase.components.ComponentRegistrar" />
+209-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:32:17-82
+210            <meta-data
+210-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:33:13-35:85
+211                android:name="com.google.firebase.components:com.google.firebase.storage.StorageRegistrar"
+211-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:34:17-107
+212                android:value="com.google.firebase.components.ComponentRegistrar" />
+212-->[com.google.firebase:firebase-storage:21.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\45767f5617c492c666c0ba9a971165ba\transformed\firebase-storage-21.0.2\AndroidManifest.xml:35:17-82
+213            <meta-data
+213-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:15:13-17:85
+214                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar"
+214-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:16:17-130
+215                android:value="com.google.firebase.components.ComponentRegistrar" />
+215-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:17:17-82
+216            <meta-data
+216-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:18:13-20:85
+217                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
+217-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:19:17-127
+218                android:value="com.google.firebase.components.ComponentRegistrar" />
+218-->[com.google.firebase:firebase-installations:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24e4188653a13ed91fc8f1faebfda469\transformed\firebase-installations-18.0.0\AndroidManifest.xml:20:17-82
+219            <meta-data
+219-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:25:13-27:85
+220                android:name="com.google.firebase.components:com.google.firebase.appcheck.FirebaseAppCheckKtxRegistrar"
+220-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:26:17-120
+221                android:value="com.google.firebase.components.ComponentRegistrar" />
+221-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:27:17-82
+222            <meta-data
+222-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:28:13-30:85
+223                android:name="com.google.firebase.components:com.google.firebase.appcheck.FirebaseAppCheckRegistrar"
+223-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:29:17-117
+224                android:value="com.google.firebase.components.ComponentRegistrar" />
+224-->[com.google.firebase:firebase-appcheck:18.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\b7573af6de898503139de7b89daa03ce\transformed\firebase-appcheck-18.0.0\AndroidManifest.xml:30:17-82
+225            <meta-data
+225-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f07b93c76a564abf39ca2e94a9893ae2\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:12:13-14:85
+226                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
+226-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f07b93c76a564abf39ca2e94a9893ae2\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:13:17-116
+227                android:value="com.google.firebase.components.ComponentRegistrar" />
+227-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f07b93c76a564abf39ca2e94a9893ae2\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:14:17-82
+228            <meta-data
+228-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:35:13-37:85
+229                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
+229-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:36:17-109
+230                android:value="com.google.firebase.components.ComponentRegistrar" />
+230-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:37:17-82
+231            <meta-data
+231-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a0fd1a3a33cd7574415fd84c0fe683d6\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:25:13-27:85
+232                android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar"
+232-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a0fd1a3a33cd7574415fd84c0fe683d6\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:26:17-115
+233                android:value="com.google.firebase.components.ComponentRegistrar" />
+233-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a0fd1a3a33cd7574415fd84c0fe683d6\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:27:17-82
+234        </service>
+235        <service
+235-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:9-17:72
+236            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingBackgroundService"
+236-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:13-107
+237            android:exported="false"
+237-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:16:13-37
+238            android:permission="android.permission.BIND_JOB_SERVICE" />
+238-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:17:13-69
+239        <service
+239-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:18:9-24:19
+240            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+240-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:19:13-97
+241            android:exported="false" >
+241-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:20:13-37
+242            <intent-filter>
+242-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:21:13-23:29
+243                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+243-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:17-78
+243-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:25-75
+244            </intent-filter>
+245        </service>
+246
+247        <receiver
+247-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:26:9-33:20
+248            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingReceiver"
+248-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:27:13-98
+249            android:exported="true"
+249-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:28:13-36
+250            android:permission="com.google.android.c2dm.permission.SEND" >
+250-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:29:13-73
+251            <intent-filter>
+251-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:30:13-32:29
+252                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+252-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:31:17-81
+252-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:31:25-78
+253            </intent-filter>
+254        </receiver>
+255
+256        <provider
+256-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:41:9-45:38
+257            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingInitProvider"
+257-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:42:13-102
+258            android:authorities="com.example.watchhub.flutterfirebasemessaginginitprovider"
+258-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:43:13-88
+259            android:exported="false"
+259-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:44:13-37
+260            android:initOrder="99" />
+260-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:45:13-35
+261
+262        <activity
+262-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:29:9-46:20
+263            android:name="com.google.firebase.auth.internal.GenericIdpActivity"
+263-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:30:13-80
+264            android:excludeFromRecents="true"
+264-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:31:13-46
+265            android:exported="true"
+265-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:32:13-36
+266            android:launchMode="singleTask"
+266-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:33:13-44
+267            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+267-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:34:13-72
+268            <intent-filter>
+268-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:35:13-45:29
+269                <action android:name="android.intent.action.VIEW" />
+269-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+269-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+270
+271                <category android:name="android.intent.category.DEFAULT" />
+271-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:17-76
+271-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:27-73
+272                <category android:name="android.intent.category.BROWSABLE" />
+272-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:17-78
+272-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:27-75
+273
+274                <data
+274-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+275                    android:host="firebase.auth"
+276                    android:path="/"
+277                    android:scheme="genericidp" />
+278            </intent-filter>
+279        </activity>
+280        <activity
+280-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:47:9-64:20
+281            android:name="com.google.firebase.auth.internal.RecaptchaActivity"
+281-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:48:13-79
+282            android:excludeFromRecents="true"
+282-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:49:13-46
+283            android:exported="true"
+283-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:50:13-36
+284            android:launchMode="singleTask"
+284-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:51:13-44
+285            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+285-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:52:13-72
+286            <intent-filter>
+286-->[com.google.firebase:firebase-auth:23.2.1] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\f40c89dbe508c602c4332a9f610a1ef4\transformed\firebase-auth-23.2.1\AndroidManifest.xml:53:13-63:29
+287                <action android:name="android.intent.action.VIEW" />
+287-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+287-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+288
+289                <category android:name="android.intent.category.DEFAULT" />
+289-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:17-76
+289-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:27-73
+290                <category android:name="android.intent.category.BROWSABLE" />
+290-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:17-78
+290-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:27-75
+291
+292                <data
+292-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+293                    android:host="firebase.auth"
+294                    android:path="/"
+295                    android:scheme="recaptcha" />
+296            </intent-filter>
+297        </activity>
+298        <activity
+298-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:8:9-12:58
+299            android:name="com.stripe.android.paymentsheet.PaymentSheetActivity"
+299-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:9:13-80
+300            android:exported="false"
+300-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:10:13-37
+301            android:theme="@style/StripePaymentSheetDefaultTheme"
+301-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:11:13-66
+302            android:windowSoftInputMode="adjustResize" />
+302-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:12:13-55
+303        <activity
+303-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:13:9-17:58
+304            android:name="com.stripe.android.paymentsheet.PaymentOptionsActivity"
+304-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:14:13-82
+305            android:exported="false"
+305-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:15:13-37
+306            android:theme="@style/StripePaymentSheetDefaultTheme"
+306-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:16:13-66
+307            android:windowSoftInputMode="adjustResize" />
+307-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:17:13-55
+308        <activity
+308-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:18:9-22:58
+309            android:name="com.stripe.android.customersheet.CustomerSheetActivity"
+309-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:19:13-82
+310            android:exported="false"
+310-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:20:13-37
+311            android:theme="@style/StripePaymentSheetDefaultTheme"
+311-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:21:13-66
+312            android:windowSoftInputMode="adjustResize" />
+312-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:22:13-55
+313        <activity
+313-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:23:9-27:58
+314            android:name="com.stripe.android.paymentsheet.addresselement.AddressElementActivity"
+314-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:24:13-97
+315            android:exported="false"
+315-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:25:13-37
+316            android:theme="@style/StripePaymentSheetDefaultTheme"
+316-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:26:13-66
+317            android:windowSoftInputMode="adjustResize" />
+317-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:27:13-55
+318        <activity
+318-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:28:9-31:69
+319            android:name="com.stripe.android.paymentsheet.paymentdatacollection.bacs.BacsMandateConfirmationActivity"
+319-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:29:13-118
+320            android:exported="false"
+320-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:30:13-37
+321            android:theme="@style/StripePaymentSheetDefaultTheme" />
+321-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:31:13-66
+322        <activity
+322-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:32:9-35:69
+323            android:name="com.stripe.android.paymentsheet.paymentdatacollection.polling.PollingActivity"
+323-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:33:13-105
+324            android:exported="false"
+324-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:34:13-37
+325            android:theme="@style/StripePaymentSheetDefaultTheme" />
+325-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:35:13-66
+326        <activity
+326-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:36:9-39:69
+327            android:name="com.stripe.android.paymentsheet.ui.SepaMandateActivity"
+327-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:37:13-82
+328            android:exported="false"
+328-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:38:13-37
+329            android:theme="@style/StripePaymentSheetDefaultTheme" />
+329-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:39:13-66
+330        <activity
+330-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:40:9-43:68
+331            android:name="com.stripe.android.paymentsheet.ExternalPaymentMethodProxyActivity"
+331-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:41:13-94
+332            android:exported="false"
+332-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:42:13-37
+333            android:theme="@style/StripePayLauncherDefaultTheme" />
+333-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:43:13-65
+334        <activity
+334-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:44:9-47:58
+335            android:name="com.stripe.android.paymentsheet.paymentdatacollection.cvcrecollection.CvcRecollectionActivity"
+335-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:45:13-121
+336            android:theme="@style/StripePaymentSheetDefaultTheme"
+336-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:46:13-66
+337            android:windowSoftInputMode="adjustResize" />
+337-->[com.stripe:paymentsheet:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\3dd8ad271953b42e747f8f8c626e89ba\transformed\paymentsheet-20.44.2\AndroidManifest.xml:47:13-55
+338        <activity
+338-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:8:9-13:61
+339            android:name="com.stripe.android.link.LinkForegroundActivity"
+339-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:9:13-74
+340            android:autoRemoveFromRecents="true"
+340-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:10:13-49
+341            android:configChanges="orientation|keyboard|keyboardHidden|screenLayout|screenSize|smallestScreenSize"
+341-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:11:13-115
+342            android:launchMode="singleTop"
+342-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:12:13-43
+343            android:theme="@style/StripeTransparentTheme" />
+343-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:13:13-58
+344        <activity
+344-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:14:9-31:20
+345            android:name="com.stripe.android.link.LinkRedirectHandlerActivity"
+345-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:15:13-79
+346            android:autoRemoveFromRecents="true"
+346-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:16:13-49
+347            android:exported="true"
+347-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:17:13-36
+348            android:launchMode="singleInstance"
+348-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:18:13-48
+349            android:theme="@style/StripeTransparentTheme" >
+349-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:19:13-58
+350            <intent-filter>
+350-->[com.stripe:link:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\5f9ccbb8206d5e383cef3a64aa82b175\transformed\link-20.44.2\AndroidManifest.xml:20:13-30:29
+351                <action android:name="android.intent.action.VIEW" />
+351-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+351-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+352
+353                <category android:name="android.intent.category.DEFAULT" />
+353-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:17-76
+353-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:27-73
+354                <category android:name="android.intent.category.BROWSABLE" />
+354-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:17-78
+354-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:27-75
+355
+356                <data
+356-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+357                    android:host="complete"
+358                    android:path="/com.example.watchhub"
+359                    android:scheme="link-popup" />
+360            </intent-filter>
+361        </activity>
+362        <activity
+362-->[com.stripe:payments-ui-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\168e2e18ac810b1252c69b0ed4d22302\transformed\payments-ui-core-20.44.2\AndroidManifest.xml:8:9-11:69
+363            android:name="com.stripe.android.ui.core.cardscan.CardScanActivity"
+363-->[com.stripe:payments-ui-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\168e2e18ac810b1252c69b0ed4d22302\transformed\payments-ui-core-20.44.2\AndroidManifest.xml:9:13-80
+364            android:exported="false"
+364-->[com.stripe:payments-ui-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\168e2e18ac810b1252c69b0ed4d22302\transformed\payments-ui-core-20.44.2\AndroidManifest.xml:10:13-37
+365            android:theme="@style/StripePaymentSheetDefaultTheme" />
+365-->[com.stripe:payments-ui-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\168e2e18ac810b1252c69b0ed4d22302\transformed\payments-ui-core-20.44.2\AndroidManifest.xml:11:13-66
+366        <activity
+366-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:15:9-18:57
+367            android:name="com.stripe.android.view.AddPaymentMethodActivity"
+367-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:16:13-76
+368            android:exported="false"
+368-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:17:13-37
+369            android:theme="@style/StripeDefaultTheme" />
+369-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:18:13-54
+370        <activity
+370-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:19:9-22:57
+371            android:name="com.stripe.android.view.PaymentMethodsActivity"
+371-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:20:13-74
+372            android:exported="false"
+372-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:21:13-37
+373            android:theme="@style/StripeDefaultTheme" />
+373-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:22:13-54
+374        <activity
+374-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:23:9-26:57
+375            android:name="com.stripe.android.view.PaymentFlowActivity"
+375-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:24:13-71
+376            android:exported="false"
+376-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:25:13-37
+377            android:theme="@style/StripeDefaultTheme" />
+377-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:26:13-54
+378        <activity
+378-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:27:9-31:58
+379            android:name="com.stripe.android.view.PaymentAuthWebViewActivity"
+379-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:28:13-78
+380            android:exported="false"
+380-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:29:13-37
+381            android:theme="@style/StripeDefaultTheme"
+381-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:30:13-54
+382            android:windowSoftInputMode="adjustResize" />
+382-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:31:13-55
+383        <activity
+383-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:32:9-35:61
+384            android:name="com.stripe.android.view.PaymentRelayActivity"
+384-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:33:13-72
+385            android:exported="false"
+385-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:34:13-37
+386            android:theme="@style/StripeTransparentTheme" />
+386-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:35:13-58
+387        <!--
+388        Set android:launchMode="singleTop" so that the StripeBrowserLauncherActivity instance that
+389        launched the browser Activity will also handle the return URL deep link.
+390        -->
+391        <activity
+391-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:41:9-45:61
+392            android:name="com.stripe.android.payments.StripeBrowserLauncherActivity"
+392-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:42:13-85
+393            android:exported="false"
+393-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:43:13-37
+394            android:launchMode="singleTask"
+394-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:44:13-44
+395            android:theme="@style/StripeTransparentTheme" />
+395-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:45:13-58
+396        <activity
+396-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:46:9-63:20
+397            android:name="com.stripe.android.payments.StripeBrowserProxyReturnActivity"
+397-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:47:13-88
+398            android:exported="true"
+398-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:48:13-36
+399            android:launchMode="singleTask"
+399-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:49:13-44
+400            android:theme="@style/StripeTransparentTheme" >
+400-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:50:13-58
+401            <intent-filter>
+401-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:51:13-62:29
+402                <action android:name="android.intent.action.VIEW" />
+402-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:13-65
+402-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:14:21-62
+403
+404                <category android:name="android.intent.category.DEFAULT" />
+404-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:17-76
+404-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:28:27-73
+405                <category android:name="android.intent.category.BROWSABLE" />
+405-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:17-78
+405-->[com.stripe:financial-connections:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\24d9b078a53579782f6ac9a98946b8ea\transformed\financial-connections-20.44.2\AndroidManifest.xml:29:27-75
+406
+407                <!-- Must match `DefaultReturnUrl#value`. -->
+408                <data
+408-->D:\aptech\WatchHub\android\app\src\main\AndroidManifest.xml:46:13-50
+409                    android:host="payment_return_url"
+410                    android:path="/com.example.watchhub"
+411                    android:scheme="stripesdk" />
+412            </intent-filter>
+413        </activity>
+414        <activity
+414-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:64:9-67:57
+415            android:name="com.stripe.android.payments.core.authentication.threeds2.Stripe3ds2TransactionActivity"
+415-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:65:13-114
+416            android:exported="false"
+416-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:66:13-37
+417            android:theme="@style/StripeDefaultTheme" />
+417-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:67:13-54
+418        <activity
+418-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:68:9-71:66
+419            android:name="com.stripe.android.googlepaylauncher.GooglePayLauncherActivity"
+419-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:69:13-90
+420            android:exported="false"
+420-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:70:13-37
+421            android:theme="@style/StripeGooglePayDefaultTheme" />
+421-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:71:13-63
+422        <activity
+422-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:72:9-75:66
+423            android:name="com.stripe.android.googlepaylauncher.GooglePayPaymentMethodLauncherActivity"
+423-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:73:13-103
+424            android:exported="false"
+424-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:74:13-37
+425            android:theme="@style/StripeGooglePayDefaultTheme" />
+425-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:75:13-63
+426        <activity
+426-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:76:9-79:68
+427            android:name="com.stripe.android.payments.paymentlauncher.PaymentLauncherConfirmationActivity"
+427-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:77:13-107
+428            android:exported="false"
+428-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:78:13-37
+429            android:theme="@style/StripePayLauncherDefaultTheme" />
+429-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:79:13-65
+430        <activity
+430-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:80:9-83:61
+431            android:name="com.stripe.android.payments.bankaccount.ui.CollectBankAccountActivity"
+431-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:81:13-97
+432            android:exported="false"
+432-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:82:13-37
+433            android:theme="@style/StripeTransparentTheme" />
+433-->[com.stripe:payments-core:20.44.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\398f7df82bd7e2c5b153a5071e577896\transformed\payments-core-20.44.2\AndroidManifest.xml:83:13-58
+434
+435        <provider
+435-->[:printing] D:\aptech\WatchHub\build\printing\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-16:20
+436            android:name="net.nfet.flutter.printing.PrintFileProvider"
+436-->[:printing] D:\aptech\WatchHub\build\printing\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-71
+437            android:authorities="com.example.watchhub.flutter.printing"
+437-->[:printing] D:\aptech\WatchHub\build\printing\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-68
+438            android:exported="false"
+438-->[:printing] D:\aptech\WatchHub\build\printing\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-37
+439            android:grantUriPermissions="true" >
+439-->[:printing] D:\aptech\WatchHub\build\printing\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-47
+440            <meta-data
+440-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:13-16:75
+441                android:name="android.support.FILE_PROVIDER_PATHS"
+441-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:17-67
+442                android:resource="@xml/flutter_printing_file_paths" />
+442-->[:image_picker_android] D:\aptech\WatchHub\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:16:17-72
+443        </provider>
+444
+445        <service
+445-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:24:9-32:19
+446            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
+446-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:25:13-94
+447            android:enabled="true"
+447-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:26:13-35
+448            android:exported="false" >
+448-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:27:13-37
+449            <meta-data
+449-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:29:13-31:104
+450                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
+450-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:30:17-76
+451                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
+451-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:31:17-101
+452        </service>
+453
+454        <activity
+454-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:34:9-41:20
+455            android:name="androidx.credentials.playservices.HiddenActivity"
+455-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:35:13-76
+456            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+456-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:36:13-87
+457            android:enabled="true"
+457-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:37:13-35
+458            android:exported="false"
+458-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:38:13-37
+459            android:fitsSystemWindows="true"
+459-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:39:13-45
+460            android:theme="@style/Theme.Hidden" >
+460-->[androidx.credentials:credentials-play-services-auth:1.2.0-rc01] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\c47b613183bdf4aa5c762f8e27e9a24e\transformed\credentials-play-services-auth-1.2.0-rc01\AndroidManifest.xml:40:13-48
+461        </activity>
+462        <activity
+462-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:23:9-27:75
+463            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+463-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:24:13-93
+464            android:excludeFromRecents="true"
+464-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:25:13-46
+465            android:exported="false"
+465-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:26:13-37
+466            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+466-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:27:13-72
+467        <!--
+468            Service handling Google Sign-In user revocation. For apps that do not integrate with
+469            Google Sign-In, this service will never be started.
+470        -->
+471        <service
+471-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:33:9-37:51
+472            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+472-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:34:13-89
+473            android:exported="true"
+473-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:35:13-36
+474            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+474-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:36:13-107
+475            android:visibleToInstantApps="true" />
+475-->[com.google.android.gms:play-services-auth:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\d17eeb28154a263f4c97ebff8cb1b276\transformed\play-services-auth-21.0.0\AndroidManifest.xml:37:13-48
+476
+477        <activity
+477-->[com.stripe:stripe-3ds2-android:6.1.8] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\2021f6b3a0bb0277640b2b2823f86018\transformed\stripe-3ds2-android-6.1.8\AndroidManifest.xml:8:9-11:54
+478            android:name="com.stripe.android.stripe3ds2.views.ChallengeActivity"
+478-->[com.stripe:stripe-3ds2-android:6.1.8] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\2021f6b3a0bb0277640b2b2823f86018\transformed\stripe-3ds2-android-6.1.8\AndroidManifest.xml:9:13-81
+479            android:exported="false"
+479-->[com.stripe:stripe-3ds2-android:6.1.8] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\2021f6b3a0bb0277640b2b2823f86018\transformed\stripe-3ds2-android-6.1.8\AndroidManifest.xml:10:13-37
+480            android:theme="@style/Stripe3DS2Theme" />
+480-->[com.stripe:stripe-3ds2-android:6.1.8] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\2021f6b3a0bb0277640b2b2823f86018\transformed\stripe-3ds2-android-6.1.8\AndroidManifest.xml:11:13-51
+481
+482        <receiver
+482-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:29:9-40:20
+483            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+483-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:30:13-78
+484            android:exported="true"
+484-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:31:13-36
+485            android:permission="com.google.android.c2dm.permission.SEND" >
+485-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:32:13-73
+486            <intent-filter>
+486-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:30:13-32:29
+487                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+487-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:31:17-81
+487-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:31:25-78
+488            </intent-filter>
+489
+490            <meta-data
+490-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:37:13-39:40
+491                android:name="com.google.android.gms.cloudmessaging.FINISHED_AFTER_HANDLED"
+491-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:38:17-92
+492                android:value="true" />
+492-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:39:17-37
+493        </receiver>
+494        <!--
+495             FirebaseMessagingService performs security checks at runtime,
+496             but set to not exported to explicitly avoid allowing another app to call it.
+497        -->
+498        <service
+498-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:46:9-53:19
+499            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+499-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:47:13-82
+500            android:directBootAware="true"
+500-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:48:13-43
+501            android:exported="false" >
+501-->[com.google.firebase:firebase-messaging:24.1.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\8b3e26b5a6db726d52d31f22592cc814\transformed\firebase-messaging-24.1.2\AndroidManifest.xml:49:13-37
+502            <intent-filter android:priority="-500" >
+502-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:21:13-23:29
+503                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+503-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:17-78
+503-->[:firebase_messaging] D:\aptech\WatchHub\build\firebase_messaging\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:25-75
+504            </intent-filter>
+505        </service>
+506
+507        <provider
+507-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:23:9-28:39
+508            android:name="com.google.firebase.provider.FirebaseInitProvider"
+508-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:24:13-77
+509            android:authorities="com.example.watchhub.firebaseinitprovider"
+509-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:25:13-72
+510            android:directBootAware="true"
+510-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:26:13-43
+511            android:exported="false"
+511-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:27:13-37
+512            android:initOrder="100" /> <!-- Needs to be explicitly declared on P+ -->
+512-->[com.google.firebase:firebase-common:21.0.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\bcd7aea34acbd70b32c239351fffd4fd\transformed\firebase-common-21.0.0\AndroidManifest.xml:28:13-36
+513        <uses-library
+513-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:39:9-41:40
+514            android:name="org.apache.http.legacy"
+514-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:40:13-50
+515            android:required="false" />
+515-->[com.google.android.gms:play-services-maps:18.0.2] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\652ee95554ea4fd7ee305ebe128ec4c9\transformed\play-services-maps-18.0.2\AndroidManifest.xml:41:13-37
+516
+517        <activity
+517-->[com.google.android.gms:play-services-base:18.3.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\6a5a7d208a6d0e0b2c5969dfb28b5bc3\transformed\play-services-base-18.3.0\AndroidManifest.xml:20:9-22:45
+518            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+518-->[com.google.android.gms:play-services-base:18.3.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\6a5a7d208a6d0e0b2c5969dfb28b5bc3\transformed\play-services-base-18.3.0\AndroidManifest.xml:20:19-85
+519            android:exported="false"
+519-->[com.google.android.gms:play-services-base:18.3.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\6a5a7d208a6d0e0b2c5969dfb28b5bc3\transformed\play-services-base-18.3.0\AndroidManifest.xml:22:19-43
+520            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+520-->[com.google.android.gms:play-services-base:18.3.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\6a5a7d208a6d0e0b2c5969dfb28b5bc3\transformed\play-services-base-18.3.0\AndroidManifest.xml:21:19-78
+521
+522        <uses-library
+522-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:23:9-25:40
+523            android:name="androidx.window.extensions"
+523-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:24:13-54
+524            android:required="false" />
+524-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:25:13-37
+525        <uses-library
+525-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:26:9-28:40
+526            android:name="androidx.window.sidecar"
+526-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:27:13-51
+527            android:required="false" />
+527-->[androidx.window:window:1.2.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\7217e782825a2d4d49e286a23835439b\transformed\window-1.2.0\AndroidManifest.xml:28:13-37
+528
+529        <provider
+529-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+530            android:name="androidx.startup.InitializationProvider"
+530-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+531            android:authorities="com.example.watchhub.androidx-startup"
+531-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+532            android:exported="false" >
+532-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+533            <meta-data
+533-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+534                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+534-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+535                android:value="androidx.startup" />
+535-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\00bdde7c2bfd90ff7e62a7cca88365fc\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+536            <meta-data
+536-->[androidx.lifecycle:lifecycle-process:2.8.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ada621cfccd0246e563336c0a3f980a5\transformed\lifecycle-process-2.8.3\AndroidManifest.xml:29:13-31:52
+537                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+537-->[androidx.lifecycle:lifecycle-process:2.8.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ada621cfccd0246e563336c0a3f980a5\transformed\lifecycle-process-2.8.3\AndroidManifest.xml:30:17-78
+538                android:value="androidx.startup" />
+538-->[androidx.lifecycle:lifecycle-process:2.8.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ada621cfccd0246e563336c0a3f980a5\transformed\lifecycle-process-2.8.3\AndroidManifest.xml:31:17-49
+539            <meta-data
+539-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+540                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+540-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+541                android:value="androidx.startup" />
+541-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+542        </provider>
+543
+544        <meta-data
+544-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ca92e8ab9ef5e02151a6b800752907c0\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+545            android:name="com.google.android.gms.version"
+545-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ca92e8ab9ef5e02151a6b800752907c0\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+546            android:value="@integer/google_play_services_version" />
+546-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\ca92e8ab9ef5e02151a6b800752907c0\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+547
+548        <receiver
+548-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+549            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+549-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+550            android:directBootAware="false"
+550-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+551            android:enabled="true"
+551-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+552            android:exported="true"
+552-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+553            android:permission="android.permission.DUMP" >
+553-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+554            <intent-filter>
+554-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+555                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+555-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+555-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+556            </intent-filter>
+557            <intent-filter>
+557-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+558                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+558-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+558-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+559            </intent-filter>
+560            <intent-filter>
+560-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+561                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+561-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+561-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+562            </intent-filter>
+563            <intent-filter>
+563-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+564                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+564-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+564-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\a9cd928dbb32cb97d269fd14b2717658\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+565            </intent-filter>
+566        </receiver>
+567
+568        <service
+568-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:28:9-34:19
+569            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+569-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:29:13-103
+570            android:exported="false" >
+570-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:30:13-37
+571            <meta-data
+571-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:31:13-33:39
+572                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+572-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:32:17-94
+573                android:value="cct" />
+573-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\61081204cb74a08ef41b1f937d33341f\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:33:17-36
+574        </service>
+575        <service
+575-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:26:9-30:19
+576            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+576-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:27:13-117
+577            android:exported="false"
+577-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:28:13-37
+578            android:permission="android.permission.BIND_JOB_SERVICE" >
+578-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:29:13-69
+579        </service>
+580
+581        <receiver
+581-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:32:9-34:40
+582            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+582-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:33:13-132
+583            android:exported="false" />
+583-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\9329f6575d2d4df0289cda14002c9e4d\transformed\transport-runtime-3.1.9\AndroidManifest.xml:34:13-37
+584
+585        <meta-data
+585-->[com.google.android.instantapps:instantapps:1.1.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\42ac8ed7dbea9109a454e8d680e19f87\transformed\instantapps-1.1.0\AndroidManifest.xml:10:9-12:33
+586            android:name="aia-compat-api-min-version"
+586-->[com.google.android.instantapps:instantapps:1.1.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\42ac8ed7dbea9109a454e8d680e19f87\transformed\instantapps-1.1.0\AndroidManifest.xml:11:13-54
+587            android:value="1" /> <!-- The activities will be merged into the manifest of the hosting app. -->
+587-->[com.google.android.instantapps:instantapps:1.1.0] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\42ac8ed7dbea9109a454e8d680e19f87\transformed\instantapps-1.1.0\AndroidManifest.xml:12:13-30
+588        <activity
+588-->[com.google.android.play:core-common:2.0.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\0f1d45358d1e1bb405185656421c92bb\transformed\core-common-2.0.3\AndroidManifest.xml:14:9-18:65
+589            android:name="com.google.android.play.core.common.PlayCoreDialogWrapperActivity"
+589-->[com.google.android.play:core-common:2.0.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\0f1d45358d1e1bb405185656421c92bb\transformed\core-common-2.0.3\AndroidManifest.xml:15:13-93
+590            android:exported="false"
+590-->[com.google.android.play:core-common:2.0.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\0f1d45358d1e1bb405185656421c92bb\transformed\core-common-2.0.3\AndroidManifest.xml:16:13-37
+591            android:stateNotNeeded="true"
+591-->[com.google.android.play:core-common:2.0.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\0f1d45358d1e1bb405185656421c92bb\transformed\core-common-2.0.3\AndroidManifest.xml:17:13-42
+592            android:theme="@style/Theme.PlayCore.Transparent" />
+592-->[com.google.android.play:core-common:2.0.3] C:\Users\Dell 7480\.gradle\caches\8.14\transforms\0f1d45358d1e1bb405185656421c92bb\transformed\core-common-2.0.3\AndroidManifest.xml:18:13-62
+593    </application>
+594
+595</manifest>

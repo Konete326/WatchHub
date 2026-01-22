@@ -258,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             'WatchHub',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.montserrat(
               fontSize: 26,
               fontWeight: FontWeight.w800,
               color: AppTheme.primaryColor,
@@ -350,11 +350,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const SearchScreen()),
+        MaterialPageRoute(
+          builder: (context) => const BrowseScreen(
+            autoFocusSearch: true,
+            showBackButton: true,
+          ),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.cardColor,
+          color: AppTheme.backgroundColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
         ),
@@ -447,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (banner.title != null)
                           Text(
                             banner.title!,
-                            style: GoogleFonts.playfairDisplay(
+                            style: GoogleFonts.montserrat(
                               color: Colors.white,
                               fontSize: 28,
                               fontWeight: FontWeight.w800,
@@ -615,7 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 12),
               Text(
                 title,
-                style: GoogleFonts.playfairDisplay(
+                style: GoogleFonts.montserrat(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimaryColor,
@@ -686,7 +691,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Text(
             'Browse by Brand',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimaryColor,
@@ -813,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (promotion.title != null)
                         Text(
                           promotion.title!,
-                          style: GoogleFonts.playfairDisplay(
+                          style: GoogleFonts.montserrat(
                             color: AppTheme.primaryColor,
                             fontSize: 24,
                             fontWeight: FontWeight.w800,

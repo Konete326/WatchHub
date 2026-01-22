@@ -1,0 +1,90 @@
+[
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_3ds2_ic_arrow.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-3ds2-android-6.1.8-11:/drawable-night-v8/stripe_3ds2_ic_arrow.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_amex.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_jcb.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_jcb.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_pm_revolut_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_paymentsheet_pm_revolut_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_mastercard.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_mastercard.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_chevron_down.xml",
+        "source": "com.flutter.stripe.stripe_android-stripe-ui-core-20.44.2-35:/drawable-night-v8/stripe_ic_chevron_down.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_pm_alma.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_paymentsheet_pm_alma.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_cartes_bancaires.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_cartes_bancaires.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_discover.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_discover.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_pm_mobile_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_paymentsheet_pm_mobile_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_visa.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_visa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_pm_amazon_pay.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_paymentsheet_pm_amazon_pay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_sepa.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_sepa.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_link.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_link.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_affirm_logo.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_affirm_logo.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_unknown.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_unknown.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_pm_multibanco.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-ui-core-20.44.2-7:/drawable-night-v8/stripe_ic_paymentsheet_pm_multibanco.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_unionpay.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_unionpay.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_cvc.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable-night-v8/stripe_ic_cvc.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_unknown.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable-night-v8/stripe_ic_unknown.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_paymentsheet_card_dinersclub.xml",
+        "source": "com.flutter.stripe.stripe_android-paymentsheet-20.44.2-15:/drawable-night-v8/stripe_ic_paymentsheet_card_dinersclub.xml"
+    },
+    {
+        "merged": "com.flutter.stripe.stripe_android-release-91:/drawable-night-v8/stripe_ic_cvc_amex.xml",
+        "source": "com.flutter.stripe.stripe_android-payments-model-20.44.2-63:/drawable-night-v8/stripe_ic_cvc_amex.xml"
+    }
+]

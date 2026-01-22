@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Dell 7480\AppData\Local\Pub\Cache\hosted\pub.dev\stripe_android-10.2.1\android"
+    name=":stripe_android"
+    type="LIBRARY"
+    maven="com.flutter.stripe:stripe_android:1.0-SNAPSHOT"
+    agpVersion="8.11.1"
+    buildFolder="D:\aptech\WatchHub\build\stripe_android"
+    bootClassPath="D:\Android\Sdk\platforms\android-34\android.jar;D:\Android\Sdk\build-tools\35.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

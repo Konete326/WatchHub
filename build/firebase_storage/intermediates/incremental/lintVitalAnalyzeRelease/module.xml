@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Dell 7480\AppData\Local\Pub\Cache\hosted\pub.dev\firebase_storage-12.4.10\android"
+    name=":firebase_storage"
+    type="LIBRARY"
+    maven="io.flutter.plugins.firebase.storage:firebase_storage:1.0-SNAPSHOT"
+    agpVersion="8.11.1"
+    buildFolder="D:\aptech\WatchHub\build\firebase_storage"
+    bootClassPath="D:\Android\Sdk\platforms\android-34\android.jar;D:\Android\Sdk\build-tools\35.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>
