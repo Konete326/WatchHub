@@ -1,35 +1,62 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
 
-
-.pub-cache/
-.pub/
-
-
-# Android
-.gradle/
-local.properties
-*.kwks
-*.keystore
-*.jks
-**/android/app/key.properties
-
-# iOS/macOS
-.generated/
-.last_build_id
-DerivedData/
-*.IPHONE
-*.simulator
-*.pb.h
-*.pb.cc
-Pods/
-ServiceDefinitions.json
-
-# Web
-build/web/
-
-# IDEs
-.idea/
+# IntelliJ related
 *.iml
-.vscode/
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/App.podspec
+**/ios/ServiceDefinitions.json
+**/android/app/src/main/java/io/flutter/plugins/
+**/android/local.properties
+**/android/key.properties
+**/android/app/google-services.json
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/build/
+
+# Symbolication related
+app.*.symbols
+
+# Executable python binary
+**/*.py[co]
 
 # Environment variables
+.env
+.env.*
 functions/.env
+
+# Android Studio will create this folder for testing and stories
+**/android/.gradle/
+**/android/app/key.properties
+**/*.keystore
+**/*.jks
+
+# iOS/macOS
+**/ios/.generated/
+**/ios/.last_build_id
+**/ios/DerivedData/
+**/*.IPHONE
+**/*.simulator

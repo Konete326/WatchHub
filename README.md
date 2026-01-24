@@ -1,4 +1,5 @@
 # ⌚ WatchHub - Premium Luxury Watch Store
+### Batch: 2402G1
 
 WatchHub is a state-of-the-art Flutter application meticulously crafted for luxury watch enthusiasts. The platform combines a high-end **User Experience (UX)** with a powerful **Admin Control Panel** for complete business management.
 
@@ -72,7 +73,7 @@ WatchHub features a custom luxury design system tailored for high-end retail:
 ### Installation
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-repo/watchhub.git
+    git clone https://github.com/Konete326/WatchHub.git
     ```
 2.  **Fetch dependencies:**
     ```bash
@@ -85,17 +86,17 @@ WatchHub features a custom luxury design system tailored for high-end retail:
 
 ---
 
-## � Development Team
+## 👥 Development Team
 
 This flagship project was meticulously developed by:
 
 *   **Muhammad Sameer**
-*   **Maaz Asad**
-*   **Shahneel Sohail**
-*   **Arhum Saeed**
-*   **Ibad**
+*   **Maaz Bin Asad**
+*   **Arham**
+*   **Ibad Ullah**
+*   **Shahneel**
 
 ---
 
-## �📄 Standards
+## 📄 Standards
 This project is built to **Advanced Agentic Coding** standards, ensuring modularity, scalability, and premium aesthetics.
